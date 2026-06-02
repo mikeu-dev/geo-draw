@@ -112,7 +112,8 @@ export default function LocationSearch({ map }: LocationSearchProps) {
     <div ref={containerRef} className="absolute top-[0.75rem] left-[3.25rem] z-40 w-[calc(100vw-7.5rem)] sm:w-72 max-w-72">
       <div className={`
         flex items-center gap-2 px-3 py-2 rounded-lg
-        status-bar transition-all duration-200
+        bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))]
+        transition-all duration-200
         ${isFocused ? 'ring-2 ring-accent/40 shadow-lg' : 'shadow-sm'}
       `}>
         <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -137,7 +138,7 @@ export default function LocationSearch({ map }: LocationSearchProps) {
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="mt-1.5 rounded-lg overflow-hidden status-bar shadow-xl animate-fade-in-up">
+        <div className="mt-1.5 rounded-lg overflow-hidden bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-xl animate-fade-in-up">
           {results.map((result) => (
             <button
               key={result.place_id}
