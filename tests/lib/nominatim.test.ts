@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('nominatim helper', () => {
-  let getNominatimFetchInit: any;
-  let nominatimSearchUrl: any;
-  let fetchNominatim: any;
-  let nominatimSearchResults: any;
+  let getNominatimFetchInit: typeof import('@/lib/nominatim').getNominatimFetchInit;
+  let nominatimSearchUrl: typeof import('@/lib/nominatim').nominatimSearchUrl;
+  let fetchNominatim: typeof import('@/lib/nominatim').fetchNominatim;
+  let nominatimSearchResults: typeof import('@/lib/nominatim').nominatimSearchResults;
 
   beforeEach(async () => {
     vi.resetModules();

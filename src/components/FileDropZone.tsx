@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, DragEvent } from 'react';
-import { Upload, FileUp, X } from 'lucide-react';
+import { FileUp } from 'lucide-react';
 
 interface FileDropZoneProps {
   onFileLoad: (content: string, filename: string) => void | Promise<void>;

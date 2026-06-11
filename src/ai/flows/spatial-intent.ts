@@ -115,14 +115,15 @@ export async function processSpatialIntent(
       return { success: false, error: 'AI returned an empty response.', isQuotaExceeded: false };
     }
     return { success: true, data: output };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in processSpatialIntent:', error);
-    const message = error?.message || '';
+    const err = error as { message?: string; status?: number };
+    const message = err?.message || '';
     const isQuotaExceeded =
       message.includes('429') ||
       message.toLowerCase().includes('quota') ||
       message.toLowerCase().includes('rate limit') ||
-      error?.status === 429;
+      err?.status === 429;
 
     return {
       success: false,

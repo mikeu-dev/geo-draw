@@ -3,6 +3,13 @@ import { topoJsonDragFormat } from '@/lib/ol-topojson-drag-format';
 import type { Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
 
+interface DragFormat {
+  getType(): string;
+  readFeatures(source: unknown, options?: unknown): unknown[];
+}
+
+const format = topoJsonDragFormat as unknown as DragFormat;
+
 describe('topoJsonDragFormat', () => {
   const validTopo = {
     type: 'Topology',
@@ -24,21 +31,19 @@ describe('topoJsonDragFormat', () => {
   const validTopoString = JSON.stringify(validTopo);
 
   it('should return correct type', () => {
-    expect((topoJsonDragFormat as any).getType()).toBe('json');
+    expect(format.getType()).toBe('json');
   });
 
   describe('readFeatures', () => {
     it('should return empty array for invalid input', () => {
-      expect((topoJsonDragFormat as any).readFeatures(null)).toEqual([]);
-      expect((topoJsonDragFormat as any).readFeatures(undefined)).toEqual([]);
-      expect((topoJsonDragFormat as any).readFeatures('invalid-json-string')).toEqual([]);
-      expect((topoJsonDragFormat as any).readFeatures('{}')).toEqual([]);
+      expect(format.readFeatures(null)).toEqual([]);
+      expect(format.readFeatures(undefined)).toEqual([]);
+      expect(format.readFeatures('invalid-json-string')).toEqual([]);
+      expect(format.readFeatures('{}')).toEqual([]);
     });
 
     it('should parse valid TopoJSON string correctly', () => {
-      const features = (topoJsonDragFormat as any).readFeatures(
-        validTopoString
-      ) as Feature<Geometry>[];
+      const features = format.readFeatures(validTopoString) as Feature<Geometry>[];
       expect(features).toHaveLength(1);
       expect(features[0].get('id')).toBe(1);
 
@@ -48,7 +53,7 @@ describe('topoJsonDragFormat', () => {
     });
 
     it('should parse valid TopoJSON object correctly', () => {
-      const features = (topoJsonDragFormat as any).readFeatures(validTopo) as Feature<Geometry>[];
+      const features = format.readFeatures(validTopo) as Feature<Geometry>[];
       expect(features).toHaveLength(1);
       expect(features[0].get('id')).toBe(1);
     });
@@ -58,7 +63,7 @@ describe('topoJsonDragFormat', () => {
       const buffer = new ArrayBuffer(view.byteLength);
       new Uint8Array(buffer).set(view);
 
-      const features = (topoJsonDragFormat as any).readFeatures(buffer) as Feature<Geometry>[];
+      const features = format.readFeatures(buffer) as Feature<Geometry>[];
       expect(features).toHaveLength(1);
       expect(features[0].get('id')).toBe(1);
     });

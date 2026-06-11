@@ -90,7 +90,7 @@ export default function DrawingTools({
           projection={projection}
           onProjectionChange={onProjectionChange}
         />
-        <BasemapSwitcher tileLayer={tileLayer} map={map} />
+        <BasemapSwitcher tileLayer={tileLayer} />
         <MapScreenshot map={map} />
       </div>
       <div className="drawing-controls">
