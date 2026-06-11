@@ -10,39 +10,52 @@ import { z } from 'zod';
 
 const SpatialIntentInputSchema = z.object({
   prompt: z.string().describe('The user command in natural language.'),
-  featureContext: z.string().optional().describe('Brief summary of existing map features (types, count).'),
+  featureContext: z
+    .string()
+    .optional()
+    .describe('Brief summary of existing map features (types, count).'),
 });
 export type SpatialIntentInput = z.infer<typeof SpatialIntentInputSchema>;
 
 const SpatialIntentOutputSchema = z.object({
-  action: z.enum([
-    'buffer',
-    'centroid',
-    'simplify',
-    'union',
-    'flyTo',
-    'setBasemap',
-    'setProjection',
-    'clear',
-    'delete',
-    'style',
-    'export',
-    'analyze',
-    'unknown'
-  ]).describe('The specific GIS operation inferred from the prompt.'),
-  params: z.object({
-    radius: z.number().optional().describe('Radius for buffer (default units: km).'),
-    units: z.enum(['meters', 'kilometers', 'miles', 'degrees']).optional(),
-    query: z.string().optional().describe('Search query for location fly-to.'),
-    basemap: z.string().optional().describe('Name of the basemap (osm, satellite, topo, dark).'),
-    projection: z.string().optional().describe('Projection code (EPSG:4326, EPSG:3857).'),
-    target: z.enum(['all', 'selected', 'last']).optional().describe('Which feature(s) to target.'),
-    color: z.string().optional().describe('CSS color for styling (e.g., #ff0000, red).'),
-    strokeWidth: z.number().optional().describe('Width for strokes.'),
-    opacity: z.number().optional().describe('Opacity value between 0 and 1.'),
-    exportFormat: z.enum(['geojson', 'topojson', 'kml', 'kmz']).optional().describe('Format for data export.'),
-  }).optional(),
-  narrative: z.string().describe('A short user-friendly response explaining what the AI is doing.')
+  action: z
+    .enum([
+      'buffer',
+      'centroid',
+      'simplify',
+      'union',
+      'flyTo',
+      'setBasemap',
+      'setProjection',
+      'clear',
+      'delete',
+      'style',
+      'export',
+      'analyze',
+      'unknown',
+    ])
+    .describe('The specific GIS operation inferred from the prompt.'),
+  params: z
+    .object({
+      radius: z.number().optional().describe('Radius for buffer (default units: km).'),
+      units: z.enum(['meters', 'kilometers', 'miles', 'degrees']).optional(),
+      query: z.string().optional().describe('Search query for location fly-to.'),
+      basemap: z.string().optional().describe('Name of the basemap (osm, satellite, topo, dark).'),
+      projection: z.string().optional().describe('Projection code (EPSG:4326, EPSG:3857).'),
+      target: z
+        .enum(['all', 'selected', 'last'])
+        .optional()
+        .describe('Which feature(s) to target.'),
+      color: z.string().optional().describe('CSS color for styling (e.g., #ff0000, red).'),
+      strokeWidth: z.number().optional().describe('Width for strokes.'),
+      opacity: z.number().optional().describe('Opacity value between 0 and 1.'),
+      exportFormat: z
+        .enum(['geojson', 'topojson', 'kml', 'kmz'])
+        .optional()
+        .describe('Format for data export.'),
+    })
+    .optional(),
+  narrative: z.string().describe('A short user-friendly response explaining what the AI is doing.'),
 });
 export type SpatialIntentOutput = z.infer<typeof SpatialIntentOutputSchema>;
 
@@ -92,7 +105,10 @@ export type ProcessIntentResult =
   | { success: true; data: SpatialIntentOutput }
   | { success: false; error: string; isQuotaExceeded: boolean };
 
-export async function processSpatialIntent(prompt: string, featureContext?: string): Promise<ProcessIntentResult> {
+export async function processSpatialIntent(
+  prompt: string,
+  featureContext?: string
+): Promise<ProcessIntentResult> {
   try {
     const { output } = await spatialIntentPrompt({ prompt, featureContext });
     if (!output) {

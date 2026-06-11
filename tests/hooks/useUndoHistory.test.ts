@@ -86,18 +86,30 @@ describe('useUndoHistory Hook', () => {
   it('should limit the history size', () => {
     const { result } = renderHook(() => useUndoHistory('initial', 2));
 
-    act(() => { result.current.set('state1'); });
-    act(() => { result.current.set('state2'); });
-    act(() => { result.current.set('state3'); });
+    act(() => {
+      result.current.set('state1');
+    });
+    act(() => {
+      result.current.set('state2');
+    });
+    act(() => {
+      result.current.set('state3');
+    });
 
     // History is limited to 2: past should contain ['state2', 'state3'] when current is state3
-    act(() => { result.current.undo(); }); // goes to state2
+    act(() => {
+      result.current.undo();
+    }); // goes to state2
     expect(result.current.state).toBe('state2');
 
-    act(() => { result.current.undo(); }); // goes to state1
+    act(() => {
+      result.current.undo();
+    }); // goes to state1
     expect(result.current.state).toBe('state1');
 
-    act(() => { result.current.undo(); }); // can't undo further because limit is 2
+    act(() => {
+      result.current.undo();
+    }); // can't undo further because limit is 2
     expect(result.current.state).toBe('state1');
   });
 

@@ -14,10 +14,13 @@ describe('nominatim helper', () => {
     fetchNominatim = nominatim.fetchNominatim;
     nominatimSearchResults = nominatim.nominatimSearchResults;
 
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([]),
-    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([]),
+      })
+    );
     vi.useFakeTimers();
   });
 
@@ -84,10 +87,13 @@ describe('nominatim helper', () => {
   describe('nominatimSearchResults', () => {
     it('should return search results array when fetch is successful', async () => {
       const mockData = [{ place_id: 123, display_name: 'Jakarta' }];
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockData),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve(mockData),
+        })
+      );
 
       const resPromise = nominatimSearchResults('https://api/search');
       await vi.advanceTimersByTimeAsync(10);
@@ -97,10 +103,13 @@ describe('nominatim helper', () => {
     });
 
     it('should return empty array if response json is not an array', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ notAnArray: true }),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ notAnArray: true }),
+        })
+      );
 
       const resPromise = nominatimSearchResults('https://api/search');
       await vi.advanceTimersByTimeAsync(10);
@@ -110,24 +119,30 @@ describe('nominatim helper', () => {
     });
 
     it('should throw error if response is not ok', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+        })
+      );
 
       const resPromise = nominatimSearchResults('https://api/search');
       const assertion = expect(resPromise).rejects.toThrow('Nominatim HTTP 500');
-      
+
       // Advance timers after attaching the rejection handler to prevent Unhandled Rejection warning
       await vi.advanceTimersByTimeAsync(10);
       await assertion;
     });
 
     it('should throw error if json parsing fails', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.reject(new Error('SyntaxError')),
-      }));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.reject(new Error('SyntaxError')),
+        })
+      );
 
       const resPromise = nominatimSearchResults('https://api/search');
       const assertion = expect(resPromise).rejects.toThrow('Nominatim returned non-JSON');

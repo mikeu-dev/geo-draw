@@ -24,9 +24,7 @@ export const GisService = {
   /**
    * Calculates the centroid of a feature or feature collection.
    */
-  calculateCentroid(
-    data: Feature<Geometry> | FeatureCollection<Geometry>
-  ): Feature<Point> {
+  calculateCentroid(data: Feature<Geometry> | FeatureCollection<Geometry>): Feature<Point> {
     return turf.centroid(data);
   },
 
@@ -48,10 +46,7 @@ export const GisService = {
   /**
    * Checks if two features intersect.
    */
-  checkIntersection(
-    feat1: Feature<Geometry>,
-    feat2: Feature<Geometry>
-  ): boolean {
+  checkIntersection(feat1: Feature<Geometry>, feat2: Feature<Geometry>): boolean {
     // @ts-expect-error: turf.intersect needs both features in newer versions
     const intersect = turf.intersect(turf.featureCollection([feat1, feat2]));
     return !!intersect;
@@ -90,7 +85,7 @@ export const GisService = {
       if (obj == null) continue;
       const gj = tj.feature(top, obj) as unknown as FeatureCollection | Feature;
       if (gj.type === 'FeatureCollection') {
-        features.push(...gj.features as Feature<Geometry>[]);
+        features.push(...(gj.features as Feature<Geometry>[]));
       } else {
         features.push(gj as Feature<Geometry>);
       }
@@ -113,12 +108,10 @@ export const GisService = {
   /**
    * Combines multiple features into one.
    */
-  unionFeatures(
-     features: Feature<Geometry>[]
-  ): Feature<Polygon | MultiPolygon> | null {
+  unionFeatures(features: Feature<Geometry>[]): Feature<Polygon | MultiPolygon> | null {
     if (features.length < 2) return null;
     const collection = turf.featureCollection(features);
     // @ts-expect-error: turf.union typing issue
     return turf.union(collection);
-  }
+  },
 };

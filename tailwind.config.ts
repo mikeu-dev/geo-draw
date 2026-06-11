@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 import typography from '@tailwindcss/typography';
 
@@ -14,7 +14,16 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
-        code: ['Menlo', 'Monaco', 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', 'monospace'],
+        code: [
+          'Menlo',
+          'Monaco',
+          'Lucida Console',
+          'Liberation Mono',
+          'DejaVu Sans Mono',
+          'Bitstream Vera Sans Mono',
+          'Courier New',
+          'monospace',
+        ],
       },
       colors: {
         background: 'hsl(var(--background))',

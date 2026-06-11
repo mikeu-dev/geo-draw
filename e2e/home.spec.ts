@@ -43,7 +43,7 @@ test.describe('Geovara E2E Tests', () => {
 
     // Kembalikan ke tab "JSON"
     await jsonTab.click();
-    
+
     // Pastikan container editor Monaco termuat
     const monacoEditor = page.locator('.monaco-editor');
     await expect(monacoEditor).toBeVisible();

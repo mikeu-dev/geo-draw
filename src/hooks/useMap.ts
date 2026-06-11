@@ -21,7 +21,16 @@ import { Style } from 'ol/style';
 import type { StyleLike } from 'ol/style/Style';
 import type { Type } from 'ol/geom/Geometry';
 
-export type DrawType = 'Point' | 'LineString' | 'Polygon' | 'Rectangle' | 'Circle' | 'Edit' | 'Delete' | 'MeasureDistance' | 'MeasureArea';
+export type DrawType =
+  | 'Point'
+  | 'LineString'
+  | 'Polygon'
+  | 'Rectangle'
+  | 'Circle'
+  | 'Edit'
+  | 'Delete'
+  | 'MeasureDistance'
+  | 'MeasureArea';
 
 interface UseMapOptions {
   target: React.RefObject<HTMLDivElement | null>;
@@ -52,13 +61,13 @@ export function useMap({
 }: UseMapOptions) {
   const [map, setMap] = useState<Map | null>(null);
   const mapInstance = useRef<Map | null>(null);
-  
+
   // Use state for stable OL objects to avoid Ref-access-during-render errors
   const [vectorSource] = useState(() => new VectorSource<Feature<Geometry>>());
   const [tileLayer] = useState(() => new TileLayer({ source: new OSM() }));
   const [selectInteraction] = useState(() => new Select({ hitTolerance: 5 }));
   const [modifyInteraction] = useState(() => new Modify({ source: vectorSource }));
-  
+
   const vectorLayerRef = useRef<VectorImageLayer<Feature<Geometry>> | null>(null);
   const drawInteraction = useRef<Draw | null>(null);
   const isUpdatingFromHash = useRef(false);
@@ -66,7 +75,10 @@ export function useMap({
   const updateViewFromHash = useCallback(() => {
     const activeMap = mapInstance.current;
     if (!activeMap) return;
-    const hash = window.location.hash.substring(1).split('&').find(p => p.startsWith('map='));
+    const hash = window.location.hash
+      .substring(1)
+      .split('&')
+      .find((p) => p.startsWith('map='));
     if (!hash) return;
 
     const parts = hash.substring(4).split('/');
@@ -97,27 +109,27 @@ export function useMap({
 
     let center = fromLonLat([0, 0]);
     let zoom = 2;
-    const initialHash = window.location.hash.substring(1).split('&').find(p => p.startsWith('map='));
+    const initialHash = window.location.hash
+      .substring(1)
+      .split('&')
+      .find((p) => p.startsWith('map='));
     if (initialHash) {
-        const parts = initialHash.substring(4).split('/');
-        if (parts.length === 3) {
-            zoom = parseFloat(parts[0]) || 2;
-            center = fromLonLat([parseFloat(parts[2]), parseFloat(parts[1])]) || center;
-        }
+      const parts = initialHash.substring(4).split('/');
+      if (parts.length === 3) {
+        zoom = parseFloat(parts[0]) || 2;
+        center = fromLonLat([parseFloat(parts[2]), parseFloat(parts[1])]) || center;
+      }
     }
 
     const newMap = new Map({
       target: target.current,
-      layers: [
-        tileLayer,
-        vectorLayer,
-      ],
+      layers: [tileLayer, vectorLayer],
       view: new View({ center, zoom }),
       controls: defaultControls({ zoom: false, rotate: false, attribution: false }).extend([
         new Zoom(),
         new Attribution({ collapsible: true }),
-        new ScaleLine({ units: 'metric' })
-      ])
+        new ScaleLine({ units: 'metric' }),
+      ]),
     });
 
     mapInstance.current = newMap;
@@ -134,13 +146,13 @@ export function useMap({
       const view = newMap.getView();
       const centerCoord = view.getCenter();
       if (!centerCoord) return;
-      
+
       const c = toLonLat(centerCoord);
       const z = view.getZoom();
       const mapHash = `map=${z?.toFixed(2)}/${c[1].toFixed(4)}/${c[0].toFixed(4)}`;
-      
+
       const currentHashValue = window.location.hash.substring(1);
-      const otherParts = currentHashValue.split('&').filter(p => !p.startsWith('map='));
+      const otherParts = currentHashValue.split('&').filter((p) => !p.startsWith('map='));
       const newHashValue = [...otherParts, mapHash].join('&');
       window.history.replaceState(null, '', `#${newHashValue}`);
     };
@@ -161,7 +173,7 @@ export function useMap({
         dropped.forEach((f, i) => {
           if (!f.getId()) f.setId(`dropped_${Date.now()}_${i}`);
         });
-        setFeatures(prev => [...prev, ...dropped]);
+        setFeatures((prev) => [...prev, ...dropped]);
       }
     });
     newMap.addInteraction(dragAndDrop);
@@ -172,12 +184,12 @@ export function useMap({
     });
 
     newMap.addInteraction(modifyInteraction);
-    modifyInteraction.on('modifyend', () => setFeatures(prev => [...prev]));
-    
+    modifyInteraction.on('modifyend', () => setFeatures((prev) => [...prev]));
+
     const handleFlyTo = (event: Event) => {
-      const customEvent = event as CustomEvent<{ 
-        lon?: number; 
-        lat?: number; 
+      const customEvent = event as CustomEvent<{
+        lon?: number;
+        lat?: number;
         boundingbox?: string[];
       }>;
       const { lon, lat, boundingbox } = customEvent.detail;
@@ -200,21 +212,21 @@ export function useMap({
         case 'imagery':
           source = new XYZ({
             url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-            maxZoom: 19
+            maxZoom: 19,
           });
           break;
         case 'topo':
         case 'topographic':
           source = new XYZ({
             url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-            maxZoom: 19
+            maxZoom: 19,
           });
           break;
         case 'dark':
         case 'night':
           source = new XYZ({
             url: 'https://{a-c}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-            attributions: '© <a href="https:// carto.com/attributions">CARTO</a>'
+            attributions: '© <a href="https:// carto.com/attributions">CARTO</a>',
           });
           break;
         case 'osm':
@@ -238,7 +250,19 @@ export function useMap({
         setMap(null);
       }
     };
-  }, [target, styleFunction, vectorOpacity, vectorVisible, updateViewFromHash, onFeatureSelect, setFeatures, vectorSource, tileLayer, selectInteraction, modifyInteraction]);
+  }, [
+    target,
+    styleFunction,
+    vectorOpacity,
+    vectorVisible,
+    updateViewFromHash,
+    onFeatureSelect,
+    setFeatures,
+    vectorSource,
+    tileLayer,
+    selectInteraction,
+    modifyInteraction,
+  ]);
 
   useEffect(() => {
     const activeMap = map;
@@ -254,26 +278,30 @@ export function useMap({
     if (vectorSource) {
       vectorSource.getFeatures().forEach((f: Feature<Geometry>) => {
         const style = f.getStyle();
-        if (style && !Array.isArray(style) && typeof (style as unknown as { getStroke: () => unknown }).getStroke === 'function') {
-           const styleObj = style as Style;
-           const stroke = styleObj.getStroke();
-           if (stroke) {
-             const color = stroke.getColor();
-             if (Array.isArray(color)) {
-               const newColor = [...color];
-               newColor[3] = vectorOpacity;
-               stroke.setColor(newColor);
-             }
-           }
-           const fill = styleObj.getFill();
-           if (fill) {
-             const color = fill.getColor();
-             if (Array.isArray(color)) {
-               const newColor = [...color];
-               newColor[3] = vectorOpacity * 0.5;
-               fill.setColor(newColor);
-             }
-           }
+        if (
+          style &&
+          !Array.isArray(style) &&
+          typeof (style as unknown as { getStroke: () => unknown }).getStroke === 'function'
+        ) {
+          const styleObj = style as Style;
+          const stroke = styleObj.getStroke();
+          if (stroke) {
+            const color = stroke.getColor();
+            if (Array.isArray(color)) {
+              const newColor = [...color];
+              newColor[3] = vectorOpacity;
+              stroke.setColor(newColor);
+            }
+          }
+          const fill = styleObj.getFill();
+          if (fill) {
+            const color = fill.getColor();
+            if (Array.isArray(color)) {
+              const newColor = [...color];
+              newColor[3] = vectorOpacity * 0.5;
+              fill.setColor(newColor);
+            }
+          }
         }
       });
     }
@@ -288,7 +316,8 @@ export function useMap({
       drawInteraction.current = null;
     }
 
-    const isDrawing = drawType && ['Point', 'LineString', 'Polygon', 'Rectangle', 'Circle'].includes(drawType);
+    const isDrawing =
+      drawType && ['Point', 'LineString', 'Polygon', 'Rectangle', 'Circle'].includes(drawType);
     selectInteraction.setActive(!isDrawing);
     modifyInteraction.setActive(drawType === 'Edit');
 
@@ -305,29 +334,37 @@ export function useMap({
       drawInteraction.current.on('drawend', (event: DrawEvent) => {
         const feature = event.feature;
         feature.setId(`${drawType}_${Date.now()}`);
-        setFeatures(prev => [...prev, feature]);
+        setFeatures((prev) => [...prev, feature]);
         setTimeout(() => setDrawType(null), 0);
         onFeatureSelect(feature);
       });
 
       activeMap.addInteraction(drawInteraction.current);
     }
-  }, [drawType, setFeatures, setDrawType, onFeatureSelect, vectorSource, selectInteraction, modifyInteraction]);
+  }, [
+    drawType,
+    setFeatures,
+    setDrawType,
+    onFeatureSelect,
+    vectorSource,
+    selectInteraction,
+    modifyInteraction,
+  ]);
 
   useEffect(() => {
     const source = vectorSource;
     if (!source) return;
 
-    const featuresInStateIds = features.map(f => f.getId());
-    
-    source.getFeatures().forEach(f => {
+    const featuresInStateIds = features.map((f) => f.getId());
+
+    source.getFeatures().forEach((f) => {
       const id = f.getId();
       if (id !== undefined && !featuresInStateIds.includes(id)) {
         source.removeFeature(f);
       }
     });
 
-    features.forEach(f => {
+    features.forEach((f) => {
       if (f.getId() && !source.getFeatureById(f.getId()!)) {
         source.addFeature(f);
       }
@@ -339,33 +376,38 @@ export function useMap({
   useEffect(() => {
     const activeMap = mapInstance.current;
     if (!activeMap) return;
-    
+
     const view = activeMap.getView();
     if (!view) return;
-    
+
     const projectionObj = view.getProjection();
     const currentProj = projectionObj ? projectionObj.getCode() : 'EPSG:3857';
-    
+
     if (currentProj !== projection) {
-       const center = view.getCenter();
-       const zoom = view.getZoom();
-       
-       const newCenter = center ? transform(center, currentProj, projection) : [0, 0];
-       
-       activeMap.setView(new View({
-         projection,
-         center: newCenter,
-         zoom: zoom || 2,
-       }));
+      const center = view.getCenter();
+      const zoom = view.getZoom();
+
+      const newCenter = center ? transform(center, currentProj, projection) : [0, 0];
+
+      activeMap.setView(
+        new View({
+          projection,
+          center: newCenter,
+          zoom: zoom || 2,
+        })
+      );
     }
   }, [projection]);
 
-  const result = useMemo(() => ({
-    map,
-    vectorSource,
-    tileLayer,
-    selectInteraction,
-  }), [map, vectorSource, tileLayer, selectInteraction]);
+  const result = useMemo(
+    () => ({
+      map,
+      vectorSource,
+      tileLayer,
+      selectInteraction,
+    }),
+    [map, vectorSource, tileLayer, selectInteraction]
+  );
 
   return result;
 }

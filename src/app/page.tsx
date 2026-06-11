@@ -15,7 +15,16 @@ import { Feature as GeoJSONFeature } from 'geojson';
 import AIAssistant from '@/components/AIAssistant';
 import { SpatialIntentOutput } from '@/ai/flows/spatial-intent';
 
-export type DrawType = 'Point' | 'LineString' | 'Polygon' | 'Rectangle' | 'Circle' | 'Edit' | 'Delete' | 'MeasureDistance' | 'MeasureArea';
+export type DrawType =
+  | 'Point'
+  | 'LineString'
+  | 'Polygon'
+  | 'Rectangle'
+  | 'Circle'
+  | 'Edit'
+  | 'Delete'
+  | 'MeasureDistance'
+  | 'MeasureArea';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
@@ -49,14 +58,14 @@ export default function Home() {
   const [zoomToId, setZoomToId] = useState<string | number | null>(null);
   const [is3d, setIs3d] = useState(false);
 
-  const { 
-    state: geojsonString, 
-    set: setGeojsonString, 
-    undo, 
-    redo, 
-    canUndo, 
+  const {
+    state: geojsonString,
+    set: setGeojsonString,
+    undo,
+    redo,
+    canUndo,
     canRedo,
-    reset: resetHistory
+    reset: resetHistory,
   } = useUndoHistory(defaultGeoJsonString);
 
   const skipFeaturesSync = useRef(false);
@@ -69,10 +78,14 @@ export default function Home() {
       }
       const obj = JSON.parse(str);
       const parsed = format.readFeatures(obj) as Feature<Geometry>[];
-      parsed.forEach((f, i) => { if (!f.getId()) f.setId(`f_sync_${Date.now()}_${i}`); });
+      parsed.forEach((f, i) => {
+        if (!f.getId()) f.setId(`f_sync_${Date.now()}_${i}`);
+      });
       skipFeaturesSync.current = true;
       setFeatures(parsed);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const handleUndo = useCallback(() => {
@@ -95,54 +108,65 @@ export default function Home() {
     setSelectedFeature(null);
   }, []);
 
-  const handleDeleteFeature = useCallback((featureId: string | number | undefined) => {
-    if (featureId) {
-      setFeatures(prev => prev.filter(f => f.getId() !== featureId));
-      if (selectedFeature && selectedFeature.getId() === featureId) {
-        setSelectedFeature(null);
+  const handleDeleteFeature = useCallback(
+    (featureId: string | number | undefined) => {
+      if (featureId) {
+        setFeatures((prev) => prev.filter((f) => f.getId() !== featureId));
+        if (selectedFeature && selectedFeature.getId() === featureId) {
+          setSelectedFeature(null);
+        }
       }
-    }
-  }, [selectedFeature]);
-  
-  const handleFeaturePropertyChange = useCallback((featureId: string | number, key: string, value: unknown) => {
-    setFeatures(prev => {
+    },
+    [selectedFeature]
+  );
+
+  const handleFeaturePropertyChange = useCallback(
+    (featureId: string | number, key: string, value: unknown) => {
+      setFeatures((prev) => {
         const newFeatures = [...prev];
-        const feature = newFeatures.find(f => f.getId() === featureId);
+        const feature = newFeatures.find((f) => f.getId() === featureId);
         if (feature) {
-            if (value === null || value === undefined) {
-              feature.unset(key);
-            } else {
-              feature.set(key, value);
-            }
+          if (value === null || value === undefined) {
+            feature.unset(key);
+          } else {
+            feature.set(key, value);
+          }
         }
         return newFeatures;
-    });
-  }, []);
+      });
+    },
+    []
+  );
 
   const handleFeatureSelect = useCallback((feature: Feature<Geometry> | null) => {
     setSelectedFeature(feature);
   }, []);
 
-  const handleGeojsonChange = useCallback((value: string | undefined) => {
-    const newGeojsonString = value || '';
-    setGeojsonString(newGeojsonString);
-    
-    if (!newGeojsonString.trim() || newGeojsonString.trim() === defaultGeoJsonString) {
-      skipFeaturesSync.current = true;
-      setFeatures([]);
-      return;
-    }
+  const handleGeojsonChange = useCallback(
+    (value: string | undefined) => {
+      const newGeojsonString = value || '';
+      setGeojsonString(newGeojsonString);
 
-    try {
-      const geojson_obj = JSON.parse(newGeojsonString);
-      const featuresFromGeojson = format.readFeatures(geojson_obj) as Feature<Geometry>[];
-      featuresFromGeojson.forEach((f, i) => {
-        if (!f.getId()) f.setId(`feature_editor_${Date.now()}_${i}`);
-      });
-      skipFeaturesSync.current = true;
-      setFeatures(featuresFromGeojson);
-    } catch { /* ignore */ }
-  }, [setGeojsonString]);
+      if (!newGeojsonString.trim() || newGeojsonString.trim() === defaultGeoJsonString) {
+        skipFeaturesSync.current = true;
+        setFeatures([]);
+        return;
+      }
+
+      try {
+        const geojson_obj = JSON.parse(newGeojsonString);
+        const featuresFromGeojson = format.readFeatures(geojson_obj) as Feature<Geometry>[];
+        featuresFromGeojson.forEach((f, i) => {
+          if (!f.getId()) f.setId(`feature_editor_${Date.now()}_${i}`);
+        });
+        skipFeaturesSync.current = true;
+        setFeatures(featuresFromGeojson);
+      } catch {
+        /* ignore */
+      }
+    },
+    [setGeojsonString]
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -178,35 +202,42 @@ export default function Home() {
           updateUrlHash(encoded);
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [features, geojsonString, setGeojsonString, isClient]);
 
-  const handleAIAction = useCallback((action: SpatialIntentOutput) => {
-    if (action.action === 'flyTo') {
-      window.dispatchEvent(new CustomEvent('map:flyto', { detail: action.params }));
-    } else if (action.action === 'setBasemap') {
-      window.dispatchEvent(new CustomEvent('map:setbasemap', { detail: { basemap: action.params?.basemap } }));
-    } else if (action.action === 'buffer') {
-       if (selectedFeature) {
-         const radius = (action.params as { radius?: number })?.radius || 1;
-         const gj = format.writeFeatureObject(selectedFeature);
-         const buffered = GisService.createBuffer(gj as GeoJSONFeature, radius);
-         const bufferedFeature = format.readFeature(buffered);
-         bufferedFeature.setId(`buffer_${Date.now()}`);
-         setFeatures(prev => [...prev, bufferedFeature as Feature<Geometry>]);
-       }
-    }
-  }, [selectedFeature]);
+  const handleAIAction = useCallback(
+    (action: SpatialIntentOutput) => {
+      if (action.action === 'flyTo') {
+        window.dispatchEvent(new CustomEvent('map:flyto', { detail: action.params }));
+      } else if (action.action === 'setBasemap') {
+        window.dispatchEvent(
+          new CustomEvent('map:setbasemap', { detail: { basemap: action.params?.basemap } })
+        );
+      } else if (action.action === 'buffer') {
+        if (selectedFeature) {
+          const radius = (action.params as { radius?: number })?.radius || 1;
+          const gj = format.writeFeatureObject(selectedFeature);
+          const buffered = GisService.createBuffer(gj as GeoJSONFeature, radius);
+          const bufferedFeature = format.readFeature(buffered);
+          bufferedFeature.setId(`buffer_${Date.now()}`);
+          setFeatures((prev) => [...prev, bufferedFeature as Feature<Geometry>]);
+        }
+      }
+    },
+    [selectedFeature]
+  );
 
   const handleToggle3d = useCallback(() => {
-    setIs3d(prev => !prev);
+    setIs3d((prev) => !prev);
   }, []);
 
   if (!isClient) return null;
 
   return (
     <main className="flex h-screen w-screen overflow-hidden bg-background text-foreground selection:bg-accent/20">
-      <Sidebar 
+      <Sidebar
         geojsonString={geojsonString}
         onGeojsonChange={handleGeojsonChange}
         featuresCount={features.length}
@@ -227,7 +258,7 @@ export default function Home() {
         basemapOpacity={basemapOpacity}
         onBasemapOpacityChange={setBasemapOpacity}
       />
-      
+
       <div className="flex-grow relative h-full">
         {isParsing && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm animate-in fade-in duration-500">
@@ -235,10 +266,12 @@ export default function Home() {
               <div className="absolute inset-0 bg-accent/20 blur-3xl animate-pulse rounded-full" />
               <Loader2 className="h-12 w-12 animate-spin text-accent relative z-10" />
             </div>
-            <p className="mt-4 text-sm font-semibold tracking-widest uppercase text-muted-foreground animate-pulse">Processing Geospatial Data</p>
+            <p className="mt-4 text-sm font-semibold tracking-widest uppercase text-muted-foreground animate-pulse">
+              Processing Geospatial Data
+            </p>
           </div>
         )}
-        <MapComponent 
+        <MapComponent
           features={features}
           setFeatures={setFeatures}
           drawType={drawType}
@@ -258,9 +291,11 @@ export default function Home() {
         />
       </div>
 
-      <AIAssistant 
-        onAction={handleAIAction} 
-        featureContext={selectedFeature ? JSON.stringify(format.writeFeatureObject(selectedFeature)) : undefined}
+      <AIAssistant
+        onAction={handleAIAction}
+        featureContext={
+          selectedFeature ? JSON.stringify(format.writeFeatureObject(selectedFeature)) : undefined
+        }
       />
     </main>
   );

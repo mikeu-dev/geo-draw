@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, MouseEvent as ReactMouseEvent } from 'react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Plus, GripVertical } from 'lucide-react';
@@ -20,7 +16,11 @@ const geojsonFormat = new GeoJSON();
 interface FeaturePropertiesPopupProps {
   feature: Feature<Geometry>;
   onDelete: (featureId: string | number | undefined) => void;
-  onPropertyChange: (featureId: string | number, key: string, value: string | number | boolean | null | undefined | object) => void;
+  onPropertyChange: (
+    featureId: string | number,
+    key: string,
+    value: string | number | boolean | null | undefined | object
+  ) => void;
   children: React.ReactNode;
   onOpenChange: (open: boolean) => void;
 }
@@ -29,11 +29,15 @@ const getSanitizedProperties = (feature: Feature<Geometry>) => {
   const props = feature.getProperties();
   // Exclude non-serializable or internal properties from the editor
   delete props.geometry;
-  return Object.entries(props).filter(([, value]) =>
-    typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || value === null || (typeof value === 'object' && value !== null && !Array.isArray(value))
+  return Object.entries(props).filter(
+    ([, value]) =>
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean' ||
+      value === null ||
+      (typeof value === 'object' && value !== null && !Array.isArray(value))
   );
 };
-
 
 export default function FeaturePropertiesPopup({
   feature,
@@ -47,7 +51,6 @@ export default function FeaturePropertiesPopup({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef({ x: 0, y: 0 });
   const popupRef = useRef<HTMLDivElement>(null);
-
 
   // When the feature changes, update the properties and reset position
   useEffect(() => {
@@ -78,7 +81,7 @@ export default function FeaturePropertiesPopup({
     document.body.style.cursor = 'default';
     document.body.style.userSelect = 'auto';
   };
-  
+
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleDragMove);
@@ -92,7 +95,7 @@ export default function FeaturePropertiesPopup({
       window.removeEventListener('mousemove', handleDragMove);
       window.removeEventListener('mouseup', handleDragEnd);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging]);
 
   const handlePropertyKeyChange = (oldKey: string, newKey: string) => {
@@ -104,13 +107,22 @@ export default function FeaturePropertiesPopup({
     onPropertyChange(feature.getId()!, newKey, currentValue); // Set the new key with the old value
 
     // Update local state to reflect the change immediately
-    setProperties(prev => prev.map(([key, value]) => key === oldKey ? [newKey, value] : [key, value]));
+    setProperties((prev) =>
+      prev.map(([key, value]) => (key === oldKey ? [newKey, value] : [key, value]))
+    );
   };
 
-  const handlePropertyValueChange = (key: string, value: string | number | boolean | null | undefined | object) => {
+  const handlePropertyValueChange = (
+    key: string,
+    value: string | number | boolean | null | undefined | object
+  ) => {
     onPropertyChange(feature.getId()!, key, value);
     // Update local state
-    setProperties(prev => prev.map(([propKey, propValue]) => propKey === key ? [propKey, value] : [propKey, propValue]));
+    setProperties((prev) =>
+      prev.map(([propKey, propValue]) =>
+        propKey === key ? [propKey, value] : [propKey, propValue]
+      )
+    );
   };
 
   const handleAddProperty = () => {
@@ -119,17 +131,17 @@ export default function FeaturePropertiesPopup({
     let i = 1;
     const existingKeys = properties.map(([k]) => k);
     while (existingKeys.includes(newKey)) {
-        newKey = `new_property_${i}`;
-        i++;
+      newKey = `new_property_${i}`;
+      i++;
     }
-    
+
     onPropertyChange(feature.getId()!, newKey, '');
-    setProperties(prev => [...prev, [newKey, '']]);
+    setProperties((prev) => [...prev, [newKey, '']]);
   };
 
   const handleRemoveProperty = (keyToRemove: string) => {
     onPropertyChange(feature.getId()!, keyToRemove, undefined); // Unset property in OpenLayers feature
-    setProperties(prev => prev.filter(([key]) => key !== keyToRemove)); // Update local state
+    setProperties((prev) => prev.filter(([key]) => key !== keyToRemove)); // Update local state
   };
 
   const handleAddSimpleStyle = () => {
@@ -137,41 +149,41 @@ export default function FeaturePropertiesPopup({
     const styleProps: Record<string, string | number> = {};
 
     switch (geometryType) {
-        case 'Point':
-        case 'MultiPoint':
-            styleProps['fill'] = '#ff0000';
-            styleProps['stroke'] = '#ffffff';
-            styleProps['stroke-width'] = 2;
-            styleProps['radius'] = 7;
-            break;
-        case 'LineString':
-        case 'MultiLineString':
-            styleProps['stroke'] = '#0000ff';
-            styleProps['stroke-width'] = 3;
-            break;
-        case 'Polygon':
-        case 'MultiPolygon':
-            styleProps['fill'] = 'rgba(0, 0, 255, 0.1)';
-            styleProps['stroke'] = '#0000ff';
-            styleProps['stroke-width'] = 2;
-            break;
-        default:
-            break;
+      case 'Point':
+      case 'MultiPoint':
+        styleProps['fill'] = '#ff0000';
+        styleProps['stroke'] = '#ffffff';
+        styleProps['stroke-width'] = 2;
+        styleProps['radius'] = 7;
+        break;
+      case 'LineString':
+      case 'MultiLineString':
+        styleProps['stroke'] = '#0000ff';
+        styleProps['stroke-width'] = 3;
+        break;
+      case 'Polygon':
+      case 'MultiPolygon':
+        styleProps['fill'] = 'rgba(0, 0, 255, 0.1)';
+        styleProps['stroke'] = '#0000ff';
+        styleProps['stroke-width'] = 2;
+        break;
+      default:
+        break;
     }
 
     const newProperties = [...properties];
     for (const [key, value] of Object.entries(styleProps)) {
-        onPropertyChange(feature.getId()!, key, value);
-        const existingPropIndex = newProperties.findIndex(([pKey]) => pKey === key);
-        if (existingPropIndex > -1) {
-            newProperties[existingPropIndex] = [key, value];
-        } else {
-            newProperties.push([key, value]);
-        }
+      onPropertyChange(feature.getId()!, key, value);
+      const existingPropIndex = newProperties.findIndex(([pKey]) => pKey === key);
+      if (existingPropIndex > -1) {
+        newProperties[existingPropIndex] = [key, value];
+      } else {
+        newProperties.push([key, value]);
+      }
     }
     setProperties(newProperties);
   };
-  
+
   const isColorProperty = (key: string) => ['fill', 'stroke'].includes(key.toLowerCase());
 
   const calculatedAnalysis = (() => {
@@ -186,17 +198,13 @@ export default function FeaturePropertiesPopup({
         const area = GisService.calculateArea(geojson);
         return {
           label: 'Area',
-          value: area > 1000000 
-            ? `${(area / 1000000).toFixed(4)} km²` 
-            : `${area.toFixed(2)} m²`
+          value: area > 1000000 ? `${(area / 1000000).toFixed(4)} km²` : `${area.toFixed(2)} m²`,
         };
       } else if (type === 'LineString' || type === 'MultiLineString') {
         const length = GisService.calculateLength(geojson);
         return {
           label: 'Length',
-          value: length > 1000 
-            ? `${(length / 1000).toFixed(4)} km` 
-            : `${length.toFixed(2)} m`
+          value: length > 1000 ? `${(length / 1000).toFixed(4)} km` : `${length.toFixed(2)} m`,
         };
       }
       return null;
@@ -205,21 +213,19 @@ export default function FeaturePropertiesPopup({
     }
   })();
 
-
-
   return (
     <Popover open={true} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
-        ref={popupRef} 
-        className="w-80 cursor-default" 
-        onOpenAutoFocus={(e) => e.preventDefault()} 
+        ref={popupRef}
+        className="w-80 cursor-default"
+        onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={() => onOpenChange(false)}
         style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
-        >
+      >
         <div className="grid gap-4">
           <div className="space-y-2">
-            <div 
+            <div
               className="flex items-center justify-center cursor-move text-muted-foreground py-2"
               onMouseDown={handleDragStart}
             >
@@ -233,51 +239,63 @@ export default function FeaturePropertiesPopup({
           <div className="grid gap-2 max-h-64 overflow-y-auto pr-2">
             {properties.map(([key, value]) => (
               <div key={key} className="flex items-center gap-2 group">
-                 <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+                <GripVertical className="h-4 w-4 text-muted-foreground/50" />
                 <Input
                   defaultValue={key}
                   className="font-mono text-xs"
                   onBlur={(e) => {
-                      if (e.target.value !== key) {
-                        handlePropertyKeyChange(key, e.target.value)
-                      }
+                    if (e.target.value !== key) {
+                      handlePropertyKeyChange(key, e.target.value);
+                    }
                   }}
                 />
                 {isColorProperty(key) ? (
-                   <div className="relative flex items-center h-10 w-full">
-                     <Input
-                       type="color"
-                       defaultValue={value || '#000000'}
-                       className="absolute inset-0 w-full h-full p-0 border-none appearance-none"
-                       onBlur={(e) => handlePropertyValueChange(key, e.target.value)}
-                       onChange={(e) => handlePropertyValueChange(key, e.target.value)}
-                     />
-                     <div className="w-full text-sm px-3 py-2 pointer-events-none">{value}</div>
-                   </div>
-                ) : (
+                  <div className="relative flex items-center h-10 w-full">
                     <Input
-                      defaultValue={typeof value === 'object' ? JSON.stringify(value) : value}
-                      className="text-xs"
+                      type="color"
+                      defaultValue={value || '#000000'}
+                      className="absolute inset-0 w-full h-full p-0 border-none appearance-none"
                       onBlur={(e) => handlePropertyValueChange(key, e.target.value)}
+                      onChange={(e) => handlePropertyValueChange(key, e.target.value)}
                     />
+                    <div className="w-full text-sm px-3 py-2 pointer-events-none">{value}</div>
+                  </div>
+                ) : (
+                  <Input
+                    defaultValue={typeof value === 'object' ? JSON.stringify(value) : value}
+                    className="text-xs"
+                    onBlur={(e) => handlePropertyValueChange(key, e.target.value)}
+                  />
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => handleRemoveProperty(key)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => handleRemoveProperty(key)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             ))}
           </div>
-           <Button variant="outline" size="sm" onClick={handleAddProperty}>
+          <Button variant="outline" size="sm" onClick={handleAddProperty}>
             <Plus className="h-4 w-4 mr-2" /> Add Property
           </Button>
 
-          <Button variant="link" size="sm" onClick={handleAddSimpleStyle} className="p-0 h-auto justify-start">
+          <Button
+            variant="link"
+            size="sm"
+            onClick={handleAddSimpleStyle}
+            className="p-0 h-auto justify-start"
+          >
             Add simple style
           </Button>
 
           {calculatedAnalysis && (
             <div className="mt-2 p-2 bg-muted rounded-md border border-dashed text-xs">
-              <span className="font-semibold text-muted-foreground mr-1">{calculatedAnalysis.label}:</span>
+              <span className="font-semibold text-muted-foreground mr-1">
+                {calculatedAnalysis.label}:
+              </span>
               <span className="font-mono">{calculatedAnalysis.value}</span>
             </div>
           )}

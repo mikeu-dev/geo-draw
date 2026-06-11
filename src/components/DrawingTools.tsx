@@ -6,18 +6,24 @@ import type { Map } from 'ol';
 import type { DrawType } from '@/app/page';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Spline, Square, Circle, Pointer, Pencil, Trash2, Pentagon, Ruler, Maximize } from 'lucide-react';
+import {
+  MapPin,
+  Spline,
+  Square,
+  Circle,
+  Pointer,
+  Pencil,
+  Trash2,
+  Pentagon,
+  Ruler,
+  Maximize,
+} from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
 import TileLayer from 'ol/layer/Tile';
 import { OSM, XYZ } from 'ol/source';
 import SceneViewSwitcher from './SceneViewSwitcher';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-  } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DrawingToolsProps {
   map: Map | null;
@@ -31,25 +37,35 @@ interface DrawingToolsProps {
   onProjectionChange: (proj: 'EPSG:4326' | 'EPSG:3857') => void;
 }
 
-export default function DrawingTools({ map, drawType, setDrawType, featuresCount, tileLayer, is3d, onToggle3d, projection, onProjectionChange }: DrawingToolsProps) {
+export default function DrawingTools({
+  map,
+  drawType,
+  setDrawType,
+  featuresCount,
+  tileLayer,
+  is3d,
+  onToggle3d,
+  projection,
+  onProjectionChange,
+}: DrawingToolsProps) {
   const controlRef = useRef<HTMLDivElement>(null);
   const customControlRef = useRef<Control | null>(null);
-  
+
   useEffect(() => {
     if (!map || !controlRef.current) return;
 
     if (!customControlRef.current) {
-        customControlRef.current = new Control({
-            element: controlRef.current,
-        });
+      customControlRef.current = new Control({
+        element: controlRef.current,
+      });
     }
-    
+
     const customControl = customControlRef.current;
 
     // Check if control is already added to avoid duplicates
     const isControlAdded = map.getControls().getArray().includes(customControl);
     if (!isControlAdded) {
-        map.addControl(customControl);
+      map.addControl(customControl);
     }
 
     return () => {
@@ -60,154 +76,174 @@ export default function DrawingTools({ map, drawType, setDrawType, featuresCount
       }
     };
   }, [map]);
-  
+
   const handleDrawTypeChange = (type: DrawType) => {
     setDrawType(drawType === type ? null : type);
   };
 
   return (
     <div ref={controlRef} className="drawing-tools ol-control ol-unselectable">
-       <div className='flex flex-col items-center gap-2'>
-        <SceneViewSwitcher 
-          is3d={is3d} 
-          onToggle3d={onToggle3d} 
-          projection={projection} 
-          onProjectionChange={onProjectionChange} 
+      <div className="flex flex-col items-center gap-2">
+        <SceneViewSwitcher
+          is3d={is3d}
+          onToggle3d={onToggle3d}
+          projection={projection}
+          onProjectionChange={onProjectionChange}
         />
         <BasemapSwitcher tileLayer={tileLayer} map={map} />
         <MapScreenshot map={map} />
       </div>
-      <div className='drawing-controls'>
+      <div className="drawing-controls">
         <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Select feature"
-                        pressed={drawType === null}
-                        onPressedChange={() => setDrawType(null)}
-                    >
-                        <Pointer className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Select</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Draw a point"
-                        pressed={drawType === 'Point'}
-                        onPressedChange={() => handleDrawTypeChange('Point')}
-                    >
-                        <MapPin className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Draw Point</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Draw a line"
-                        pressed={drawType === 'LineString'}
-                        onPressedChange={() => handleDrawTypeChange('LineString')}
-                    >
-                        <Spline className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Draw Line</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Draw a polygon"
-                        pressed={drawType === 'Polygon'}
-                        onPressedChange={() => handleDrawTypeChange('Polygon')}
-                    >
-                        <Pentagon className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Draw Polygon</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Draw a rectangle"
-                        pressed={drawType === 'Rectangle'}
-                        onPressedChange={() => handleDrawTypeChange('Rectangle')}
-                    >
-                        <Square className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Draw Rectangle</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Draw a circle"
-                        pressed={drawType === 'Circle'}
-                        onPressedChange={() => handleDrawTypeChange('Circle')}
-                    >
-                        <Circle className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Draw Circle</p></TooltipContent>
-            </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Select feature"
+                pressed={drawType === null}
+                onPressedChange={() => setDrawType(null)}
+              >
+                <Pointer className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Select</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Draw a point"
+                pressed={drawType === 'Point'}
+                onPressedChange={() => handleDrawTypeChange('Point')}
+              >
+                <MapPin className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Draw Point</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Draw a line"
+                pressed={drawType === 'LineString'}
+                onPressedChange={() => handleDrawTypeChange('LineString')}
+              >
+                <Spline className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Draw Line</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Draw a polygon"
+                pressed={drawType === 'Polygon'}
+                onPressedChange={() => handleDrawTypeChange('Polygon')}
+              >
+                <Pentagon className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Draw Polygon</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Draw a rectangle"
+                pressed={drawType === 'Rectangle'}
+                onPressedChange={() => handleDrawTypeChange('Rectangle')}
+              >
+                <Square className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Draw Rectangle</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Draw a circle"
+                pressed={drawType === 'Circle'}
+                onPressedChange={() => handleDrawTypeChange('Circle')}
+              >
+                <Circle className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Draw Circle</p>
+            </TooltipContent>
+          </Tooltip>
 
-            <Separator orientation="horizontal" className="my-1 bg-border" />
-            
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Measure distance"
-                        pressed={drawType === 'MeasureDistance'}
-                        onPressedChange={() => handleDrawTypeChange('MeasureDistance')}
-                    >
-                        <Ruler className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Measure Distance</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Toggle
-                        aria-label="Measure area"
-                        pressed={drawType === 'MeasureArea'}
-                        onPressedChange={() => handleDrawTypeChange('MeasureArea')}
-                    >
-                        <Maximize className="h-4 w-4" />
-                    </Toggle>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Measure Area</p></TooltipContent>
-            </Tooltip>
+          <Separator orientation="horizontal" className="my-1 bg-border" />
 
-            {featuresCount > 0 && (
-                <>
-                <Separator orientation="horizontal" className="my-1 bg-border" />
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Toggle
-                            aria-label="Edit feature"
-                            pressed={drawType === 'Edit'}
-                            onPressedChange={() => handleDrawTypeChange('Edit')}
-                        >
-                            <Pencil className="h-4 w-4" />
-                        </Toggle>
-                    </TooltipTrigger>
-                    <TooltipContent side="left"><p>Edit Feature</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Toggle
-                            aria-label="Delete feature"
-                            pressed={drawType === 'Delete'}
-                            onPressedChange={() => handleDrawTypeChange('Delete')}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Toggle>
-                    </TooltipTrigger>
-                    <TooltipContent side="left"><p>Delete Feature</p></TooltipContent>
-                </Tooltip>
-                </>
-            )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Measure distance"
+                pressed={drawType === 'MeasureDistance'}
+                onPressedChange={() => handleDrawTypeChange('MeasureDistance')}
+              >
+                <Ruler className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Measure Distance</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Measure area"
+                pressed={drawType === 'MeasureArea'}
+                onPressedChange={() => handleDrawTypeChange('MeasureArea')}
+              >
+                <Maximize className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Measure Area</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {featuresCount > 0 && (
+            <>
+              <Separator orientation="horizontal" className="my-1 bg-border" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Toggle
+                    aria-label="Edit feature"
+                    pressed={drawType === 'Edit'}
+                    onPressedChange={() => handleDrawTypeChange('Edit')}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Edit Feature</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Toggle
+                    aria-label="Delete feature"
+                    pressed={drawType === 'Delete'}
+                    onPressedChange={() => handleDrawTypeChange('Delete')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Delete Feature</p>
+                </TooltipContent>
+              </Tooltip>
+            </>
+          )}
         </TooltipProvider>
       </div>
     </div>

@@ -36,10 +36,12 @@ describe('topoJsonDragFormat', () => {
     });
 
     it('should parse valid TopoJSON string correctly', () => {
-      const features = (topoJsonDragFormat as any).readFeatures(validTopoString) as Feature<Geometry>[];
+      const features = (topoJsonDragFormat as any).readFeatures(
+        validTopoString
+      ) as Feature<Geometry>[];
       expect(features).toHaveLength(1);
       expect(features[0].get('id')).toBe(1);
-      
+
       const geometry = features[0].getGeometry();
       expect(geometry).toBeDefined();
       expect(geometry?.getType()).toBe('Point');

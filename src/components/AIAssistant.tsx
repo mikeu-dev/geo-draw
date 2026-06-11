@@ -23,7 +23,7 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setIsOpen(prev => !prev);
+        setIsOpen((prev) => !prev);
       }
       if (e.key === 'Escape' && isOpen) {
         setIsOpen(false);
@@ -45,23 +45,24 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
 
     setIsLoading(true);
     setLastNarrative('Analyzing your request...');
-    
+
     try {
       const result = await processSpatialIntent(query, featureContext);
-      
+
       if (!result.success) {
         if (result.isQuotaExceeded) {
           setLastNarrative('Batas kuota/kredit AI telah habis. Silakan coba beberapa saat lagi.');
           toast({
-            title: "Kuota/Kredit AI Habis",
-            description: "Batas permintaan gratis API Gemini terlampaui. Mohon tunggu sekitar 1 menit sebelum mencoba lagi.",
+            title: 'Kuota/Kredit AI Habis',
+            description:
+              'Batas permintaan gratis API Gemini terlampaui. Mohon tunggu sekitar 1 menit sebelum mencoba lagi.',
             variant: 'destructive',
             duration: 10000,
           });
         } else {
           setLastNarrative(result.error);
           toast({
-            title: "Kesalahan AI",
+            title: 'Kesalahan AI',
             description: result.error,
             variant: 'destructive',
           });
@@ -72,16 +73,18 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
       const spatialAction = result.data;
 
       if (spatialAction.action === 'unknown') {
-        setLastNarrative("I'm not sure how to help with that. Try 'Buffer this by 100m' or 'Fly to Paris'.");
+        setLastNarrative(
+          "I'm not sure how to help with that. Try 'Buffer this by 100m' or 'Fly to Paris'."
+        );
         toast({
-          title: "Unknown Command",
-          description: "Try rephrasing your request.",
+          title: 'Unknown Command',
+          description: 'Try rephrasing your request.',
           variant: 'destructive',
         });
       } else {
         setLastNarrative(spatialAction.narrative);
         onAction(spatialAction);
-        
+
         // Auto-close after a delay to let user read narrative
         setTimeout(() => {
           setQuery('');
@@ -92,8 +95,8 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
     } catch {
       setLastNarrative('Something went wrong. Please try again.');
       toast({
-        title: "AI Error",
-        description: "Failed to process command.",
+        title: 'AI Error',
+        description: 'Failed to process command.',
         variant: 'destructive',
       });
     } finally {
@@ -103,7 +106,7 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
 
   if (!isOpen) {
     return (
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-20 right-6 z-30 flex items-center gap-2.5 px-4 py-2.5 rounded-full glass-pill shadow-2xl hover:scale-105 hover:shadow-accent/40 transition-all border border-white/10 bg-accent/15 group active:scale-95"
         title="Ask Geovara Intelligence (Ctrl+K)"
@@ -112,7 +115,9 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
           <div className="absolute inset-0 bg-accent/40 blur-md rounded-full animate-pulse group-hover:bg-accent/60" />
           <Sparkles className="h-5 w-5 text-accent relative z-10 animate-pulse group-hover:scale-110 transition-transform" />
         </div>
-        <span className="text-xs font-bold tracking-wide text-foreground/90 group-hover:text-foreground">Ask Geovara</span>
+        <span className="text-xs font-bold tracking-wide text-foreground/90 group-hover:text-foreground">
+          Ask Geovara
+        </span>
         <div className="flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded-md bg-white/10 border border-white/10">
           <Command className="h-2.5 w-2.5 text-muted-foreground" />
           <span className="text-[9px] font-mono font-bold text-muted-foreground italic">K</span>
@@ -123,22 +128,20 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 bg-background/40 backdrop-blur-md animate-in fade-in duration-300">
-      <div 
-        className="w-full max-w-2xl overflow-hidden rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] border border-white/10 bg-card/80 backdrop-blur-2xl animate-in slide-in-from-top-8 duration-500"
-      >
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] border border-white/10 bg-card/80 backdrop-blur-2xl animate-in slide-in-from-top-8 duration-500">
         <div className="relative">
           <form onSubmit={handleSubmit} className="flex items-center p-5 gap-4">
             <div className="flex-shrink-0">
               {isLoading ? (
                 <div className="relative">
-                   <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full animate-pulse" />
-                   <Loader2 className="h-6 w-6 animate-spin text-accent relative z-10" />
+                  <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full animate-pulse" />
+                  <Loader2 className="h-6 w-6 animate-spin text-accent relative z-10" />
                 </div>
               ) : (
                 <Sparkles className="h-6 w-6 text-accent" />
               )}
             </div>
-            
+
             <input
               ref={inputRef}
               type="text"
@@ -154,8 +157,8 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
                 <Command className="h-3 w-3" />
                 <span>Enter</span>
               </div>
-              
-              <button 
+
+              <button
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
@@ -170,12 +173,14 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
             <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="pt-4 border-t border-white/5 flex items-start gap-3">
                 <div className="mt-1 p-1 rounded bg-accent/10 border border-accent/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
                 </div>
                 <p className="text-sm text-foreground/80 leading-relaxed italic">
                   {lastNarrative || (
                     <span className="flex items-center gap-1">
-                      Thinking<span className="animate-bounce">.</span><span className="animate-bounce [animation-delay:0.2s]">.</span><span className="animate-bounce [animation-delay:0.4s]">.</span>
+                      Thinking<span className="animate-bounce">.</span>
+                      <span className="animate-bounce [animation-delay:0.2s]">.</span>
+                      <span className="animate-bounce [animation-delay:0.4s]">.</span>
                     </span>
                   )}
                 </p>
@@ -186,18 +191,22 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
 
         {/* Suggestions / Shortcuts Footer */}
         {!isLoading && !lastNarrative && (
-           <div className="bg-white/5 px-5 py-3 flex flex-wrap gap-2">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold self-center mr-2">Quick Commands:</span>
-              {['Fly to Jakarta', 'Buffer all', 'Simplify polygons', 'Switch to satellite'].map(cmd => (
-                <button 
+          <div className="bg-white/5 px-5 py-3 flex flex-wrap gap-2">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold self-center mr-2">
+              Quick Commands:
+            </span>
+            {['Fly to Jakarta', 'Buffer all', 'Simplify polygons', 'Switch to satellite'].map(
+              (cmd) => (
+                <button
                   key={cmd}
                   onClick={() => setQuery(cmd)}
                   className="text-xs px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-accent/10 hover:border-accent/30 transition-all text-muted-foreground hover:text-accent-foreground"
                 >
                   {cmd}
                 </button>
-              ))}
-           </div>
+              )
+            )}
+          </div>
         )}
       </div>
     </div>

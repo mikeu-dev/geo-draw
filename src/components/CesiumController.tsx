@@ -39,7 +39,7 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
       const OLCesium = win.olcs?.OLCesium;
 
       if (!Cesium || !OLCesium) {
-        console.warn("Cesium or OLCesium not yet loaded from CDN");
+        console.warn('Cesium or OLCesium not yet loaded from CDN');
         return;
       }
 
@@ -54,25 +54,28 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
         const terrainProvider = await Cesium.createWorldTerrainAsync();
         scene.terrainProvider = terrainProvider;
 
-        const tileset = await Cesium.Cesium3DTileset.fromUrl('https://assets.cesium.com/1/ion/default/v1/354307/tileset.json?assetId=354307', {
-          skipLevelOfDetail: true,
-          cullWithChildrenBounds: false,
-        });
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(
+          'https://assets.cesium.com/1/ion/default/v1/354307/tileset.json?assetId=354307',
+          {
+            skipLevelOfDetail: true,
+            cullWithChildrenBounds: false,
+          }
+        );
         scene.primitives.add(tileset);
 
         isInitialized.current = true;
         ol3d.current.setEnabled(enabled);
       } catch (error) {
-        console.error("Error initializing OLCesium/Cesium:", error);
+        console.error('Error initializing OLCesium/Cesium:', error);
       }
     };
 
     const interval = setInterval(() => {
-        const win = window as unknown as WindowWithCesium;
-        if (win.Cesium && win.olcs?.OLCesium) {
-            initCesium();
-            clearInterval(interval);
-        }
+      const win = window as unknown as WindowWithCesium;
+      if (win.Cesium && win.olcs?.OLCesium) {
+        initCesium();
+        clearInterval(interval);
+      }
     }, 500);
 
     return () => clearInterval(interval);
@@ -80,11 +83,11 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
 
   useEffect(() => {
     if (isInitialized.current && ol3d.current) {
-        try {
-          ol3d.current.setEnabled(enabled);
-        } catch (error) {
-          console.error("Error toggling Cesium:", error);
-        }
+      try {
+        ol3d.current.setEnabled(enabled);
+      } catch (error) {
+        console.error('Error toggling Cesium:', error);
+      }
     }
   }, [enabled]);
 

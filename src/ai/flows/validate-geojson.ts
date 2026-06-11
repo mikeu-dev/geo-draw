@@ -8,8 +8,8 @@
  * - ValidateGeoJSONOutput - The return type for the validateGeoJSON function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
 const ValidateGeoJSONInputSchema = z.string().describe('The GeoJSON string to validate.');
 export type ValidateGeoJSONInput = z.infer<typeof ValidateGeoJSONInputSchema>;
@@ -26,8 +26,8 @@ export async function validateGeoJSON(input: ValidateGeoJSONInput): Promise<Vali
 
 const validateGeoJSONPrompt = ai.definePrompt({
   name: 'validateGeoJSONPrompt',
-  input: {schema: ValidateGeoJSONInputSchema },
-  output: {schema: ValidateGeoJSONOutputSchema},
+  input: { schema: ValidateGeoJSONInputSchema },
+  output: { schema: ValidateGeoJSONOutputSchema },
   prompt: `You are a strict GeoJSON validator. Your job is to validate the provided text against the GeoJSON specification (RFC 7946).
 
 Here is the GeoJSON to validate:
@@ -46,8 +46,8 @@ const validateGeoJSONFlow = ai.defineFlow(
     inputSchema: ValidateGeoJSONInputSchema,
     outputSchema: ValidateGeoJSONOutputSchema,
   },
-  async input => {
-    const {output} = await validateGeoJSONPrompt(input);
+  async (input) => {
+    const { output } = await validateGeoJSONPrompt(input);
     return output!;
   }
 );

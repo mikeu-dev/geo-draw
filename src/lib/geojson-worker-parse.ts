@@ -8,9 +8,7 @@ export function shouldParseGeoJsonInWorker(sourceLength: number): boolean {
   return typeof Worker !== 'undefined' && sourceLength >= PARSE_WORKER_THRESHOLD;
 }
 
-type WorkerResult =
-  | { success: true; data: unknown }
-  | { success: false; error: string };
+type WorkerResult = { success: true; data: unknown } | { success: false; error: string };
 
 export function parseGeoJsonStringInWorker(geojsonString: string): Promise<unknown> {
   return new Promise((resolve, reject) => {

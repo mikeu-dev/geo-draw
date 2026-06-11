@@ -17,7 +17,15 @@ describe('GisService', () => {
     properties: { id: 1 },
     geometry: {
       type: 'Polygon',
-      coordinates: [[[0, 0], [2, 0], [2, 2], [0, 2], [0, 0]]],
+      coordinates: [
+        [
+          [0, 0],
+          [2, 0],
+          [2, 2],
+          [0, 2],
+          [0, 0],
+        ],
+      ],
     },
   };
 
@@ -26,7 +34,15 @@ describe('GisService', () => {
     properties: { id: 2 },
     geometry: {
       type: 'Polygon',
-      coordinates: [[[1, 1], [3, 1], [3, 3], [1, 3], [1, 1]]],
+      coordinates: [
+        [
+          [1, 1],
+          [3, 1],
+          [3, 3],
+          [1, 3],
+          [1, 1],
+        ],
+      ],
     },
   };
 
@@ -35,7 +51,15 @@ describe('GisService', () => {
     properties: { id: 3 },
     geometry: {
       type: 'Polygon',
-      coordinates: [[[4, 4], [6, 4], [6, 6], [4, 6], [4, 4]]],
+      coordinates: [
+        [
+          [4, 4],
+          [6, 4],
+          [6, 6],
+          [4, 6],
+          [4, 4],
+        ],
+      ],
     },
   };
 
@@ -102,7 +126,9 @@ describe('GisService', () => {
 
     it('should throw error when converting invalid TopoJSON', () => {
       expect(() => GisService.fromTopoJSON({})).toThrow('Invalid TopoJSON: missing objects');
-      expect(() => GisService.fromTopoJSON({ objects: {} })).toThrow('Invalid TopoJSON: empty objects');
+      expect(() => GisService.fromTopoJSON({ objects: {} })).toThrow(
+        'Invalid TopoJSON: empty objects'
+      );
     });
   });
 

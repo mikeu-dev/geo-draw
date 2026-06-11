@@ -8,8 +8,8 @@
  * - GenerateFeatureDescriptionOutput - The return type for the generateFeatureDescription function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
 
 const GenerateFeatureDescriptionInputSchema = z.object({
   feature: z
@@ -20,9 +20,7 @@ const GenerateFeatureDescriptionInputSchema = z.object({
     })
     .describe('The GeoJSON feature to describe.'),
 });
-export type GenerateFeatureDescriptionInput = z.infer<
-  typeof GenerateFeatureDescriptionInputSchema
->;
+export type GenerateFeatureDescriptionInput = z.infer<typeof GenerateFeatureDescriptionInputSchema>;
 
 const GenerateFeatureDescriptionOutputSchema = z.object({
   description: z.string().describe('A brief description of the feature.'),
@@ -39,8 +37,8 @@ export async function generateFeatureDescription(
 
 const prompt = ai.definePrompt({
   name: 'generateFeatureDescriptionPrompt',
-  input: {schema: GenerateFeatureDescriptionInputSchema},
-  output: {schema: GenerateFeatureDescriptionOutputSchema},
+  input: { schema: GenerateFeatureDescriptionInputSchema },
+  output: { schema: GenerateFeatureDescriptionOutputSchema },
   prompt: `You are a helpful assistant that generates a concise description of a GeoJSON feature.
 
   Given the following GeoJSON feature, create a short, informative description of what it represents.
@@ -57,8 +55,8 @@ const generateFeatureDescriptionFlow = ai.defineFlow(
     inputSchema: GenerateFeatureDescriptionInputSchema,
     outputSchema: GenerateFeatureDescriptionOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
   }
 );

@@ -65,42 +65,45 @@ export default function LocationSearch({ map }: LocationSearchProps) {
     }
   }, []);
 
-  const handleChange = useCallback((value: string) => {
-    setQuery(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchLocation(value), 400);
-  }, [searchLocation]);
+  const handleChange = useCallback(
+    (value: string) => {
+      setQuery(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => searchLocation(value), 400);
+    },
+    [searchLocation]
+  );
 
-  const handleSelect = useCallback((result: SearchResult) => {
-    if (!map) return;
-    
-    const lon = parseFloat(result.lon);
-    const lat = parseFloat(result.lat);
-    const center = fromLonLat([lon, lat]);
-    
-    // If bounding box available, use fit; otherwise fly to point
-    if (result.boundingbox) {
-      const [south, north, west, east] = result.boundingbox.map(Number);
-      const extent = [
-        ...fromLonLat([west, south]),
-        ...fromLonLat([east, north]),
-      ];
-      map.getView().fit(extent as [number, number, number, number], {
-        padding: [50, 50, 50, 50],
-        duration: 1200,
-        maxZoom: 18,
-      });
-    } else {
-      map.getView().animate({
-        center,
-        zoom: 14,
-        duration: 1200,
-      });
-    }
+  const handleSelect = useCallback(
+    (result: SearchResult) => {
+      if (!map) return;
 
-    setQuery(result.display_name.split(',')[0]);
-    setIsOpen(false);
-  }, [map]);
+      const lon = parseFloat(result.lon);
+      const lat = parseFloat(result.lat);
+      const center = fromLonLat([lon, lat]);
+
+      // If bounding box available, use fit; otherwise fly to point
+      if (result.boundingbox) {
+        const [south, north, west, east] = result.boundingbox.map(Number);
+        const extent = [...fromLonLat([west, south]), ...fromLonLat([east, north])];
+        map.getView().fit(extent as [number, number, number, number], {
+          padding: [50, 50, 50, 50],
+          duration: 1200,
+          maxZoom: 18,
+        });
+      } else {
+        map.getView().animate({
+          center,
+          zoom: 14,
+          duration: 1200,
+        });
+      }
+
+      setQuery(result.display_name.split(',')[0]);
+      setIsOpen(false);
+    },
+    [map]
+  );
 
   const handleClear = useCallback(() => {
     setQuery('');
@@ -109,13 +112,18 @@ export default function LocationSearch({ map }: LocationSearchProps) {
   }, []);
 
   return (
-    <div ref={containerRef} className="absolute top-[0.75rem] left-[3.25rem] z-40 w-[calc(100vw-7.5rem)] sm:w-72 max-w-72">
-      <div className={`
+    <div
+      ref={containerRef}
+      className="absolute top-[0.75rem] left-[3.25rem] z-40 w-[calc(100vw-7.5rem)] sm:w-72 max-w-72"
+    >
+      <div
+        className={`
         flex items-center gap-2 px-3 py-2 rounded-lg
         bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))]
         transition-all duration-200
         ${isFocused ? 'ring-2 ring-accent/40 shadow-lg' : 'shadow-sm'}
-      `}>
+      `}
+      >
         <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <input
           type="text"
@@ -125,13 +133,19 @@ export default function LocationSearch({ map }: LocationSearchProps) {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') { handleClear(); (e.target as HTMLInputElement).blur(); }
+            if (e.key === 'Escape') {
+              handleClear();
+              (e.target as HTMLInputElement).blur();
+            }
           }}
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
         />
         {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
         {query && !isLoading && (
-          <button onClick={handleClear} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={handleClear}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <X className="h-3.5 w-3.5" />
           </button>
         )}

@@ -37,7 +37,12 @@ export const topoJsonDragFormat = {
       } catch {
         return [];
       }
-    } else if (source && typeof source === 'object' && !('nodeType' in source) && isTopoTopology(source)) {
+    } else if (
+      source &&
+      typeof source === 'object' &&
+      !('nodeType' in source) &&
+      isTopoTopology(source)
+    ) {
       parsed = source;
     } else {
       return [];

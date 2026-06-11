@@ -64,7 +64,7 @@ export default function MapComponent({
     const fill = feature.get('fill') || 'rgba(147, 51, 234, 0.2)';
     const stroke = feature.get('stroke') || '#9333ea';
     const strokeWidth = feature.get('strokeWidth') || 3;
-    
+
     return new Style({
       fill: new Fill({ color: fill }),
       stroke: new Stroke({ color: stroke, width: strokeWidth }),
@@ -104,12 +104,13 @@ export default function MapComponent({
         target?.tagName === 'INPUT' ||
         target?.tagName === 'TEXTAREA' ||
         target?.closest('.monaco-editor')
-      ) return;
+      )
+        return;
 
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selectedFeature) {
           onDeleteFeature(selectedFeature.getId());
-          toast({ title: "Feature deleted", description: `ID: ${selectedFeature.getId()}` });
+          toast({ title: 'Feature deleted', description: `ID: ${selectedFeature.getId()}` });
         }
       }
     };
@@ -123,31 +124,34 @@ export default function MapComponent({
 
   useEffect(() => {
     if (!map || !selectedFeature || !isPopupOpen) return;
-    const overlay = map.getOverlays().getArray().find(o => o.getElement() === popupElement.current);
+    const overlay = map
+      .getOverlays()
+      .getArray()
+      .find((o) => o.getElement() === popupElement.current);
     if (overlay) {
       const geometry = selectedFeature.getGeometry();
       if (geometry) {
         let coordinate: number[] | undefined;
-        
+
         // Use a more specific interface for cross-geometry coordinate extraction
         interface GeometryWithCenter {
           getInteriorPoint?: () => { getCoordinates: () => number[] };
           getCenter?: () => number[];
           getCoordinates?: () => number[] | number[][] | number[][][];
         }
-        
+
         const geom = geometry as unknown as GeometryWithCenter;
-        
+
         if (typeof geom.getInteriorPoint === 'function') {
           const interiorPoint = geom.getInteriorPoint();
           if (interiorPoint) coordinate = interiorPoint.getCoordinates();
         } else if (typeof geom.getCenter === 'function') {
-           coordinate = geom.getCenter();
+          coordinate = geom.getCenter();
         } else if (typeof geom.getCoordinates === 'function') {
-           const coords = geom.getCoordinates();
-           if (coords) {
-             coordinate = Array.isArray(coords[0]) ? (coords[0] as number[]) : (coords as number[]);
-           }
+          const coords = geom.getCoordinates();
+          if (coords) {
+            coordinate = Array.isArray(coords[0]) ? (coords[0] as number[]) : (coords as number[]);
+          }
         }
         if (coordinate) overlay.setPosition(coordinate);
       }
@@ -156,9 +160,9 @@ export default function MapComponent({
 
   useEffect(() => {
     if (selectedFeature) {
-       setTimeout(() => setIsPopupOpen(true), 0);
+      setTimeout(() => setIsPopupOpen(true), 0);
     } else {
-       setTimeout(() => setIsPopupOpen(false), 0);
+      setTimeout(() => setIsPopupOpen(false), 0);
     }
   }, [selectedFeature]);
 
@@ -175,7 +179,11 @@ export default function MapComponent({
     if (vectorSource) {
       vectorSource.getFeatures().forEach((f: Feature<Geometry>) => {
         const style = f.getStyle();
-        if (style && !Array.isArray(style) && typeof (style as unknown as { getStroke: () => unknown }).getStroke === 'function') {
+        if (
+          style &&
+          !Array.isArray(style) &&
+          typeof (style as unknown as { getStroke: () => unknown }).getStroke === 'function'
+        ) {
           const styleObj = style as Style;
           const stroke = styleObj.getStroke();
           if (stroke) {
@@ -219,11 +227,11 @@ export default function MapComponent({
   return (
     <div className="w-full h-full relative group">
       <div ref={mapElement} className="w-full h-full outline-none" />
-      
+
       <LocationSearch map={map} />
       <div className="absolute top-[0.75rem] right-[0.75rem] flex flex-col gap-3 z-30 items-end">
         <Compass map={map} />
-        <DrawingTools 
+        <DrawingTools
           map={map}
           drawType={drawType}
           setDrawType={setDrawType}
@@ -237,7 +245,10 @@ export default function MapComponent({
       </div>
 
       <div className="absolute bottom-12 right-[0.75rem] flex flex-col gap-2 items-end z-30">
-        <MeasurementController map={map} activeType={drawType as 'MeasureArea' | 'MeasureDistance' | null} />
+        <MeasurementController
+          map={map}
+          activeType={drawType as 'MeasureArea' | 'MeasureDistance' | null}
+        />
         <CesiumController map={map} enabled={is3d} />
       </div>
 
@@ -247,7 +258,9 @@ export default function MapComponent({
         {isPopupOpen && selectedFeature && (
           <FeaturePropertiesPopup
             feature={selectedFeature}
-            onOpenChange={(open: boolean) => { if(!open) setTimeout(() => setIsPopupOpen(false), 0); }}
+            onOpenChange={(open: boolean) => {
+              if (!open) setTimeout(() => setIsPopupOpen(false), 0);
+            }}
             onPropertyChange={onFeaturePropertyChange}
             onDelete={onDeleteFeature}
           >

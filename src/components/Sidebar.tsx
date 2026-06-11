@@ -10,20 +10,29 @@ import {
   MenubarMenu,
   MenubarSeparator,
   MenubarTrigger,
-} from "@/components/ui/menubar"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from '@/components/ui/menubar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Copy, Trash2, CheckCircle, AlertTriangle, Loader2, 
-  FileDown, Sparkles, Sun, Moon, Check, 
-  Map as MapIcon, Crosshair, Share2, Undo2, Redo2,
-  Layers, Eye, EyeOff
+import {
+  Copy,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+  FileDown,
+  Sparkles,
+  Sun,
+  Moon,
+  Check,
+  Map as MapIcon,
+  Crosshair,
+  Share2,
+  Undo2,
+  Redo2,
+  Layers,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { validateGeoJSON } from '@/ai/flows/validate-geojson';
@@ -40,10 +49,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import HelpContent from './HelpContent';
 import FileDropZone from './FileDropZone';
 import { getArea, getLength } from 'ol/sphere';
-import {
-  parseGeoJsonStringInWorker,
-  shouldParseGeoJsonInWorker,
-} from '@/lib/geojson-worker-parse';
+import { parseGeoJsonStringInWorker, shouldParseGeoJsonInWorker } from '@/lib/geojson-worker-parse';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -82,10 +88,10 @@ const kmlFormat = new KML({
   showPointNames: true,
 });
 
-export default function Sidebar({ 
-  geojsonString, 
-  onGeojsonChange, 
-  featuresCount, 
+export default function Sidebar({
+  geojsonString,
+  onGeojsonChange,
+  featuresCount,
   onClear,
   undo,
   redo,
@@ -104,7 +110,9 @@ export default function Sidebar({
   onBasemapOpacityChange,
 }: SidebarProps) {
   const { toast } = useToast();
-  const [validationStatus, setValidationStatus] = useState<'idle' | 'loading' | 'valid' | 'invalid'>('idle');
+  const [validationStatus, setValidationStatus] = useState<
+    'idle' | 'loading' | 'valid' | 'invalid'
+  >('idle');
   const [validationFeedback, setValidationFeedback] = useState('');
   const [theme, setTheme] = useState('light');
   const [isCopied, setIsCopied] = useState(false);
@@ -147,27 +155,30 @@ export default function Sidebar({
       });
       return;
     }
-    navigator.clipboard.writeText(geojsonString).then(() => {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-      toast({
-        title: 'Copied to clipboard!',
-      });
-    }, (err) => {
-      console.error('Could not copy text: ', err);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to copy',
-        description: 'Could not copy GeoJSON to clipboard.',
-      });
-    });
+    navigator.clipboard.writeText(geojsonString).then(
+      () => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+        toast({
+          title: 'Copied to clipboard!',
+        });
+      },
+      (err) => {
+        console.error('Could not copy text: ', err);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to copy',
+          description: 'Could not copy GeoJSON to clipboard.',
+        });
+      }
+    );
   };
 
   const handleBuffer = () => {
     if (!geojsonString) return;
     const radius = prompt('Enter buffer radius in kilometers:', '1');
     if (radius === null) return;
-    
+
     const r = parseFloat(radius);
     if (isNaN(r)) {
       toast({ title: 'Invalid radius', variant: 'destructive' });
@@ -177,28 +188,28 @@ export default function Sidebar({
     try {
       const geojson = JSON.parse(geojsonString) as FeatureCollection;
       const bufferedFeatures: GeoJSONFeature[] = [];
-      
-      geojson.features.forEach(feature => {
+
+      geojson.features.forEach((feature) => {
         const buffered = GisService.createBuffer(feature as GeoJSONFeature, r);
-        buffered.properties = { 
-          ...feature.properties, 
-          type: 'buffer', 
+        buffered.properties = {
+          ...feature.properties,
+          type: 'buffer',
           parent_id: feature.id || 'unknown',
-          buffer_radius: r 
+          buffer_radius: r,
         };
         bufferedFeatures.push(buffered as GeoJSONFeature);
       });
 
       const newGeojson = {
         ...geojson,
-        features: [...geojson.features, ...bufferedFeatures]
+        features: [...geojson.features, ...bufferedFeatures],
       };
-      
+
       onGeojsonChange(JSON.stringify(newGeojson, null, 2));
       toast({ title: `Created ${bufferedFeatures.length} buffer(s)` });
     } catch (error) {
-       console.error('Buffer error:', error);
-       toast({ title: 'Analysis failed', variant: 'destructive' });
+      console.error('Buffer error:', error);
+      toast({ title: 'Analysis failed', variant: 'destructive' });
     }
   };
 
@@ -208,17 +219,17 @@ export default function Sidebar({
       const geojson = JSON.parse(geojsonString) as FeatureCollection;
       const centroid = GisService.calculateCentroid(geojson);
       centroid.properties = { type: 'centroid', generated_at: new Date().toISOString() };
-      
+
       const newGeojson = {
         ...geojson,
-        features: [...geojson.features, centroid as GeoJSONFeature]
+        features: [...geojson.features, centroid as GeoJSONFeature],
       };
-      
+
       onGeojsonChange(JSON.stringify(newGeojson, null, 2));
       toast({ title: 'Centroid calculated' });
     } catch (error) {
-       console.error('Centroid error:', error);
-       toast({ title: 'Analysis failed', variant: 'destructive' });
+      console.error('Centroid error:', error);
+      toast({ title: 'Analysis failed', variant: 'destructive' });
     }
   };
 
@@ -226,7 +237,7 @@ export default function Sidebar({
     if (!geojsonString) return;
     const tolerance = prompt('Enter simplification tolerance (e.g. 0.01):', '0.01');
     if (tolerance === null) return;
-    
+
     const t = parseFloat(tolerance);
     if (isNaN(t)) {
       toast({ title: 'Invalid tolerance', variant: 'destructive' });
@@ -235,7 +246,7 @@ export default function Sidebar({
 
     try {
       const geojson = JSON.parse(geojsonString) as FeatureCollection;
-      const simplifiedFeatures = geojson.features.map(f => {
+      const simplifiedFeatures = geojson.features.map((f) => {
         const simplified = GisService.simplifyGeometry(f as GeoJSONFeature, t);
         return { ...simplified, properties: { ...f.properties, simplified: true, tolerance: t } };
       });
@@ -252,8 +263,10 @@ export default function Sidebar({
     if (!geojsonString) return;
     try {
       const geojson = JSON.parse(geojsonString) as FeatureCollection;
-      const polygons = geojson.features.filter(f => f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon');
-      
+      const polygons = geojson.features.filter(
+        (f) => f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'
+      );
+
       if (polygons.length < 2) {
         toast({ title: 'Need at least 2 polygons to union', variant: 'destructive' });
         return;
@@ -262,7 +275,9 @@ export default function Sidebar({
       const unioned = GisService.unionFeatures(polygons as GeoJSONFeature[]);
       if (unioned) {
         unioned.properties = { type: 'union_result', generated_at: new Date().toISOString() };
-        const otherFeatures = geojson.features.filter(f => f.geometry.type !== 'Polygon' && f.geometry.type !== 'MultiPolygon');
+        const otherFeatures = geojson.features.filter(
+          (f) => f.geometry.type !== 'Polygon' && f.geometry.type !== 'MultiPolygon'
+        );
         const newGeojson = { ...geojson, features: [...otherFeatures, unioned as GeoJSONFeature] };
         onGeojsonChange(JSON.stringify(newGeojson, null, 2));
         toast({ title: 'Polygons unioned successfully' });
@@ -273,20 +288,23 @@ export default function Sidebar({
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      setIsLinkCopied(true);
-      setTimeout(() => setIsLinkCopied(false), 2000);
-      toast({
-        title: 'Shareable link copied!',
-        description: 'Anyone with this link can view your map.',
-      });
-    }, (err) => {
-      console.error('Could not copy link: ', err);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to copy link',
-      });
-    });
+    navigator.clipboard.writeText(window.location.href).then(
+      () => {
+        setIsLinkCopied(true);
+        setTimeout(() => setIsLinkCopied(false), 2000);
+        toast({
+          title: 'Shareable link copied!',
+          description: 'Anyone with this link can view your map.',
+        });
+      },
+      (err) => {
+        console.error('Could not copy link: ', err);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to copy link',
+        });
+      }
+    );
   };
 
   const handleValidate = async () => {
@@ -308,7 +326,7 @@ export default function Sidebar({
         title: result.isValid ? 'Validation Successful' : 'Validation Failed',
         description: result.feedback,
         variant: result.isValid ? 'default' : 'destructive',
-        duration: 9000
+        duration: 9000,
       });
     } catch (error) {
       console.error('Validation error:', error);
@@ -397,15 +415,30 @@ export default function Sidebar({
       toast({ title: `Successfully downloaded ${filename}` });
     } catch (error) {
       console.error('Error during download:', error);
-      toast({ title: 'Download failed', description: 'Could not generate file.', variant: 'destructive' });
+      toast({
+        title: 'Download failed',
+        description: 'Could not generate file.',
+        variant: 'destructive',
+      });
     }
   };
 
   return (
     <aside className="w-full md:w-[350px] lg:w-[400px] flex-shrink-0 flex flex-col border-r border-border h-full overflow-y-auto sidebar-panel">
       <div className="p-4 border-b border-border animate-slide-in-left">
-        <h1 className="text-2xl font-bold tracking-tight" style={{background: 'linear-gradient(135deg, hsl(173, 58%, 39%), hsl(210, 70%, 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>Geovara</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Professional geospatial analysis toolkit</p>
+        <h1
+          className="text-2xl font-bold tracking-tight"
+          style={{
+            background: 'linear-gradient(135deg, hsl(173, 58%, 39%), hsl(210, 70%, 50%))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          Geovara
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Professional geospatial analysis toolkit
+        </p>
       </div>
       <div className="flex flex-col flex-grow p-4 min-h-0">
         <Card className="flex flex-col flex-grow">
@@ -417,7 +450,11 @@ export default function Sidebar({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <MenubarTrigger className="w-9 h-9" onClick={handleThemeToggle}>
-                          {theme === 'light' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                          {theme === 'light' ? (
+                            <Sun className="h-4 w-4" />
+                          ) : (
+                            <Moon className="h-4 w-4" />
+                          )}
                         </MenubarTrigger>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -457,8 +494,16 @@ export default function Sidebar({
                   <MenubarMenu>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <MenubarTrigger className="w-9 h-9" disabled={!geojsonString} onClick={handleValidate}>
-                          {validationStatus === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                        <MenubarTrigger
+                          className="w-9 h-9"
+                          disabled={!geojsonString}
+                          onClick={handleValidate}
+                        >
+                          {validationStatus === 'loading' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
                         </MenubarTrigger>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -471,7 +516,11 @@ export default function Sidebar({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <MenubarTrigger className="w-9 h-9" onClick={handleCopyLink}>
-                          {isLinkCopied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+                          {isLinkCopied ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Share2 className="h-4 w-4" />
+                          )}
                         </MenubarTrigger>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -492,21 +541,21 @@ export default function Sidebar({
                     </Tooltip>
                     <MenubarContent>
                       <MenubarItem onClick={handleBuffer} className="flex items-center gap-2">
-                         <div className="w-4 h-4 rounded-full border-2 border-primary" />
-                         Buffer Features
+                        <div className="w-4 h-4 rounded-full border-2 border-primary" />
+                        Buffer Features
                       </MenubarItem>
                       <MenubarItem onClick={handleCentroid} className="flex items-center gap-2">
-                         <MapIcon className="w-4 h-4" />
-                         Calculate Centroid
+                        <MapIcon className="w-4 h-4" />
+                        Calculate Centroid
                       </MenubarItem>
                       <MenubarSeparator />
                       <MenubarItem onClick={handleSimplify} className="flex items-center gap-2">
-                         <Sparkles className="w-4 h-4" />
-                         Simplify Geometry
+                        <Sparkles className="w-4 h-4" />
+                        Simplify Geometry
                       </MenubarItem>
                       <MenubarItem onClick={handleUnion} className="flex items-center gap-2">
-                         <Copy className="w-4 h-4" />
-                         Union All Polygons
+                        <Copy className="w-4 h-4" />
+                        Union All Polygons
                       </MenubarItem>
                     </MenubarContent>
                   </MenubarMenu>
@@ -529,12 +578,8 @@ export default function Sidebar({
                       <MenubarItem onClick={() => handleDownload('topojson')}>
                         Save as TopoJSON
                       </MenubarItem>
-                      <MenubarItem onClick={() => handleDownload('kml')}>
-                        Save as KML
-                      </MenubarItem>
-                      <MenubarItem onClick={() => handleDownload('kmz')}>
-                        Save as KMZ
-                      </MenubarItem>
+                      <MenubarItem onClick={() => handleDownload('kml')}>Save as KML</MenubarItem>
+                      <MenubarItem onClick={() => handleDownload('kmz')}>Save as KMZ</MenubarItem>
                     </MenubarContent>
                   </MenubarMenu>
                 </div>
@@ -543,12 +588,23 @@ export default function Sidebar({
 
             <Tabs defaultValue="json" className="flex-grow flex flex-col">
               <TabsList className="w-full">
-                <TabsTrigger value="json" className="flex-1">JSON</TabsTrigger>
-                <TabsTrigger value="features" className="flex-1">Features ({features.length})</TabsTrigger>
-                <TabsTrigger value="layers" className="flex-1">Layers</TabsTrigger>
-                <TabsTrigger value="help" className="flex-1">Help</TabsTrigger>
+                <TabsTrigger value="json" className="flex-1">
+                  JSON
+                </TabsTrigger>
+                <TabsTrigger value="features" className="flex-1">
+                  Features ({features.length})
+                </TabsTrigger>
+                <TabsTrigger value="layers" className="flex-1">
+                  Layers
+                </TabsTrigger>
+                <TabsTrigger value="help" className="flex-1">
+                  Help
+                </TabsTrigger>
               </TabsList>
-              <TabsContent value="json" className="flex-grow relative mt-2 rounded-md border border-input overflow-hidden">
+              <TabsContent
+                value="json"
+                className="flex-grow relative mt-2 rounded-md border border-input overflow-hidden"
+              >
                 {geojsonString && (
                   <TooltipProvider>
                     <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
@@ -576,7 +632,11 @@ export default function Sidebar({
                             className="h-7 w-7"
                             onClick={handleCopy}
                           >
-                            {isCopied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                            {isCopied ? (
+                              <Check className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -602,49 +662,64 @@ export default function Sidebar({
                 />
                 {validationStatus !== 'idle' && (
                   <div className="absolute bottom-0 left-0 right-0 p-2 bg-muted/80 backdrop-blur-sm text-muted-foreground text-xs flex items-start gap-2 border-t">
-                    {validationStatus === 'loading' && <Loader2 className="h-4 w-4 animate-spin mt-0.5 flex-shrink-0" />}
-                    {validationStatus === 'valid' && <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />}
-                    {validationStatus === 'invalid' && <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-500 mt-0.5 flex-shrink-0" />}
+                    {validationStatus === 'loading' && (
+                      <Loader2 className="h-4 w-4 animate-spin mt-0.5 flex-shrink-0" />
+                    )}
+                    {validationStatus === 'valid' && (
+                      <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
+                    )}
+                    {validationStatus === 'invalid' && (
+                      <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-500 mt-0.5 flex-shrink-0" />
+                    )}
                     <p className="break-words min-w-0">{validationFeedback}</p>
                   </div>
                 )}
               </TabsContent>
               <TabsContent value="features" className="flex-grow mt-2 overflow-y-auto">
                 <div className="space-y-2">
-                  <FileDropZone onFileLoad={async (content, filename) => {
-                    const lower = filename.toLowerCase();
-                    const isTopo = lower.endsWith('.topojson');
-                    const isKml = lower.endsWith('.kml');
-                    const canTryWorker =
-                      !isKml &&
-                      !isTopo &&
-                      shouldParseGeoJsonInWorker(content.length);
+                  <FileDropZone
+                    onFileLoad={async (content, filename) => {
+                      const lower = filename.toLowerCase();
+                      const isTopo = lower.endsWith('.topojson');
+                      const isKml = lower.endsWith('.kml');
+                      const canTryWorker =
+                        !isKml && !isTopo && shouldParseGeoJsonInWorker(content.length);
 
-                    onHeavyParseChange?.(true);
-                    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+                      onHeavyParseChange?.(true);
+                      await new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-                    try {
-                      let geojsonStr = content;
-                      if (isKml) {
-                        const kmlFeatures = kmlFormat.readFeatures(content, { featureProjection: 'EPSG:3857' });
-                        const gjFormat = new GeoJSON({ featureProjection: 'EPSG:3857', dataProjection: 'EPSG:4326' });
-                        geojsonStr = gjFormat.writeFeatures(kmlFeatures as Feature<Geometry>[]);
-                      } else if (isTopo) {
-                        const topology = JSON.parse(content);
-                        const fc = GisService.fromTopoJSON(topology);
-                        geojsonStr = JSON.stringify(fc, null, 2);
-                      } else if (canTryWorker) {
-                        const parsed = await parseGeoJsonStringInWorker(content);
-                        geojsonStr = JSON.stringify(parsed, null, 2);
+                      try {
+                        let geojsonStr = content;
+                        if (isKml) {
+                          const kmlFeatures = kmlFormat.readFeatures(content, {
+                            featureProjection: 'EPSG:3857',
+                          });
+                          const gjFormat = new GeoJSON({
+                            featureProjection: 'EPSG:3857',
+                            dataProjection: 'EPSG:4326',
+                          });
+                          geojsonStr = gjFormat.writeFeatures(kmlFeatures as Feature<Geometry>[]);
+                        } else if (isTopo) {
+                          const topology = JSON.parse(content);
+                          const fc = GisService.fromTopoJSON(topology);
+                          geojsonStr = JSON.stringify(fc, null, 2);
+                        } else if (canTryWorker) {
+                          const parsed = await parseGeoJsonStringInWorker(content);
+                          geojsonStr = JSON.stringify(parsed, null, 2);
+                        }
+                        onGeojsonChange(geojsonStr);
+                        toast({ title: `Imported ${filename}` });
+                      } catch {
+                        toast({
+                          title: 'Import failed',
+                          description: 'Could not parse the file.',
+                          variant: 'destructive',
+                        });
+                      } finally {
+                        onHeavyParseChange?.(false);
                       }
-                      onGeojsonChange(geojsonStr);
-                      toast({ title: `Imported ${filename}` });
-                    } catch {
-                      toast({ title: 'Import failed', description: 'Could not parse the file.', variant: 'destructive' });
-                    } finally {
-                      onHeavyParseChange?.(false);
-                    }
-                  }} />
+                    }}
+                  />
                   {features.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground italic text-sm">
                       No features drawn yet.
@@ -656,45 +731,86 @@ export default function Sidebar({
                       let stat = '';
                       if (geom && (geomType === 'Polygon' || geomType === 'MultiPolygon')) {
                         const area = getArea(geom);
-                        stat = area > 1e6 ? `${(area / 1e6).toFixed(2)} km²` : `${area.toFixed(0)} m²`;
-                      } else if (geom && (geomType === 'LineString' || geomType === 'MultiLineString')) {
+                        stat =
+                          area > 1e6 ? `${(area / 1e6).toFixed(2)} km²` : `${area.toFixed(0)} m²`;
+                      } else if (
+                        geom &&
+                        (geomType === 'LineString' || geomType === 'MultiLineString')
+                      ) {
                         const len = getLength(geom);
                         stat = len > 1000 ? `${(len / 1000).toFixed(2)} km` : `${len.toFixed(0)} m`;
                       }
                       return (
-                        <Card key={feature.getId() || idx} className="p-2.5 mb-1.5 hover:bg-accent/50 transition-all duration-150 cursor-pointer border-border/60" onClick={() => onFeatureSelect(feature)}>
+                        <Card
+                          key={feature.getId() || idx}
+                          className="p-2.5 mb-1.5 hover:bg-accent/50 transition-all duration-150 cursor-pointer border-border/60"
+                          onClick={() => onFeatureSelect(feature)}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5 overflow-hidden">
-                              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                                geomType?.includes('Polygon') ? 'bg-accent' :
-                                geomType?.includes('Line') ? 'bg-blue-500' : 'bg-orange-500'
-                              }`} />
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                                  geomType?.includes('Polygon')
+                                    ? 'bg-accent'
+                                    : geomType?.includes('Line')
+                                      ? 'bg-blue-500'
+                                      : 'bg-orange-500'
+                                }`}
+                              />
                               <div className="flex flex-col">
-                                <span className="text-xs font-medium truncate w-28">{String(feature.getId() || `Feature ${idx}`)}</span>
+                                <span className="text-xs font-medium truncate w-28">
+                                  {String(feature.getId() || `Feature ${idx}`)}
+                                </span>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] text-muted-foreground uppercase">{geomType}</span>
-                                  {stat && <span className="text-[10px] text-accent font-medium">· {stat}</span>}
+                                  <span className="text-[10px] text-muted-foreground uppercase">
+                                    {geomType}
+                                  </span>
+                                  {stat && (
+                                    <span className="text-[10px] text-accent font-medium">
+                                      · {stat}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-0.5">
                               <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onZoomToFeature(feature.getId()!); }}>
-                                    <Crosshair className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Zoom to</p></TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteFeature(feature.getId()); }}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Delete</p></TooltipContent>
-                              </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onZoomToFeature(feature.getId()!);
+                                      }}
+                                    >
+                                      <Crosshair className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Zoom to</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-destructive hover:text-destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteFeature(feature.getId());
+                                      }}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Delete</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               </TooltipProvider>
                             </div>
                           </div>
@@ -713,20 +829,24 @@ export default function Sidebar({
                         <span className="text-sm font-semibold">Vector Data</span>
                       </div>
                       <div className="flex items-center gap-2">
-                         <Button
-                           variant="ghost"
-                           size="icon"
-                           className="h-8 w-8"
-                           onClick={() => onVectorVisibleChange(!vectorVisible)}
-                         >
-                           {vectorVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
-                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onVectorVisibleChange(!vectorVisible)}
+                        >
+                          {vectorVisible ? (
+                            <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
-                         <span>Opacity</span>
-                         <span>{Math.round(vectorOpacity * 100)}%</span>
+                        <span>Opacity</span>
+                        <span>{Math.round(vectorOpacity * 100)}%</span>
                       </div>
                       <Slider
                         value={[vectorOpacity * 100]}

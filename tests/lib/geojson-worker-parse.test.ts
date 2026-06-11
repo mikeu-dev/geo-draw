@@ -52,7 +52,9 @@ describe('geojson-worker-parse helper', () => {
         onerror: null,
       };
 
-      global.Worker = vi.fn().mockImplementation(() => mockWorkerInstance) as unknown as typeof Worker;
+      global.Worker = vi
+        .fn()
+        .mockImplementation(() => mockWorkerInstance) as unknown as typeof Worker;
     });
 
     it('should resolve with data when worker reports success', async () => {

@@ -38,7 +38,7 @@ export const MultiPolygonSchema = z.object({
 });
 
 // Explicit type for recursive geometry
-export type Geometry = 
+export type Geometry =
   | z.infer<typeof PointSchema>
   | z.infer<typeof LineStringSchema>
   | z.infer<typeof PolygonSchema>
@@ -47,7 +47,7 @@ export type Geometry =
   | z.infer<typeof MultiPolygonSchema>
   | { type: 'GeometryCollection'; geometries: Geometry[] };
 
-export const GeometrySchema: z.ZodType<Geometry> = z.lazy(() => 
+export const GeometrySchema: z.ZodType<Geometry> = z.lazy(() =>
   z.union([
     PointSchema,
     LineStringSchema,
@@ -55,9 +55,9 @@ export const GeometrySchema: z.ZodType<Geometry> = z.lazy(() =>
     MultiPointSchema,
     MultiLineStringSchema,
     MultiPolygonSchema,
-    z.object({ 
-      type: z.literal('GeometryCollection'), 
-      geometries: z.array(GeometrySchema) 
+    z.object({
+      type: z.literal('GeometryCollection'),
+      geometries: z.array(GeometrySchema),
     }),
   ])
 );
@@ -77,10 +77,7 @@ export const FeatureCollectionSchema = z.object({
 /**
  * Root GeoJSON Schema
  */
-export const GeoJSONSchema = z.union([
-  FeatureSchema,
-  FeatureCollectionSchema,
-]);
+export const GeoJSONSchema = z.union([FeatureSchema, FeatureCollectionSchema]);
 
 /**
  * Helper to validate and parse GeoJSON

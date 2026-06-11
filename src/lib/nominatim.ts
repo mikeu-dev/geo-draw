@@ -16,9 +16,7 @@ export function getNominatimFetchInit(extra?: HeadersInit): RequestInit {
   return { headers };
 }
 
-export function nominatimSearchUrl(
-  params: Record<string, string | number | undefined>
-): string {
+export function nominatimSearchUrl(params: Record<string, string | number | undefined>): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined) q.set(k, String(v));
@@ -41,7 +39,10 @@ export function fetchNominatim(url: string): Promise<Response> {
     lastNominatimRequestAt = Date.now();
     return fetch(url, getNominatimFetchInit());
   });
-  nominatimQueue = run.then(() => undefined, () => undefined);
+  nominatimQueue = run.then(
+    () => undefined,
+    () => undefined
+  );
   return run;
 }
 

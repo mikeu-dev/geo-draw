@@ -8,7 +8,7 @@ export function useUndoHistory<T>(initialState: T, limit: number = 50) {
   const [current, setCurrent] = useState<T>(initialState);
   const [past, setPast] = useState<T[]>([]);
   const [future, setFuture] = useState<T[]>([]);
-  
+
   // Use refs to keep stable callback identities
   const currentRef = useRef<T>(initialState);
   const pastRef = useRef<T[]>([]);
@@ -21,18 +21,21 @@ export function useUndoHistory<T>(initialState: T, limit: number = 50) {
     futureRef.current = future;
   }, [current, past, future]);
 
-  const set = useCallback((newState: T) => {
-    if (newState === currentRef.current) return;
+  const set = useCallback(
+    (newState: T) => {
+      if (newState === currentRef.current) return;
 
-    const prev = currentRef.current;
-    setPast(p => {
-      const next = [...p, prev];
-      if (next.length > limit) return next.slice(1);
-      return next;
-    });
-    setCurrent(newState);
-    setFuture([]);
-  }, [limit]);
+      const prev = currentRef.current;
+      setPast((p) => {
+        const next = [...p, prev];
+        if (next.length > limit) return next.slice(1);
+        return next;
+      });
+      setCurrent(newState);
+      setFuture([]);
+    },
+    [limit]
+  );
 
   const undo = useCallback(() => {
     const p = pastRef.current;
@@ -41,10 +44,10 @@ export function useUndoHistory<T>(initialState: T, limit: number = 50) {
     const previous = p[p.length - 1];
     const newPast = p.slice(0, p.length - 1);
 
-    setFuture(f => [currentRef.current, ...f]);
+    setFuture((f) => [currentRef.current, ...f]);
     setPast(newPast);
     setCurrent(previous);
-    
+
     return previous;
   }, []);
 
@@ -55,7 +58,7 @@ export function useUndoHistory<T>(initialState: T, limit: number = 50) {
     const next = f[0];
     const newFuture = f.slice(1);
 
-    setPast(p => [...p, currentRef.current]);
+    setPast((p) => [...p, currentRef.current]);
     setFuture(newFuture);
     setCurrent(next);
 

@@ -1,0 +1,19 @@
+# build and dependencies
+.next/
+node_modules/
+package-lock.json
+build/
+dist/
+
+# IDE configurations
+.idx/
+.agents/
+
+# testing outputs
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# static assets
+public/

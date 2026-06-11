@@ -4,12 +4,7 @@ import { useCallback } from 'react';
 import { Map } from 'ol';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MapScreenshotProps {
   map: Map | null;
@@ -30,7 +25,9 @@ export default function MapScreenshot({ map }: MapScreenshotProps) {
       if (!mapContext) return;
 
       // Composite all canvas layers
-      const canvases = map.getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-unselectable');
+      const canvases = map
+        .getViewport()
+        .querySelectorAll('.ol-layer canvas, canvas.ol-unselectable');
       canvases.forEach((canvas) => {
         const htmlCanvas = canvas as HTMLCanvasElement;
         if (htmlCanvas.width > 0) {
@@ -44,7 +41,14 @@ export default function MapScreenshot({ map }: MapScreenshotProps) {
             .map(Number);
 
           if (matrix) {
-            mapContext.setTransform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
+            mapContext.setTransform(
+              matrix[0],
+              matrix[1],
+              matrix[2],
+              matrix[3],
+              matrix[4],
+              matrix[5]
+            );
           } else {
             mapContext.setTransform(1, 0, 0, 1, 0, 0);
           }

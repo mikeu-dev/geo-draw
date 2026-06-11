@@ -4,7 +4,7 @@
  */
 self.onmessage = (event: MessageEvent<string>) => {
   const geojsonString = event.data;
-  
+
   if (!geojsonString) {
     self.postMessage({ success: false, error: 'Empty GeoJSON string' });
     return;
@@ -13,10 +13,10 @@ self.onmessage = (event: MessageEvent<string>) => {
   try {
     // 1. Heavy JSON Parsing
     const parsed = JSON.parse(geojsonString);
-    
+
     // 2. Validate basic structure
     if (!parsed || (parsed.type !== 'FeatureCollection' && parsed.type !== 'Feature')) {
-       throw new Error('Invalid GeoJSON structure');
+      throw new Error('Invalid GeoJSON structure');
     }
 
     // 3. Return serialized object back to main thread

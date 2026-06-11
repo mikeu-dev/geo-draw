@@ -114,7 +114,7 @@ export default function MeasurementController({ map, activeType }: MeasurementCo
       if (evt.dragging) return;
       let helpMsg = 'Click to start measuring';
       if (drawRef.current) {
-          helpMsg = 'Click to continue drawing';
+        helpMsg = 'Click to continue drawing';
       }
       if (helpTooltipElement.current) {
         helpTooltipElement.current.innerHTML = helpMsg;
@@ -125,7 +125,7 @@ export default function MeasurementController({ map, activeType }: MeasurementCo
 
     map.on('pointermove', pointerMoveHandler);
     map.getViewport().addEventListener('mouseout', () => {
-       helpTooltipElement.current?.classList.add('hidden');
+      helpTooltipElement.current?.classList.add('hidden');
     });
 
     return () => {
