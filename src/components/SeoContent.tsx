@@ -18,8 +18,8 @@ export default function SeoContent() {
         <p>
           Geovara is a free, browser-based GeoJSON editor designed for professional GIS workflows.
           Draw points, lines, polygons, rectangles, and circles on an interactive map powered by
-          OpenLayers. Edit feature properties, validate GeoJSON structure, and export your data — all
-          without signup or installation.
+          OpenLayers. Edit feature properties, validate GeoJSON structure, and export your data —
+          all without signup or installation.
         </p>
 
         <h3>Interactive Map Drawing Tools</h3>
@@ -32,10 +32,10 @@ export default function SeoContent() {
 
         <h3>AI-Powered Spatial Analysis</h3>
         <p>
-          Geovara includes an AI spatial assistant that understands natural language commands. Ask it
-          to fly to a location, change the basemap, or perform buffer analysis on selected features.
-          Powered by Google Gemini AI, the assistant provides intelligent geospatial operations
-          without requiring GIS expertise.
+          Geovara includes an AI spatial assistant that understands natural language commands. Ask
+          it to fly to a location, change the basemap, or perform buffer analysis on selected
+          features. Powered by Google Gemini AI, the assistant provides intelligent geospatial
+          operations without requiring GIS expertise.
         </p>
 
         <h3>Real-time GeoJSON Editor</h3>
@@ -98,9 +98,9 @@ export default function SeoContent() {
 
         <h3>How do I draw polygons on a map online?</h3>
         <p>
-          Open Geovara in your browser and select the Polygon tool from the drawing toolbar. Click on
-          the map to place vertices of your polygon. Double-click to finish drawing. Your polygon is
-          automatically converted to GeoJSON format that you can copy, export, or share via URL.
+          Open Geovara in your browser and select the Polygon tool from the drawing toolbar. Click
+          on the map to place vertices of your polygon. Double-click to finish drawing. Your polygon
+          is automatically converted to GeoJSON format that you can copy, export, or share via URL.
         </p>
 
         <h3>Can I convert GeoJSON to TopoJSON?</h3>
