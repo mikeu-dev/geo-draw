@@ -88,7 +88,32 @@ Your job is to translate user natural language commands into structured JSON act
 Respond strictly in JSON.`,
 });
 
-export async function processSpatialIntent(prompt: string, featureContext?: string): Promise<SpatialIntentOutput> {
-  const { output } = await spatialIntentPrompt({ prompt, featureContext });
-  return output!;
+export type ProcessIntentResult =
+  | { success: true; data: SpatialIntentOutput }
+  | { success: false; error: string; isQuotaExceeded: boolean };
+
+export async function processSpatialIntent(prompt: string, featureContext?: string): Promise<ProcessIntentResult> {
+  try {
+    const { output } = await spatialIntentPrompt({ prompt, featureContext });
+    if (!output) {
+      return { success: false, error: 'AI returned an empty response.', isQuotaExceeded: false };
+    }
+    return { success: true, data: output };
+  } catch (error: any) {
+    console.error('Error in processSpatialIntent:', error);
+    const message = error?.message || '';
+    const isQuotaExceeded =
+      message.includes('429') ||
+      message.toLowerCase().includes('quota') ||
+      message.toLowerCase().includes('rate limit') ||
+      error?.status === 429;
+
+    return {
+      success: false,
+      error: isQuotaExceeded
+        ? 'AI Quota exceeded. Please try again later.'
+        : 'Failed to process AI command.',
+      isQuotaExceeded,
+    };
+  }
 }

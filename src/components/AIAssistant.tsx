@@ -49,7 +49,29 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
     try {
       const result = await processSpatialIntent(query, featureContext);
       
-      if (result.action === 'unknown') {
+      if (!result.success) {
+        if (result.isQuotaExceeded) {
+          setLastNarrative('Batas kuota/kredit AI telah habis. Silakan coba beberapa saat lagi.');
+          toast({
+            title: "Kuota/Kredit AI Habis",
+            description: "Batas permintaan gratis API Gemini terlampaui. Mohon tunggu sekitar 1 menit sebelum mencoba lagi.",
+            variant: 'destructive',
+            duration: 10000,
+          });
+        } else {
+          setLastNarrative(result.error);
+          toast({
+            title: "Kesalahan AI",
+            description: result.error,
+            variant: 'destructive',
+          });
+        }
+        return;
+      }
+
+      const spatialAction = result.data;
+
+      if (spatialAction.action === 'unknown') {
         setLastNarrative("I'm not sure how to help with that. Try 'Buffer this by 100m' or 'Fly to Paris'.");
         toast({
           title: "Unknown Command",
@@ -57,8 +79,8 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
           variant: 'destructive',
         });
       } else {
-        setLastNarrative(result.narrative);
-        onAction(result);
+        setLastNarrative(spatialAction.narrative);
+        onAction(spatialAction);
         
         // Auto-close after a delay to let user read narrative
         setTimeout(() => {
