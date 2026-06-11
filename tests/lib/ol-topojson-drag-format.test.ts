@@ -52,7 +52,10 @@ describe('topoJsonDragFormat', () => {
     });
 
     it('should parse valid TopoJSON ArrayBuffer correctly', () => {
-      const buffer = new TextEncoder().encode(validTopoString).buffer;
+      const view = new TextEncoder().encode(validTopoString);
+      const buffer = new ArrayBuffer(view.byteLength);
+      new Uint8Array(buffer).set(view);
+
       const features = (topoJsonDragFormat as any).readFeatures(buffer) as Feature<Geometry>[];
       expect(features).toHaveLength(1);
       expect(features[0].get('id')).toBe(1);
