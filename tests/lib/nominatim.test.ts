@@ -1,13 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  getNominatimFetchInit,
-  nominatimSearchUrl,
-  fetchNominatim,
-  nominatimSearchResults,
-} from '@/lib/nominatim';
 
 describe('nominatim helper', () => {
-  beforeEach(() => {
+  let getNominatimFetchInit: any;
+  let nominatimSearchUrl: any;
+  let fetchNominatim: any;
+  let nominatimSearchResults: any;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    const nominatim = await import('@/lib/nominatim');
+    getNominatimFetchInit = nominatim.getNominatimFetchInit;
+    nominatimSearchUrl = nominatim.nominatimSearchUrl;
+    fetchNominatim = nominatim.fetchNominatim;
+    nominatimSearchResults = nominatim.nominatimSearchResults;
+
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
@@ -65,7 +71,6 @@ describe('nominatim helper', () => {
       // Second call should wait
       const p2 = fetchNominatim('https://api/2');
       await vi.advanceTimersByTimeAsync(500);
-      // Still should not be called since 1100ms has not passed
       expect(fetchSpy).toHaveBeenCalledTimes(1);
 
       // Advance past 1100ms
@@ -84,9 +89,8 @@ describe('nominatim helper', () => {
         json: () => Promise.resolve(mockData),
       }));
 
-      // We need to resolve the queue timers so fetch runs
       const resPromise = nominatimSearchResults('https://api/search');
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(10);
       const results = await resPromise;
 
       expect(results).toEqual(mockData);
@@ -99,7 +103,7 @@ describe('nominatim helper', () => {
       }));
 
       const resPromise = nominatimSearchResults('https://api/search');
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(10);
       const results = await resPromise;
 
       expect(results).toEqual([]);
@@ -112,9 +116,11 @@ describe('nominatim helper', () => {
       }));
 
       const resPromise = nominatimSearchResults('https://api/search');
-      await vi.advanceTimersByTimeAsync(1500);
-
-      await expect(resPromise).rejects.toThrow('Nominatim HTTP 500');
+      const assertion = expect(resPromise).rejects.toThrow('Nominatim HTTP 500');
+      
+      // Advance timers after attaching the rejection handler to prevent Unhandled Rejection warning
+      await vi.advanceTimersByTimeAsync(10);
+      await assertion;
     });
 
     it('should throw error if json parsing fails', async () => {
@@ -124,9 +130,11 @@ describe('nominatim helper', () => {
       }));
 
       const resPromise = nominatimSearchResults('https://api/search');
-      await vi.advanceTimersByTimeAsync(1500);
+      const assertion = expect(resPromise).rejects.toThrow('Nominatim returned non-JSON');
 
-      await expect(resPromise).rejects.toThrow('Nominatim returned non-JSON');
+      // Advance timers after attaching the rejection handler to prevent Unhandled Rejection warning
+      await vi.advanceTimersByTimeAsync(10);
+      await assertion;
     });
   });
 });
