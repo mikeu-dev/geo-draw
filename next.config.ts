@@ -1,7 +1,12 @@
 import type { NextConfig } from 'next';
 
+const securityHeaders = [
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
+];
+
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -26,6 +31,14 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: securityHeaders,
+      },
+    ];
   },
 };
 
