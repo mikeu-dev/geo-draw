@@ -94,7 +94,7 @@ export default function HelpContent() {
         Press <kbd>Ctrl+K</kbd> (or <kbd>Cmd+K</kbd> on macOS) to open the <strong>Ask Geovara</strong> AI prompt:
       </p>
       <ul>
-        <li>Execute natural language spatial commands (e.g., <em>"Draw a 500m buffer around selected points"</em>).</li>
+        <li>Execute natural language spatial commands (e.g., <em>&quot;Draw a 500m buffer around selected points&quot;</em>).</li>
         <li>Generate custom geometries and convert data structures on the fly.</li>
         <li>0ms Fast Pattern Matcher resolves common queries locally before routing complex requests to Gemini.</li>
       </ul>
