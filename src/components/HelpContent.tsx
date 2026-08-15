@@ -72,6 +72,12 @@ export default function HelpContent() {
           <strong>GeoJSON</strong> — Standard geospatial format
         </li>
         <li>
+          <strong>CSV</strong> — Tabular latitude & longitude spreadsheet
+        </li>
+        <li>
+          <strong>WKT</strong> — Well-Known Text for PostGIS & QGIS
+        </li>
+        <li>
           <strong>KML</strong> — Google Earth compatible
         </li>
         <li>
@@ -150,12 +156,27 @@ export default function HelpContent() {
         </li>
       </ul>
 
-      <h3>URL API</h3>
-      <h4>#map=zoom/latitude/longitude</h4>
-      <p>Open the map at a specific location.</p>
+      <h3>Developer & URL API</h3>
+      <h4>1. Remote Public GeoJSON Loader</h4>
+      <p>Preload any public CORS-enabled GeoJSON directly via URL query parameter:</p>
       <p className="text-xs text-muted-foreground bg-muted p-2 rounded-md font-code break-words">
-        Example: <code>/#map=8/51.5/-0.1</code>
+        <code>/?url=https://example.com/data.geojson</code>
       </p>
+
+      <h4>2. Location & Zoom Parameter</h4>
+      <p className="text-xs text-muted-foreground bg-muted p-2 rounded-md font-code break-words">
+        <code>/#map=8/51.5/-0.1</code>
+      </p>
+
+      <h4>3. Browser Console API (<code>window.geovara</code>)</h4>
+      <p>Open Developer Tools (F12) Console to programmatically interact with Geovara:</p>
+      <ul className="text-xs">
+        <li><code>geovara.getGeoJSON()</code> — Returns current GeoJSON string.</li>
+        <li><code>geovara.setGeoJSON(data)</code> — Loads GeoJSON object or string.</li>
+        <li><code>geovara.addFeature(geom, props)</code> — Adds a feature to the map.</li>
+        <li><code>geovara.clear()</code> — Clears all features.</li>
+        <li><code>{"geovara.setBasemap('satellite')"}</code> — Changes active basemap.</li>
+      </ul>
     </div>
   );
 }
