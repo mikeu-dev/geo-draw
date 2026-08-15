@@ -224,11 +224,18 @@ export default function MapComponent({
     }
   }, [zoomToId, map, vectorSource, onFeatureSelect]);
 
+  const handleAddFeature = useCallback(
+    (feature: Feature<Geometry>) => {
+      setFeatures((prev) => [...prev, feature]);
+    },
+    [setFeatures]
+  );
+
   return (
     <div className="w-full h-full relative group">
       <div ref={mapElement} className="w-full h-full outline-none" />
 
-      <LocationSearch map={map} />
+      <LocationSearch map={map} onAddFeature={handleAddFeature} />
       <div className="absolute top-[0.75rem] right-[0.75rem] flex flex-col gap-3 z-30 items-end">
         <Compass map={map} />
         <DrawingTools

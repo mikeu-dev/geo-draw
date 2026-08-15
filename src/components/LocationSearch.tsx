@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Map } from 'ol';
+import { Map, Feature } from 'ol';
+import { Point } from 'ol/geom';
+import type { Geometry } from 'ol/geom';
 import { fromLonLat } from 'ol/proj';
-import { Search, MapPin, Loader2, X } from 'lucide-react';
+import { Search, MapPin, Loader2, X, Plus } from 'lucide-react';
 import { nominatimSearchUrl, nominatimSearchResults } from '@/lib/nominatim';
+import { useToast } from '@/hooks/use-toast';
 
 interface SearchResult {
   place_id: number;
@@ -17,9 +20,10 @@ interface SearchResult {
 
 interface LocationSearchProps {
   map: Map | null;
+  onAddFeature?: (feature: Feature<Geometry>) => void;
 }
 
-export default function LocationSearch({ map }: LocationSearchProps) {
+export default function LocationSearch({ map, onAddFeature }: LocationSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +31,7 @@ export default function LocationSearch({ map }: LocationSearchProps) {
   const [isFocused, setIsFocused] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -105,6 +110,37 @@ export default function LocationSearch({ map }: LocationSearchProps) {
     [map]
   );
 
+  const handleAddAsPoint = useCallback(
+    (e: React.MouseEvent, result: SearchResult) => {
+      e.stopPropagation();
+      handleSelect(result);
+
+      if (onAddFeature) {
+        const lon = parseFloat(result.lon);
+        const lat = parseFloat(result.lat);
+        const pointGeom = new Point(fromLonLat([lon, lat]));
+        const shortName = result.display_name.split(',')[0];
+
+        const feature = new Feature({
+          geometry: pointGeom,
+          name: shortName,
+          display_name: result.display_name,
+          place_id: result.place_id,
+          osm_type: result.type || 'place',
+          source: 'nominatim',
+        });
+        feature.setId(`point_search_${Date.now()}`);
+
+        onAddFeature(feature);
+        toast({
+          title: 'Titik Lokasi Ditambahkan',
+          description: `'${shortName}' disematkan sebagai Point feature baru di peta.`,
+        });
+      }
+    },
+    [handleSelect, onAddFeature, toast]
+  );
+
   const handleClear = useCallback(() => {
     setQuery('');
     setResults([]);
@@ -114,7 +150,7 @@ export default function LocationSearch({ map }: LocationSearchProps) {
   return (
     <div
       ref={containerRef}
-      className="absolute top-[0.75rem] left-[3.25rem] z-40 w-[calc(100vw-7.5rem)] sm:w-72 max-w-72"
+      className="absolute top-[0.75rem] left-[3.25rem] z-40 w-[calc(100vw-7.5rem)] sm:w-80 max-w-80"
     >
       <div
         className={`
@@ -127,7 +163,7 @@ export default function LocationSearch({ map }: LocationSearchProps) {
         <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <input
           type="text"
-          placeholder="Search location..."
+          placeholder="Search location (e.g. Jakarta)..."
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
@@ -154,16 +190,27 @@ export default function LocationSearch({ map }: LocationSearchProps) {
       {isOpen && results.length > 0 && (
         <div className="mt-1.5 rounded-lg overflow-hidden bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-xl animate-fade-in-up">
           {results.map((result) => (
-            <button
+            <div
               key={result.place_id}
               onClick={() => handleSelect(result)}
-              className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left hover:bg-accent/10 transition-colors border-b border-border/30 last:border-0"
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-accent/10 transition-colors border-b border-border/30 last:border-0 cursor-pointer group"
             >
-              <MapPin className="h-3.5 w-3.5 text-accent mt-0.5 flex-shrink-0" />
-              <span className="text-xs text-foreground leading-tight line-clamp-2">
-                {result.display_name}
-              </span>
-            </button>
+              <div className="flex items-start gap-2 min-w-0 flex-1">
+                <MapPin className="h-3.5 w-3.5 text-accent mt-0.5 flex-shrink-0" />
+                <span className="text-xs text-foreground leading-tight line-clamp-2">
+                  {result.display_name}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => handleAddAsPoint(e, result)}
+                className="px-2 py-1 rounded bg-accent/15 hover:bg-accent text-accent hover:text-accent-foreground text-[10px] font-semibold flex items-center gap-1 transition-colors flex-shrink-0"
+                title="Sematkan sebagai Point Feature di peta"
+              >
+                <Plus className="h-3 w-3" />
+                <span>Add</span>
+              </button>
+            </div>
           ))}
         </div>
       )}
