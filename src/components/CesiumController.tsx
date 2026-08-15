@@ -42,7 +42,6 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
       const OLCesium = win.olcs?.OLCesium;
 
       if (!Cesium || !OLCesium) {
-        console.warn('Cesium or OLCesium not yet loaded from CDN');
         return false;
       }
 
@@ -82,13 +81,16 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
       const success = await initCesium();
       if (success) {
         clearInterval(interval);
-      } else if (attempts >= maxAttempts && enabled && !notifiedUnavailable.current) {
-        notifiedUnavailable.current = true;
-        toast({
-          title: '3D Engine Sedang Dimuat',
-          description: 'Library Cesium 3D Globe sedang diunduh dari CDN atau jaringan terbatas.',
-          duration: 5000,
-        });
+      } else if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (enabled && !notifiedUnavailable.current) {
+          notifiedUnavailable.current = true;
+          toast({
+            title: '3D Engine Belum Siap',
+            description: 'Library Cesium 3D Globe sedang diunduh dari CDN atau koneksi terbatas.',
+            duration: 5000,
+          });
+        }
       }
     }, 600);
 
