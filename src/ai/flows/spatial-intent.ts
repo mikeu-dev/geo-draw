@@ -33,6 +33,8 @@ const SpatialIntentOutputSchema = z.object({
       'delete',
       'style',
       'export',
+      'loadUrl',
+      'setProperty',
       'analyze',
       'unknown',
     ])
@@ -52,9 +54,15 @@ const SpatialIntentOutputSchema = z.object({
       strokeWidth: z.number().optional().describe('Width for strokes.'),
       opacity: z.number().optional().describe('Opacity value between 0 and 1.'),
       exportFormat: z
-        .enum(['geojson', 'topojson', 'kml', 'kmz'])
+        .enum(['geojson', 'topojson', 'kml', 'kmz', 'csv', 'wkt'])
         .optional()
         .describe('Format for data export.'),
+      url: z.string().optional().describe('Remote URL to fetch and load GeoJSON from.'),
+      propKey: z.string().optional().describe('Property key name to set.'),
+      propValue: z
+        .union([z.string(), z.number()])
+        .optional()
+        .describe('Property value to assign.'),
     })
     .optional(),
   narrative: z.string().describe('A short user-friendly response explaining what the AI is doing.'),
@@ -88,12 +96,16 @@ Your job is to translate user natural language commands into structured JSON act
 10. 'clear': If the user asks to remove everything or clear the map.
 11. 'delete': If the user asks to delete the selected feature.
 12. 'style': If the user asks to change appearance (e.g., "Make points red", "Set opacity to 50%", "Heavier lines").
-13. 'export': If the user wants to download/save data (e.g., "Download as TopoJSON", "Save to KML").
-14. 'analyze': If the user asks for stats or measurements (e.g., "What is the total area?", "How many points?").
+13. 'export': If the user wants to download/save data (e.g., "Download as TopoJSON", "Save to KML", "Export to CSV", "Save as WKT").
+14. 'loadUrl': If the user provides a link to fetch (e.g., "Load GeoJSON from https://...", "Buka URL https://...").
+15. 'setProperty': If the user asks to add or change feature attributes (e.g., "Set property status to active", "Beri nama Monas").
+16. 'analyze': If the user asks for stats or measurements (e.g., "What is the total area?", "How many points?").
 
 **Rules for 'params':**
 - For 'style', extract color (hex or named), strokeWidth, or opacity (0-1).
-- For 'export', set 'exportFormat' accordingly.
+- For 'export', set 'exportFormat' ('geojson', 'topojson', 'kml', 'kmz', 'csv', 'wkt').
+- For 'loadUrl', extract the http/https URL into 'url'.
+- For 'setProperty', extract 'propKey' and 'propValue'.
 - For 'buffer', default radius is 1 and units is 'kilometers'.
 - For 'flyTo', extract the location name into 'query'.
 - For 'setBasemap', valid values are 'osm', 'satellite', 'topo', 'dark'.

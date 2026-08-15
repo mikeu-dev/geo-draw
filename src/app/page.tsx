@@ -386,9 +386,56 @@ export default function Home() {
             setSelectedFeature(unionFeature as Feature<Geometry>);
           }
         }
+      } else if (action.action === 'loadUrl') {
+        const url = action.params?.url;
+        if (url) {
+          setIsParsing(true);
+          fetchRemoteGeoJSON(url)
+            .then((data) => {
+              setGeojsonString(data);
+              syncFeaturesFromString(data);
+              resetHistory(data);
+              toast({
+                title: 'Data Eksternal Berhasil Dimuat',
+                description: `Dimuat dari ${url}`,
+              });
+            })
+            .catch((err) => {
+              console.error('AI Load URL error:', err);
+              toast({
+                title: 'Gagal Memuat URL',
+                description: 'Pastikan URL publik dan mengizinkan CORS.',
+                variant: 'destructive',
+              });
+            })
+            .finally(() => setIsParsing(false));
+        }
+      } else if (action.action === 'setProperty') {
+        const key = action.params?.propKey;
+        const value = action.params?.propValue;
+        if (key) {
+          const target = selectedFeature || (features.length > 0 ? features[features.length - 1] : null);
+          if (target) {
+            target.set(key, value);
+            setFeatures([...features]);
+            toast({
+              title: 'Atribut Diperbarui',
+              description: `Properti '${key}' diatur ke '${value ?? ''}'.`,
+            });
+          }
+        }
       }
     },
-    [selectedFeature, features, handleClear, handleDeleteFeature]
+    [
+      selectedFeature,
+      features,
+      handleClear,
+      handleDeleteFeature,
+      setGeojsonString,
+      syncFeaturesFromString,
+      resetHistory,
+      toast,
+    ]
   );
 
   const handleToggle3d = useCallback(() => {

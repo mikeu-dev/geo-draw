@@ -62,6 +62,26 @@ describe('ai-intent-cache', () => {
       expect(centroid?.action).toBe('centroid');
     });
 
+    it('should match export and download format commands', () => {
+      const csv = matchQuickSpatialIntent('Export to CSV');
+      expect(csv?.action).toBe('export');
+      expect(csv?.params?.exportFormat).toBe('csv');
+
+      const wkt = matchQuickSpatialIntent('Save as WKT');
+      expect(wkt?.action).toBe('export');
+      expect(wkt?.params?.exportFormat).toBe('wkt');
+
+      const topo = matchQuickSpatialIntent('Download TopoJSON');
+      expect(topo?.action).toBe('export');
+      expect(topo?.params?.exportFormat).toBe('topojson');
+    });
+
+    it('should match remote URL loading command', () => {
+      const remote = matchQuickSpatialIntent('Load URL https://example.com/data.geojson');
+      expect(remote?.action).toBe('loadUrl');
+      expect(remote?.params?.url).toBe('https://example.com/data.geojson');
+    });
+
     it('should return null for complex or unrecognized commands', () => {
       const unknown = matchQuickSpatialIntent('Explain the historical topography of this region');
       expect(unknown).toBeNull();

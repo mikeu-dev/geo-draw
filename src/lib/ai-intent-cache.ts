@@ -165,5 +165,64 @@ export function matchQuickSpatialIntent(prompt: string): SpatialIntentOutput | n
     };
   }
 
+  // Export CSV
+  if (/\b(export|download|simpan|save)\b.*\b(csv)\b/i.test(p)) {
+    return {
+      action: 'export',
+      params: { exportFormat: 'csv' },
+      narrative: 'Exporting data as CSV spreadsheet...',
+    };
+  }
+
+  // Export WKT
+  if (/\b(export|download|simpan|save)\b.*\b(wkt|well\s*known\s*text)\b/i.test(p)) {
+    return {
+      action: 'export',
+      params: { exportFormat: 'wkt' },
+      narrative: 'Exporting data as WKT (Well-Known Text)...',
+    };
+  }
+
+  // Export TopoJSON / GeoJSON / KML / KMZ
+  if (/\b(export|download|simpan|save)\b.*\b(topojson)\b/i.test(p)) {
+    return {
+      action: 'export',
+      params: { exportFormat: 'topojson' },
+      narrative: 'Exporting data as TopoJSON...',
+    };
+  }
+  if (/\b(export|download|simpan|save)\b.*\b(geojson)\b/i.test(p)) {
+    return {
+      action: 'export',
+      params: { exportFormat: 'geojson' },
+      narrative: 'Exporting data as GeoJSON...',
+    };
+  }
+  if (/\b(export|download|simpan|save)\b.*\b(kmz)\b/i.test(p)) {
+    return {
+      action: 'export',
+      params: { exportFormat: 'kmz' },
+      narrative: 'Exporting data as KMZ...',
+    };
+  }
+  if (/\b(export|download|simpan|save)\b.*\b(kml)\b/i.test(p)) {
+    return {
+      action: 'export',
+      params: { exportFormat: 'kml' },
+      narrative: 'Exporting data as KML...',
+    };
+  }
+
+  // Remote URL loading
+  const urlMatch = trimmed.match(/(?:load|buka|fetch|ambil|open)\s+(?:url|link|data)?\s*(https?:\/\/[^\s]+)/i);
+  if (urlMatch && urlMatch[1]) {
+    const url = urlMatch[1].trim();
+    return {
+      action: 'loadUrl',
+      params: { url },
+      narrative: `Fetching remote GeoJSON from ${url}...`,
+    };
+  }
+
   return null;
 }
