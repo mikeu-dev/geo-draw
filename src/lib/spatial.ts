@@ -39,7 +39,6 @@ export const GisService = {
    * Calculates the length of a GeoJSON feature (LineString) in meters.
    */
   calculateLength(feature: Feature<Geometry>): number {
-    // @ts-expect-error: turf types mismatch with native geojson
     return turf.length(feature, { units: 'meters' });
   },
 
@@ -101,7 +100,6 @@ export const GisService = {
     tolerance: number = 0.01,
     highQuality: boolean = false
   ): Feature<Geometry> {
-    // @ts-expect-error: turf.simplify typing issue
     return turf.simplify(feature, { tolerance, highQuality });
   },
 
@@ -114,4 +112,37 @@ export const GisService = {
     // @ts-expect-error: turf.union typing issue
     return turf.union(collection);
   },
+
+  /**
+   * Computes the convex hull of a collection of features or coordinates.
+   */
+  calculateConvexHull(
+    features: Feature<Geometry>[]
+  ): Feature<Polygon> | null {
+    if (features.length === 0) return null;
+    const collection = turf.featureCollection(features);
+    return turf.convex(collection);
+  },
+
+  /**
+   * Calculates the bounding box polygon (envelope) for a feature or feature collection.
+   */
+  calculateBBoxPolygon(
+    data: Feature<Geometry> | FeatureCollection<Geometry>
+  ): Feature<Polygon> {
+    const box = turf.bbox(data);
+    return turf.bboxPolygon(box);
+  },
+
+  /**
+   * Finds the difference between two polygon features by clipping the second from the first.
+   */
+  differenceFeatures(
+    feat1: Feature<Polygon | MultiPolygon>,
+    feat2: Feature<Polygon | MultiPolygon>
+  ): Feature<Polygon | MultiPolygon> | null {
+    return turf.difference(turf.featureCollection([feat1, feat2]));
+  },
 };
+
+

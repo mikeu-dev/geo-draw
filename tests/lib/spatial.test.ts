@@ -152,4 +152,54 @@ describe('GisService', () => {
       expect(union).toBeNull();
     });
   });
+
+  describe('calculateConvexHull', () => {
+    it('should calculate convex hull from a collection of points', () => {
+      const p1: Feature<Point> = {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Point', coordinates: [0, 0] },
+      };
+      const p2: Feature<Point> = {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Point', coordinates: [4, 0] },
+      };
+      const p3: Feature<Point> = {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Point', coordinates: [2, 4] },
+      };
+
+      const hull = GisService.calculateConvexHull([p1, p2, p3]);
+      expect(hull).not.toBeNull();
+      expect(hull?.type).toBe('Feature');
+      expect(hull?.geometry.type).toBe('Polygon');
+    });
+
+    it('should return null if features array is empty', () => {
+      const hull = GisService.calculateConvexHull([]);
+      expect(hull).toBeNull();
+    });
+  });
+
+  describe('calculateBBoxPolygon', () => {
+    it('should return a bounding box polygon for a feature', () => {
+      const bbox = GisService.calculateBBoxPolygon(square1);
+      expect(bbox).toBeDefined();
+      expect(bbox.type).toBe('Feature');
+      expect(bbox.geometry.type).toBe('Polygon');
+      // square1 coordinates from [0,0] to [2,2]
+      expect(bbox.geometry.coordinates[0]).toHaveLength(5);
+    });
+  });
+
+  describe('differenceFeatures', () => {
+    it('should calculate difference between two overlapping polygons', () => {
+      const diff = GisService.differenceFeatures(square1, square2);
+      expect(diff).not.toBeNull();
+      expect(diff?.type).toBe('Feature');
+    });
+  });
 });
+

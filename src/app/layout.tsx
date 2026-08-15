@@ -1,16 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import JsonLd from '@/components/JsonLd';
 import SeoContent from '@/components/SeoContent';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
 
 const CESIUM_VERSION = '1.113';
 const CESIUM_BASE = `https://cesium.com/downloads/cesiumjs/releases/${CESIUM_VERSION}/Build/Cesium`;
@@ -155,7 +148,7 @@ export default function RootLayout({
         />
         <JsonLd />
       </head>
-      <body className={`${inter.className} font-body antialiased h-full`}>
+      <body className="font-body antialiased h-full">
         <SeoContent />
         {children}
         <Toaster />
