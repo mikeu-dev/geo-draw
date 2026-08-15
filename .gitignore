@@ -48,3 +48,4 @@ firestore-debug.log
 /playwright-report/
 /test-results/
 /blob-report/
+docs/*
