@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -19,7 +19,6 @@ import {
   Trash2,
   CheckCircle,
   AlertTriangle,
-  Loader2,
   FileDown,
   Sparkles,
   Sun,
@@ -35,7 +34,10 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { validateGeoJSONDeterministic } from '@/lib/geojson-validator';
+import {
+  validateGeoJSONDeterministic,
+  ValidationResult,
+} from '@/lib/geojson-validator';
 import { GisService } from '@/lib/spatial';
 import { Feature as GeoJSONFeature, FeatureCollection } from 'geojson';
 import { Skeleton } from './ui/skeleton';
@@ -92,6 +94,12 @@ const kmlFormat = new KML({
   showPointNames: true,
 });
 
+interface MonacoCodeEditor {
+  revealLineInCenter: (lineNumber: number) => void;
+  setPosition: (position: { lineNumber: number; column: number }) => void;
+  focus: () => void;
+}
+
 export default function Sidebar({
   geojsonString,
   onGeojsonChange,
@@ -115,13 +123,31 @@ export default function Sidebar({
   onBasemapOpacityChange,
 }: SidebarProps) {
   const { toast } = useToast();
-  const [validationStatus, setValidationStatus] = useState<
-    'idle' | 'loading' | 'valid' | 'invalid'
-  >('idle');
-  const [validationFeedback, setValidationFeedback] = useState('');
+  const editorRef = useRef<MonacoCodeEditor | null>(null);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [theme, setTheme] = useState('light');
   const [isCopied, setIsCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+  // Automatic real-time GeoJSON validation (0ms, offline RFC 7946)
+  useEffect(() => {
+    if (!geojsonString || !geojsonString.trim()) {
+      setValidationResult(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const res = validateGeoJSONDeterministic(geojsonString);
+      setValidationResult(res);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [geojsonString]);
+
+  const handleJumpToError = (line?: number, column?: number) => {
+    if (!editorRef.current || !line) return;
+    editorRef.current.revealLineInCenter(line);
+    editorRef.current.setPosition({ lineNumber: line, column: column || 1 });
+    editorRef.current.focus();
+  };
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -147,8 +173,7 @@ export default function Sidebar({
 
   const handleClear = () => {
     onClear();
-    setValidationStatus('idle');
-    setValidationFeedback('');
+    setValidationResult(null);
   };
 
   const handleCopy = () => {
@@ -311,33 +336,6 @@ export default function Sidebar({
       }
     );
   };
-
-  const handleValidate = () => {
-    if (!geojsonString) {
-      toast({
-        variant: 'destructive',
-        title: 'Empty GeoJSON',
-        description: 'There is nothing to validate.',
-      });
-      return;
-    }
-    setValidationStatus('loading');
-    const result = validateGeoJSONDeterministic(geojsonString);
-    setValidationStatus(result.isValid ? 'valid' : 'invalid');
-    setValidationFeedback(result.feedback);
-    toast({
-      title: result.isValid ? 'Validasi Sukses (RFC 7946)' : 'Validasi Gagal',
-      description: result.feedback,
-      variant: result.isValid ? 'default' : 'destructive',
-      duration: 6000,
-    });
-  };
-
-  useEffect(() => {
-    if (geojsonString) {
-      setValidationStatus('idle');
-    }
-  }, [geojsonString]);
 
   const handleDownload = async (
     format: 'geojson' | 'kml' | 'kmz' | 'topojson' | 'csv' | 'wkt'
@@ -529,27 +527,6 @@ export default function Sidebar({
                   <MenubarMenu>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <MenubarTrigger
-                          className="w-9 h-9"
-                          disabled={!geojsonString}
-                          onClick={handleValidate}
-                        >
-                          {validationStatus === 'loading' ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Sparkles className="h-4 w-4" />
-                          )}
-                        </MenubarTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Validate GeoJSON</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </MenubarMenu>
-
-                  <MenubarMenu>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
                         <MenubarTrigger className="w-9 h-9" onClick={handleCopyLink}>
                           {isLinkCopied ? (
                             <Check className="h-4 w-4 text-green-600" />
@@ -691,6 +668,21 @@ export default function Sidebar({
                   language="json"
                   value={geojsonString}
                   onChange={onGeojsonChange}
+                  onMount={(editor) => {
+                    editorRef.current = editor;
+                  }}
+                  beforeMount={(monaco) => {
+                    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+                      validate: true,
+                      allowComments: false,
+                      schemas: [
+                        {
+                          uri: 'http://json.schemastore.org/geojson.json',
+                          fileMatch: ['*'],
+                        },
+                      ],
+                    });
+                  }}
                   theme={theme === 'dark' ? 'vs-dark' : 'light'}
                   options={{
                     minimap: { enabled: false },
@@ -700,18 +692,39 @@ export default function Sidebar({
                     automaticLayout: true,
                   }}
                 />
-                {validationStatus !== 'idle' && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-muted/80 backdrop-blur-sm text-muted-foreground text-xs flex items-start gap-2 border-t">
-                    {validationStatus === 'loading' && (
-                      <Loader2 className="h-4 w-4 animate-spin mt-0.5 flex-shrink-0" />
+                {validationResult && !validationResult.isValid && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleJumpToError(validationResult.line, validationResult.column)
+                    }
+                    className="absolute bottom-0 left-0 right-0 p-2 bg-destructive/90 hover:bg-destructive text-destructive-foreground backdrop-blur-md text-xs flex items-center justify-between gap-2 border-t border-destructive transition-colors text-left group shadow-lg z-10"
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <AlertTriangle className="h-4 w-4 flex-shrink-0 text-white animate-pulse" />
+                      <span className="font-medium truncate">
+                        {validationResult.line
+                          ? `Baris ${validationResult.line}${validationResult.column ? `:${validationResult.column}` : ''} — `
+                          : ''}
+                        {validationResult.feedback}
+                      </span>
+                    </div>
+                    {validationResult.line && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 bg-black/20 group-hover:bg-black/30 rounded border border-white/20 flex-shrink-0">
+                        Lompat ke Line {validationResult.line} →
+                      </span>
                     )}
-                    {validationStatus === 'valid' && (
-                      <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                    )}
-                    {validationStatus === 'invalid' && (
-                      <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-500 mt-0.5 flex-shrink-0" />
-                    )}
-                    <p className="break-words min-w-0">{validationFeedback}</p>
+                  </button>
+                )}
+                {validationResult && validationResult.isValid && (
+                  <div className="absolute bottom-0 left-0 right-0 py-1 px-2.5 bg-background/80 backdrop-blur-sm text-muted-foreground text-[11px] flex items-center justify-between border-t z-10">
+                    <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      <span>GeoJSON Valid (RFC 7946)</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {validationResult.stats?.featureCount ?? features.length} Fitur
+                    </span>
                   </div>
                 )}
               </TabsContent>

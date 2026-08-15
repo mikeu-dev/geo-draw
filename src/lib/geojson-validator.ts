@@ -3,12 +3,45 @@ import type { FeatureCollection, Feature, Geometry, Position } from 'geojson';
 export interface ValidationResult {
   isValid: boolean;
   feedback: string;
+  line?: number;
+  column?: number;
   errors?: string[];
   stats?: {
     featureCount: number;
     geometryTypes: string[];
     hasProperties: boolean;
   };
+}
+
+/**
+ * Extracts line and column number from a string position or JSON error message.
+ */
+export function getErrorPosition(
+  text: string,
+  errorMsg?: string
+): { line: number; column: number } | undefined {
+  if (!text) return undefined;
+
+  // Pattern 1: "at line X column Y" or "line X, column Y"
+  const lineColMatch = errorMsg?.match(/line\s+(\d+)\s*(?:column|, column)\s*(\d+)/i);
+  if (lineColMatch) {
+    return {
+      line: parseInt(lineColMatch[1], 10),
+      column: parseInt(lineColMatch[2], 10),
+    };
+  }
+
+  // Pattern 2: "at position X"
+  const posMatch = errorMsg?.match(/position\s+(\d+)/i);
+  if (posMatch) {
+    const pos = parseInt(posMatch[1], 10);
+    const lines = text.slice(0, pos).split('\n');
+    const line = lines.length;
+    const column = lines[lines.length - 1].length + 1;
+    return { line, column };
+  }
+
+  return undefined;
 }
 
 const VALID_GEOM_TYPES = [
@@ -100,7 +133,9 @@ function validateGeometry(geom: Geometry, path: string): string[] {
         const first = ring[0];
         const last = ring[ring.length - 1];
         if (first[0] !== last[0] || first[1] !== last[1]) {
-          errors.push(`${path}.ring[${rIdx}]: Cincin polygon tidak tertutup (titik awal [${first}] != titik akhir [${last}]).`);
+          errors.push(
+            `${path}.ring[${rIdx}]: Cincin polygon tidak tertutup (titik awal [${first}] != titik akhir [${last}]).`
+          );
         }
         ring.forEach((pt, i) => {
           const err = validateCoordinate(pt, `${path}.ring[${rIdx}][${i}]`);
@@ -143,10 +178,14 @@ export function validateGeoJSONDeterministic(geojsonInput: string | object): Val
     try {
       parsed = JSON.parse(geojsonInput);
     } catch (err) {
+      const errMsg = (err as Error).message;
+      const pos = getErrorPosition(geojsonInput, errMsg);
       return {
         isValid: false,
-        feedback: `Format JSON tidak valid: ${(err as Error).message}`,
-        errors: [`Sintaks JSON error: ${(err as Error).message}`],
+        feedback: `Format JSON tidak valid: ${errMsg}`,
+        line: pos?.line,
+        column: pos?.column,
+        errors: [`Sintaks JSON error: ${errMsg}`],
       };
     }
   } else {
