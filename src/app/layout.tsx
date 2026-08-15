@@ -114,6 +114,7 @@ export const metadata: Metadata = {
   },
 
   other: {
+    'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
     'apple-mobile-web-app-title': 'Geovara',
@@ -142,6 +143,10 @@ export default function RootLayout({
           }}
         />
         <Script src={`${CESIUM_BASE}/Cesium.js`} strategy="beforeInteractive" />
+        <Script
+          src="https://cdn.jsdelivr.net/npm/ol@9.2.4/dist/ol.js"
+          strategy="beforeInteractive"
+        />
         <Script
           src="https://cdn.jsdelivr.net/npm/ol-cesium@2.17.0/dist/olcesium.js"
           strategy="beforeInteractive"
