@@ -32,7 +32,9 @@ export default function Compass({ map }: CompassProps) {
     });
   };
 
-  if (!map) return null;
+  if (!map) {
+    return <div className="z-10 h-10 w-10" aria-hidden="true" />;
+  }
 
   return (
     <div className="z-10 flex flex-col gap-2">

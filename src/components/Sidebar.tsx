@@ -35,7 +35,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { validateGeoJSON } from '@/ai/flows/validate-geojson';
+import { validateGeoJSONDeterministic } from '@/lib/geojson-validator';
 import { GisService } from '@/lib/spatial';
 import { Feature as GeoJSONFeature, FeatureCollection } from 'geojson';
 import { Skeleton } from './ui/skeleton';
@@ -312,7 +312,7 @@ export default function Sidebar({
     );
   };
 
-  const handleValidate = async () => {
+  const handleValidate = () => {
     if (!geojsonString) {
       toast({
         variant: 'destructive',
@@ -322,27 +322,15 @@ export default function Sidebar({
       return;
     }
     setValidationStatus('loading');
-    setValidationFeedback('Validating with AI...');
-    try {
-      const result = await validateGeoJSON(geojsonString);
-      setValidationStatus(result.isValid ? 'valid' : 'invalid');
-      setValidationFeedback(result.feedback);
-      toast({
-        title: result.isValid ? 'Validation Successful' : 'Validation Failed',
-        description: result.feedback,
-        variant: result.isValid ? 'default' : 'destructive',
-        duration: 9000,
-      });
-    } catch (error) {
-      console.error('Validation error:', error);
-      setValidationStatus('invalid');
-      setValidationFeedback('An unexpected error occurred during validation.');
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to communicate with the validation service.',
-      });
-    }
+    const result = validateGeoJSONDeterministic(geojsonString);
+    setValidationStatus(result.isValid ? 'valid' : 'invalid');
+    setValidationFeedback(result.feedback);
+    toast({
+      title: result.isValid ? 'Validasi Sukses (RFC 7946)' : 'Validasi Gagal',
+      description: result.feedback,
+      variant: result.isValid ? 'default' : 'destructive',
+      duration: 6000,
+    });
   };
 
   useEffect(() => {
