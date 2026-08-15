@@ -17,13 +17,18 @@ import OSM_Source from 'ol/source/OSM';
 import XYZ_Source from 'ol/source/XYZ';
 
 const basemaps = [
-  { id: 'osm', name: 'OpenStreetMap', source: new OSM_Source() },
+  {
+    id: 'osm',
+    name: 'OpenStreetMap',
+    source: new OSM_Source({ crossOrigin: 'anonymous' }),
+  },
   {
     id: 'satellite',
     name: 'Satellite (Esri)',
     source: new XYZ_Source({
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       maxZoom: 19,
+      crossOrigin: 'anonymous',
       attributions: 'Tiles © Esri',
     }),
   },
@@ -33,6 +38,7 @@ const basemaps = [
     source: new XYZ_Source({
       url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
       maxZoom: 17,
+      crossOrigin: 'anonymous',
       attributions: '© OpenTopoMap',
     }),
   },
@@ -42,6 +48,7 @@ const basemaps = [
     source: new XYZ_Source({
       url: 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       maxZoom: 20,
+      crossOrigin: 'anonymous',
       attributions: '© CARTO',
     }),
   },

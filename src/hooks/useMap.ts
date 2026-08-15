@@ -64,7 +64,7 @@ export function useMap({
 
   // Use state for stable OL objects to avoid Ref-access-during-render errors
   const [vectorSource] = useState(() => new VectorSource<Feature<Geometry>>());
-  const [tileLayer] = useState(() => new TileLayer({ source: new OSM() }));
+  const [tileLayer] = useState(() => new TileLayer({ source: new OSM({ crossOrigin: 'anonymous' }) }));
   const [selectInteraction] = useState(() => new Select({ hitTolerance: 5 }));
   const [modifyInteraction] = useState(() => new Modify({ source: vectorSource }));
 
