@@ -2,6 +2,8 @@
 
 import { useState, useCallback, DragEvent } from 'react';
 import { FileUp } from 'lucide-react';
+import { csvToGeoJson } from '@/lib/csv-geojson';
+import { wktToGeoJson } from '@/lib/wkt-geojson';
 
 interface FileDropZoneProps {
   onFileLoad: (content: string, filename: string) => void | Promise<void>;
@@ -9,6 +11,34 @@ interface FileDropZoneProps {
 
 export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
+
+  const processFileContent = useCallback(
+    (content: string, filename: string) => {
+      const ext = '.' + filename.split('.').pop()?.toLowerCase();
+
+      try {
+        if (ext === '.csv') {
+          const geojson = csvToGeoJson(content);
+          void Promise.resolve(onFileLoad(JSON.stringify(geojson, null, 2), filename));
+          return;
+        }
+
+        if (ext === '.wkt') {
+          const geojson = wktToGeoJson(content);
+          void Promise.resolve(onFileLoad(JSON.stringify(geojson, null, 2), filename));
+          return;
+        }
+
+        // Standard GeoJSON, KML, TopoJSON
+        void Promise.resolve(onFileLoad(content, filename));
+      } catch (err) {
+        console.error('File parsing error in FileDropZone:', err);
+        // Fallback to raw content if custom conversion fails
+        void Promise.resolve(onFileLoad(content, filename));
+      }
+    },
+    [onFileLoad]
+  );
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -32,7 +62,7 @@ export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
       if (!files || files.length === 0) return;
 
       const file = files[0];
-      const validExtensions = ['.geojson', '.json', '.kml', '.topojson'];
+      const validExtensions = ['.geojson', '.json', '.kml', '.topojson', '.csv', '.wkt'];
       const ext = '.' + file.name.split('.').pop()?.toLowerCase();
 
       if (!validExtensions.includes(ext)) {
@@ -43,12 +73,12 @@ export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
       reader.onload = (event) => {
         const content = event.target?.result as string;
         if (content) {
-          void Promise.resolve(onFileLoad(content, file.name));
+          processFileContent(content, file.name);
         }
       };
       reader.readAsText(file);
     },
-    [onFileLoad]
+    [processFileContent]
   );
 
   const handleFileInput = useCallback(
@@ -60,13 +90,13 @@ export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
       reader.onload = (event) => {
         const content = event.target?.result as string;
         if (content) {
-          void Promise.resolve(onFileLoad(content, file.name));
+          processFileContent(content, file.name);
         }
       };
       reader.readAsText(file);
       e.target.value = ''; // reset so same file can be re-imported
     },
-    [onFileLoad]
+    [processFileContent]
   );
 
   return (
@@ -86,7 +116,7 @@ export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
     >
       <input
         type="file"
-        accept=".geojson,.json,.kml,.topojson"
+        accept=".geojson,.json,.kml,.topojson,.csv,.wkt"
         onChange={handleFileInput}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         aria-label="Import file"
@@ -98,7 +128,7 @@ export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
         <p className="text-xs text-muted-foreground">
           {isDragging ? 'Drop file here' : 'Drop or click to import'}
         </p>
-        <p className="text-[10px] text-muted-foreground/60">GeoJSON, KML, TopoJSON</p>
+        <p className="text-[10px] text-muted-foreground/60">GeoJSON, KML, TopoJSON, CSV, WKT</p>
       </div>
     </div>
   );

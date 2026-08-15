@@ -51,6 +51,8 @@ import FileDropZone from './FileDropZone';
 import AttributeTable from './AttributeTable';
 import { getArea, getLength } from 'ol/sphere';
 import { parseGeoJsonStringInWorker, shouldParseGeoJsonInWorker } from '@/lib/geojson-worker-parse';
+import { geoJsonToCsv } from '@/lib/csv-geojson';
+import { geoJsonToWkt } from '@/lib/wkt-geojson';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -349,7 +351,9 @@ export default function Sidebar({
     }
   }, [geojsonString]);
 
-  const handleDownload = async (format: 'geojson' | 'kml' | 'kmz' | 'topojson') => {
+  const handleDownload = async (
+    format: 'geojson' | 'kml' | 'kmz' | 'topojson' | 'csv' | 'wkt'
+  ) => {
     if (format === 'topojson') {
       if (!geojsonString) return;
       try {
@@ -367,6 +371,46 @@ export default function Sidebar({
         toast({ title: 'Successfully downloaded TopoJSON' });
       } catch {
         toast({ title: 'Failed to generate TopoJSON', variant: 'destructive' });
+      }
+      return;
+    }
+
+    if (format === 'csv') {
+      if (!geojsonString) return;
+      try {
+        const csv = geoJsonToCsv(geojsonString);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'map.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast({ title: 'Successfully downloaded CSV' });
+      } catch {
+        toast({ title: 'Failed to generate CSV', variant: 'destructive' });
+      }
+      return;
+    }
+
+    if (format === 'wkt') {
+      if (!geojsonString) return;
+      try {
+        const wkt = geoJsonToWkt(geojsonString);
+        const blob = new Blob([wkt], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'map.wkt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast({ title: 'Successfully downloaded WKT' });
+      } catch {
+        toast({ title: 'Failed to generate WKT', variant: 'destructive' });
       }
       return;
     }
@@ -581,6 +625,8 @@ export default function Sidebar({
                       <MenubarItem onClick={() => handleDownload('topojson')}>
                         Save as TopoJSON
                       </MenubarItem>
+                      <MenubarItem onClick={() => handleDownload('csv')}>Save as CSV</MenubarItem>
+                      <MenubarItem onClick={() => handleDownload('wkt')}>Save as WKT</MenubarItem>
                       <MenubarItem onClick={() => handleDownload('kml')}>Save as KML</MenubarItem>
                       <MenubarItem onClick={() => handleDownload('kmz')}>Save as KMZ</MenubarItem>
                     </MenubarContent>
