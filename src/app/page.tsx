@@ -8,7 +8,16 @@ import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar';
 import MapSkeleton from '@/components/MapSkeleton';
 import { Loader2 } from 'lucide-react';
-import { encodeGeoJSON, decodeGeoJSON, updateUrlHash, getEncodedFromHash } from '@/lib/url-state';
+import {
+  encodeGeoJSON,
+  decodeGeoJSON,
+  updateUrlHash,
+  getEncodedFromHash,
+  getRemoteUrlFromParams,
+  fetchRemoteGeoJSON,
+} from '@/lib/url-state';
+import { registerGeovaraDevApi, unregisterGeovaraDevApi } from '@/lib/dev-api';
+import { useToast } from '@/hooks/use-toast';
 import { useUndoHistory } from '@/hooks/useUndoHistory';
 import { GisService } from '@/lib/spatial';
 import { Feature as GeoJSONFeature } from 'geojson';
@@ -57,6 +66,7 @@ export default function Home() {
   const [isParsing, setIsParsing] = useState(false);
   const [zoomToId, setZoomToId] = useState<string | number | null>(null);
   const [is3d, setIs3d] = useState(false);
+  const { toast } = useToast();
 
   const {
     state: geojsonString,
@@ -169,8 +179,40 @@ export default function Home() {
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       setIsClient(true);
+
+      // 1. Check for Remote GeoJSON URL (?url=... or #data=data:text/x-url,...)
+      const remoteUrl = getRemoteUrlFromParams();
+      if (remoteUrl) {
+        setIsParsing(true);
+        try {
+          toast({
+            title: 'Memuat Dataset Eksternal',
+            description: `Mengambil data dari URL...`,
+          });
+          const fetchedData = await fetchRemoteGeoJSON(remoteUrl);
+          setGeojsonString(fetchedData);
+          syncFeaturesFromString(fetchedData);
+          resetHistory(fetchedData);
+          toast({
+            title: 'GeoJSON Eksternal Berhasil Dimuat',
+            description: 'Dataset berhasil divisualisasikan pada peta.',
+          });
+        } catch (err) {
+          console.error('Failed to load remote GeoJSON URL:', err);
+          toast({
+            title: 'Gagal Memuat URL Eksternal',
+            description: 'Pastikan URL publik, valid, dan mendukung header CORS.',
+            variant: 'destructive',
+          });
+        } finally {
+          setIsParsing(false);
+        }
+        return;
+      }
+
+      // 2. Otherwise load compressed hash
       const hash = getEncodedFromHash();
       if (hash) {
         setIsParsing(true);
@@ -184,7 +226,54 @@ export default function Home() {
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [setGeojsonString, syncFeaturesFromString, resetHistory]);
+  }, [setGeojsonString, syncFeaturesFromString, resetHistory, toast]);
+
+  // Register window.geovara developer console API
+  useEffect(() => {
+    registerGeovaraDevApi({
+      version: '1.0.0',
+      getGeoJSON: () => geojsonString,
+      setGeoJSON: (data: string | object) => {
+        const str = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        setGeojsonString(str);
+        syncFeaturesFromString(str);
+      },
+      getFeatures: () => features,
+      getFeaturesCount: () => features.length,
+      addFeature: (geomOrGeojson: object, props?: Record<string, unknown>) => {
+        try {
+          let feature: Feature<Geometry>;
+          if ('type' in geomOrGeojson && (geomOrGeojson as { type: string }).type === 'Feature') {
+            feature = format.readFeature(geomOrGeojson) as Feature<Geometry>;
+          } else {
+            feature = format.readFeature({
+              type: 'Feature',
+              properties: props || {},
+              geometry: geomOrGeojson,
+            }) as Feature<Geometry>;
+          }
+          if (!feature.getId()) feature.setId(`dev_f_${Date.now()}`);
+          setFeatures((prev) => [...prev, feature]);
+        } catch (err) {
+          console.error('Geovara Dev API addFeature error:', err);
+        }
+      },
+      clear: () => handleClear(),
+      fitBounds: () => {
+        window.dispatchEvent(new CustomEvent('map:flyto', { detail: { zoom: 2, lat: 0, lon: 0 } }));
+      },
+      setBasemap: (basemapId: string) => {
+        window.dispatchEvent(
+          new CustomEvent('map:setbasemap', { detail: { basemap: basemapId } })
+        );
+      },
+      setProjection: (proj: 'EPSG:4326' | 'EPSG:3857') => {
+        setProjection(proj);
+      },
+    });
+
+    return () => unregisterGeovaraDevApi();
+  }, [geojsonString, features, setGeojsonString, syncFeaturesFromString, handleClear]);
 
   useEffect(() => {
     if (skipFeaturesSync.current) {

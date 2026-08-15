@@ -56,3 +56,58 @@ export function getEncodedFromHash(): string | null {
   if (!dataPart) return null;
   return dataPart.slice(5);
 }
+
+/**
+ * Checks for a remote GeoJSON URL specified in search params (`?url=...`)
+ * or hash format (`#data=data:text/x-url,...`).
+ */
+export function getRemoteUrlFromParams(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryUrl = searchParams.get('url');
+    if (queryUrl) return queryUrl;
+
+    const hash = window.location.hash.replace(/^#/, '');
+    const segments = hash.split('&');
+    for (const segment of segments) {
+      if (segment.startsWith('data=data:text/x-url,')) {
+        return decodeURIComponent(segment.replace('data=data:text/x-url,', ''));
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing remote URL from params:', error);
+  }
+
+  return null;
+}
+
+/**
+ * Fetches a remote GeoJSON file with timeout and error handling.
+ */
+export async function fetchRemoteGeoJSON(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json, application/geo+json, text/plain',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+    }
+
+    const text = await response.text();
+    // Validate JSON format
+    JSON.parse(text);
+    return text;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
