@@ -3,6 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, Command, X } from 'lucide-react';
 import { processSpatialIntent, SpatialIntentOutput } from '@/ai/flows/spatial-intent';
+import {
+  matchQuickSpatialIntent,
+  getCachedIntent,
+  setCachedIntent,
+} from '@/lib/ai-intent-cache';
 import { useToast } from '@/hooks/use-toast';
 
 interface AIAssistantProps {
@@ -43,8 +48,34 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
     e.preventDefault();
     if (!query.trim() || isLoading) return;
 
+    // 1. Fast client-side matching (0ms latency, zero quota consumption)
+    const quickMatch = matchQuickSpatialIntent(query);
+    if (quickMatch) {
+      setLastNarrative(quickMatch.narrative);
+      onAction(quickMatch);
+      setTimeout(() => {
+        setQuery('');
+        setIsOpen(false);
+        setLastNarrative('');
+      }, 2500);
+      return;
+    }
+
+    // 2. Check local in-memory intent cache
+    const cached = getCachedIntent(query, featureContext);
+    if (cached) {
+      setLastNarrative(cached.narrative);
+      onAction(cached);
+      setTimeout(() => {
+        setQuery('');
+        setIsOpen(false);
+        setLastNarrative('');
+      }, 2500);
+      return;
+    }
+
     setIsLoading(true);
-    setLastNarrative('Analyzing your request...');
+    setLastNarrative('Analyzing your request with Gemini...');
 
     try {
       const result = await processSpatialIntent(query, featureContext);
@@ -82,6 +113,9 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
           variant: 'destructive',
         });
       } else {
+        // Save to cache
+        setCachedIntent(query, spatialAction, featureContext);
+
         setLastNarrative(spatialAction.narrative);
         onAction(spatialAction);
 
