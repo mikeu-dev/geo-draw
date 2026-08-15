@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import type { Map } from 'ol';
-import { useToast } from '@/hooks/use-toast';
 
 interface CesiumControllerProps {
   map: Map | null;
@@ -15,110 +14,201 @@ interface WindowWithCesium extends Window {
       defaultAccessToken: string;
     };
     createWorldTerrainAsync?: () => Promise<unknown>;
-    Cesium3DTileset?: {
-      fromUrl: (url: string, options: unknown) => Promise<unknown>;
+    OpenStreetMapImageryProvider?: new (options: { url: string }) => unknown;
+    UrlTemplateImageryProvider?: new (options: {
+      url: string;
+      subdomains?: string[] | string;
+      maximumLevel?: number;
+    }) => unknown;
+    Color?: {
+      fromCssColorString: (color: string) => unknown;
+      BLACK: unknown;
+      WHITE: unknown;
     };
   };
   olcs?: {
-    OLCesium: new (options: { map: Map | null }) => {
+    OLCesium: new (options: { map: Map }) => {
       getCesiumScene: () => {
         terrainProvider: unknown;
-        primitives: { add: (tileset: unknown) => void };
+        globe?: {
+          enableLighting?: boolean;
+          depthTestAgainstTerrain?: boolean;
+          showGroundAtmosphere?: boolean;
+          show?: boolean;
+          baseColor?: unknown;
+        };
+        imageryLayers?: {
+          length: number;
+          removeAll: (destroy?: boolean) => void;
+          addImageryProvider: (provider: unknown) => void;
+        };
       };
       setEnabled: (enabled: boolean) => void;
+      getEnabled: () => boolean;
+      destroy?: () => void;
     };
   };
 }
 
 export default function CesiumController({ map, enabled }: CesiumControllerProps) {
-  const ol3d = useRef<{ setEnabled: (enabled: boolean) => void } | null>(null);
-  const isInitialized = useRef(false);
-  const isInitializing = useRef(false);
-  const { toast } = useToast();
+  const ol3dRef = useRef<{
+    getCesiumScene: () => {
+      terrainProvider: unknown;
+      globe?: {
+        enableLighting?: boolean;
+        depthTestAgainstTerrain?: boolean;
+        showGroundAtmosphere?: boolean;
+        show?: boolean;
+        baseColor?: unknown;
+      };
+      imageryLayers?: {
+        length: number;
+        removeAll: (destroy?: boolean) => void;
+        addImageryProvider: (provider: unknown) => void;
+      };
+    };
+    setEnabled: (enabled: boolean) => void;
+    getEnabled: () => boolean;
+    destroy?: () => void;
+  } | null>(null);
+
+  const isInitializingRef = useRef(false);
 
   useEffect(() => {
-    // Only initialize when user explicitly enables 3D Globe
-    if (!enabled || !map || typeof window === 'undefined') return;
+    if (!map || typeof window === 'undefined') return;
 
-    if (isInitialized.current && ol3d.current) {
-      ol3d.current.setEnabled(true);
-      return;
-    }
+    const win = window as unknown as WindowWithCesium;
 
-    if (isInitializing.current) return;
-    isInitializing.current = true;
-
-    const initCesium = async (): Promise<boolean> => {
-      const win = window as unknown as WindowWithCesium;
-      const Cesium = win.Cesium;
-      const OLCesium = win.olcs?.OLCesium;
-
-      if (!Cesium || !OLCesium) {
-        return false;
+    if (enabled) {
+      if (ol3dRef.current) {
+        try {
+          ol3dRef.current.setEnabled(true);
+        } catch (e) {
+          console.error('Error enabling Cesium 3D:', e);
+        }
+        return;
       }
 
-      try {
-        const customToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
-        if (win.Cesium?.Ion) {
-          win.Cesium.Ion.defaultAccessToken = customToken || '';
+      if (isInitializingRef.current) return;
+      isInitializingRef.current = true;
+
+      const tryInit = () => {
+        const Cesium = win.Cesium;
+        const OLCesium = win.olcs?.OLCesium;
+
+        if (!Cesium || !OLCesium) {
+          return false;
         }
 
-        const ol3dInstance = new OLCesium({ map });
-        ol3d.current = ol3dInstance;
-
-        // Only load Cesium Ion world terrain if user provides custom Ion token
-        if (customToken && Cesium.createWorldTerrainAsync) {
-          try {
-            const scene = ol3dInstance.getCesiumScene();
-            const terrainProvider = await Cesium.createWorldTerrainAsync();
-            scene.terrainProvider = terrainProvider;
-          } catch {
-            // Silently fallback to default WGS84 ellipsoid globe
+        try {
+          // Clear any expired demo token
+          const customToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
+          if (win.Cesium?.Ion) {
+            win.Cesium.Ion.defaultAccessToken = customToken || '';
           }
-        }
 
-        isInitialized.current = true;
-        ol3dInstance.setEnabled(true);
-        return true;
-      } catch (error) {
-        console.error('Error initializing OLCesium:', error);
-        return false;
-      } finally {
-        isInitializing.current = false;
+          const ol3dInstance = new OLCesium({ map });
+          ol3dRef.current = ol3dInstance;
+
+          const scene = ol3dInstance.getCesiumScene();
+          if (scene) {
+            if (scene.globe) {
+              scene.globe.show = true;
+              scene.globe.depthTestAgainstTerrain = false;
+              scene.globe.enableLighting = false;
+              scene.globe.showGroundAtmosphere = true;
+              if (Cesium.Color) {
+                scene.globe.baseColor = Cesium.Color.fromCssColorString('#1b263b');
+              }
+            }
+
+            // Provide crisp, reliable Carto Voyager / OSM imagery layer on 3D globe
+            if (scene.imageryLayers) {
+              try {
+                let provider: unknown = null;
+                if (Cesium.UrlTemplateImageryProvider) {
+                  provider = new Cesium.UrlTemplateImageryProvider({
+                    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c', 'd'],
+                    maximumLevel: 19,
+                  });
+                } else if (Cesium.OpenStreetMapImageryProvider) {
+                  provider = new Cesium.OpenStreetMapImageryProvider({
+                    url: 'https://tile.openstreetmap.org/',
+                  });
+                }
+
+                if (provider) {
+                  scene.imageryLayers.removeAll(true);
+                  scene.imageryLayers.addImageryProvider(provider);
+                }
+              } catch (imgErr) {
+                console.warn('Could not setup Cesium imagery provider:', imgErr);
+              }
+            }
+          }
+
+          if (customToken && Cesium.createWorldTerrainAsync) {
+            Cesium.createWorldTerrainAsync()
+              .then((terrainProvider) => {
+                if (ol3dRef.current && scene) {
+                  scene.terrainProvider = terrainProvider;
+                }
+              })
+              .catch(() => {
+                // Fallback to ellipsoid terrain
+              });
+          }
+
+          ol3dInstance.setEnabled(true);
+          isInitializingRef.current = false;
+          return true;
+        } catch (error) {
+          console.error('Failed to instantiate OLCesium:', error);
+          isInitializingRef.current = false;
+          return false;
+        }
+      };
+
+      if (!tryInit()) {
+        const interval = setInterval(() => {
+          if (tryInit() || !enabled) {
+            clearInterval(interval);
+          }
+        }, 300);
+
+        return () => clearInterval(interval);
+      }
+    } else {
+      if (ol3dRef.current) {
+        try {
+          ol3dRef.current.setEnabled(false);
+        } catch (e) {
+          console.error('Error disabling Cesium 3D:', e);
+        }
+      }
+    }
+  }, [map, enabled]);
+
+  // Destroy on unmount or map destruction
+  useEffect(() => {
+    return () => {
+      if (ol3dRef.current) {
+        try {
+          ol3dRef.current.setEnabled(false);
+          if (typeof ol3dRef.current.destroy === 'function') {
+            ol3dRef.current.destroy();
+          }
+        } catch {
+          // ignore cleanup errors
+        }
+        ol3dRef.current = null;
       }
     };
-
-    let attempts = 0;
-    const maxAttempts = 8;
-    const interval = setInterval(async () => {
-      attempts++;
-      const success = await initCesium();
-      if (success || attempts >= maxAttempts) {
-        clearInterval(interval);
-        if (!success) {
-          toast({
-            title: '3D Globe Belum Tersedia',
-            description: 'Sedang memuat library visualisasi 3D dari CDN...',
-            duration: 4000,
-          });
-        }
-      }
-    }, 400);
-
-    return () => clearInterval(interval);
-  }, [map, enabled, toast]);
-
-  useEffect(() => {
-    if (isInitialized.current && ol3d.current) {
-      try {
-        ol3d.current.setEnabled(enabled);
-      } catch (error) {
-        console.error('Error toggling Cesium state:', error);
-      }
-    }
-  }, [enabled]);
+  }, [map]);
 
   return null;
 }
+
 
 
