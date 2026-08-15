@@ -11,8 +11,11 @@ interface CesiumControllerProps {
 
 interface WindowWithCesium extends Window {
   Cesium?: {
-    createWorldTerrainAsync: () => Promise<unknown>;
-    Cesium3DTileset: {
+    Ion?: {
+      defaultAccessToken: string;
+    };
+    createWorldTerrainAsync?: () => Promise<unknown>;
+    Cesium3DTileset?: {
       fromUrl: (url: string, options: unknown) => Promise<unknown>;
     };
   };
@@ -30,13 +33,22 @@ interface WindowWithCesium extends Window {
 export default function CesiumController({ map, enabled }: CesiumControllerProps) {
   const ol3d = useRef<{ setEnabled: (enabled: boolean) => void } | null>(null);
   const isInitialized = useRef(false);
+  const isInitializing = useRef(false);
   const { toast } = useToast();
-  const notifiedUnavailable = useRef(false);
 
   useEffect(() => {
-    if (!map || typeof window === 'undefined') return;
+    // Only initialize when user explicitly enables 3D Globe
+    if (!enabled || !map || typeof window === 'undefined') return;
 
-    const initCesium = async () => {
+    if (isInitialized.current && ol3d.current) {
+      ol3d.current.setEnabled(true);
+      return;
+    }
+
+    if (isInitializing.current) return;
+    isInitializing.current = true;
+
+    const initCesium = async (): Promise<boolean> => {
       const win = window as unknown as WindowWithCesium;
       const Cesium = win.Cesium;
       const OLCesium = win.olcs?.OLCesium;
@@ -45,79 +57,67 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
         return false;
       }
 
-      if (isInitialized.current) return true;
-
       try {
-        const ol3dInstance = new OLCesium({ map: map });
+        const ol3dInstance = new OLCesium({ map });
         ol3d.current = ol3dInstance;
 
-        const scene = ol3dInstance.getCesiumScene();
+        // Optional: only load Cesium Ion terrain if a valid access token is provided
+        const ionToken =
+          process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN ||
+          win.Cesium?.Ion?.defaultAccessToken;
 
-        const terrainProvider = await Cesium.createWorldTerrainAsync();
-        scene.terrainProvider = terrainProvider;
-
-        const tileset = await Cesium.Cesium3DTileset.fromUrl(
-          'https://assets.cesium.com/1/ion/default/v1/354307/tileset.json?assetId=354307',
-          {
-            skipLevelOfDetail: true,
-            cullWithChildrenBounds: false,
+        if (ionToken && Cesium.createWorldTerrainAsync) {
+          try {
+            const scene = ol3dInstance.getCesiumScene();
+            const terrainProvider = await Cesium.createWorldTerrainAsync();
+            scene.terrainProvider = terrainProvider;
+          } catch {
+            // Silently fallback to default WGS84 ellipsoid globe
           }
-        );
-        scene.primitives.add(tileset);
+        }
 
         isInitialized.current = true;
-        ol3d.current.setEnabled(enabled);
+        ol3dInstance.setEnabled(true);
         return true;
       } catch (error) {
-        console.error('Error initializing OLCesium/Cesium:', error);
+        console.error('Error initializing OLCesium:', error);
         return false;
+      } finally {
+        isInitializing.current = false;
       }
     };
 
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 8;
     const interval = setInterval(async () => {
       attempts++;
       const success = await initCesium();
-      if (success) {
+      if (success || attempts >= maxAttempts) {
         clearInterval(interval);
-      } else if (attempts >= maxAttempts) {
-        clearInterval(interval);
-        if (enabled && !notifiedUnavailable.current) {
-          notifiedUnavailable.current = true;
+        if (!success) {
           toast({
-            title: '3D Engine Belum Siap',
-            description: 'Library Cesium 3D Globe sedang diunduh dari CDN atau koneksi terbatas.',
-            duration: 5000,
+            title: '3D Globe Belum Tersedia',
+            description: 'Sedang memuat library visualisasi 3D dari CDN...',
+            duration: 4000,
           });
         }
       }
-    }, 600);
+    }, 400);
 
     return () => clearInterval(interval);
   }, [map, enabled, toast]);
 
   useEffect(() => {
-    if (enabled && !isInitialized.current && !notifiedUnavailable.current) {
-      const win = typeof window !== 'undefined' ? (window as unknown as WindowWithCesium) : null;
-      if (!win?.Cesium || !win?.olcs) {
-        toast({
-          title: 'Mengaktifkan 3D Globe...',
-          description: 'Menghubungkan ke Cesium 3D Terrain engine.',
-          duration: 3000,
-        });
-      }
-    }
-
     if (isInitialized.current && ol3d.current) {
       try {
         ol3d.current.setEnabled(enabled);
       } catch (error) {
-        console.error('Error toggling Cesium:', error);
+        console.error('Error toggling Cesium state:', error);
       }
     }
-  }, [enabled, toast]);
+  }, [enabled]);
 
   return null;
 }
+
 
