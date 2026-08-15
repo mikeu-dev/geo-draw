@@ -48,6 +48,7 @@ import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import HelpContent from './HelpContent';
 import FileDropZone from './FileDropZone';
+import AttributeTable from './AttributeTable';
 import { getArea, getLength } from 'ol/sphere';
 import { parseGeoJsonStringInWorker, shouldParseGeoJsonInWorker } from '@/lib/geojson-worker-parse';
 
@@ -69,6 +70,7 @@ interface SidebarProps {
   onDeleteFeature: (id: string | number | undefined) => void;
   onZoomToFeature: (id: string | number) => void;
   onFeatureSelect: (feature: Feature<Geometry> | null) => void;
+  onFeaturePropertyChange?: (featureId: string | number, key: string, value: unknown) => void;
   onHeavyParseChange?: (busy: boolean) => void;
   vectorOpacity: number;
   onVectorOpacityChange: (value: number) => void;
@@ -101,6 +103,7 @@ export default function Sidebar({
   onDeleteFeature,
   onZoomToFeature,
   onFeatureSelect,
+  onFeaturePropertyChange,
   onHeavyParseChange,
   vectorOpacity,
   onVectorOpacityChange,
@@ -587,17 +590,20 @@ export default function Sidebar({
             </TooltipProvider>
 
             <Tabs defaultValue="json" className="flex-grow flex flex-col">
-              <TabsList className="w-full">
-                <TabsTrigger value="json" className="flex-1">
+              <TabsList className="w-full grid grid-cols-5">
+                <TabsTrigger value="json" className="text-xs">
                   JSON
                 </TabsTrigger>
-                <TabsTrigger value="features" className="flex-1">
+                <TabsTrigger value="table" className="text-xs">
+                  Table
+                </TabsTrigger>
+                <TabsTrigger value="features" className="text-xs">
                   Features ({features.length})
                 </TabsTrigger>
-                <TabsTrigger value="layers" className="flex-1">
+                <TabsTrigger value="layers" className="text-xs">
                   Layers
                 </TabsTrigger>
-                <TabsTrigger value="help" className="flex-1">
+                <TabsTrigger value="help" className="text-xs">
                   Help
                 </TabsTrigger>
               </TabsList>
@@ -880,6 +886,18 @@ export default function Sidebar({
                     </div>
                   </div>
                 </div>
+              </TabsContent>
+              <TabsContent
+                value="table"
+                className="flex-grow mt-2 rounded-md border border-input overflow-hidden flex flex-col min-h-0"
+              >
+                <AttributeTable
+                  features={features}
+                  onPropertyChange={onFeaturePropertyChange || (() => {})}
+                  onZoomToFeature={onZoomToFeature}
+                  onFeatureSelect={onFeatureSelect}
+                  onDeleteFeature={onDeleteFeature}
+                />
               </TabsContent>
               <TabsContent value="help" className="flex-grow mt-2 overflow-y-auto">
                 <HelpContent />

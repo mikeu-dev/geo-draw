@@ -323,6 +323,7 @@ export default function Home() {
         onDeleteFeature={handleDeleteFeature}
         onZoomToFeature={handleZoomTo}
         onFeatureSelect={handleFeatureSelect}
+        onFeaturePropertyChange={handleFeaturePropertyChange}
         onHeavyParseChange={setIsParsing}
         vectorOpacity={vectorOpacity}
         onVectorOpacityChange={setVectorOpacity}
