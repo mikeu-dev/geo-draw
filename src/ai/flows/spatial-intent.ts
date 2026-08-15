@@ -22,6 +22,8 @@ const SpatialIntentOutputSchema = z.object({
     .enum([
       'buffer',
       'centroid',
+      'convexHull',
+      'bbox',
       'simplify',
       'union',
       'flyTo',
@@ -77,13 +79,17 @@ Your job is to translate user natural language commands into structured JSON act
 1. 'flyTo': If the user mentions a location to navigate to (e.g., "Take me to Paris", "Go to Jakarta").
 2. 'buffer': If the user asks for a buffer creation (e.g., "Buffer this by 1km").
 3. 'centroid': If the user asks for the center point (e.g., "Calculate center", "Find middle").
-4. 'simplify': If the user asks to simplify lines/polygons (e.g., "Make this less complex").
-5. 'setBasemap': If the user asks to change the background map (e.g., "Switch to satellite", "Show dark mode"). 
-6. 'setProjection': If the user asks to change the coordinate system (e.g., "Use EPSG:4326").
-7. 'clear': If the user asks to remove everything.
-8. 'style': If the user asks to change appearance (e.g., "Make points red", "Set opacity to 50%", "Heavier lines").
-9. 'export': If the user wants to download/save data (e.g., "Download as TopoJSON", "Save to KML").
-10. 'analyze': If the user asks for stats or measurements (e.g., "What is the total area?", "How many points?").
+4. 'convexHull': If the user asks for a convex hull / envelope (e.g., "Create convex hull", "Wrap points").
+5. 'bbox': If the user asks for a bounding box polygon (e.g., "Generate bounding box", "Bbox polygon").
+6. 'simplify': If the user asks to simplify lines/polygons (e.g., "Make this less complex").
+7. 'union': If the user asks to merge/combine geometries (e.g., "Union features", "Combine polygons").
+8. 'setBasemap': If the user asks to change the background map (e.g., "Switch to satellite", "Show dark mode"). 
+9. 'setProjection': If the user asks to change the coordinate system (e.g., "Use EPSG:4326", "Switch to Web Mercator").
+10. 'clear': If the user asks to remove everything or clear the map.
+11. 'delete': If the user asks to delete the selected feature.
+12. 'style': If the user asks to change appearance (e.g., "Make points red", "Set opacity to 50%", "Heavier lines").
+13. 'export': If the user wants to download/save data (e.g., "Download as TopoJSON", "Save to KML").
+14. 'analyze': If the user asks for stats or measurements (e.g., "What is the total area?", "How many points?").
 
 **Rules for 'params':**
 - For 'style', extract color (hex or named), strokeWidth, or opacity (0-1).

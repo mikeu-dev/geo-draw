@@ -215,18 +215,91 @@ export default function Home() {
         window.dispatchEvent(
           new CustomEvent('map:setbasemap', { detail: { basemap: action.params?.basemap } })
         );
-      } else if (action.action === 'buffer') {
+      } else if (action.action === 'setProjection') {
+        const proj = action.params?.projection;
+        if (proj === 'EPSG:4326' || proj === 'EPSG:3857') {
+          setProjection(proj);
+        }
+      } else if (action.action === 'clear') {
+        handleClear();
+      } else if (action.action === 'delete') {
         if (selectedFeature) {
+          handleDeleteFeature(selectedFeature.getId());
+        }
+      } else if (action.action === 'buffer') {
+        const targetFeat = selectedFeature || (features.length > 0 ? features[features.length - 1] : null);
+        if (targetFeat) {
           const radius = (action.params as { radius?: number })?.radius || 1;
-          const gj = format.writeFeatureObject(selectedFeature);
+          const gj = format.writeFeatureObject(targetFeat);
           const buffered = GisService.createBuffer(gj as GeoJSONFeature, radius);
           const bufferedFeature = format.readFeature(buffered);
           bufferedFeature.setId(`buffer_${Date.now()}`);
           setFeatures((prev) => [...prev, bufferedFeature as Feature<Geometry>]);
         }
+      } else if (action.action === 'centroid') {
+        if (selectedFeature) {
+          const gj = format.writeFeatureObject(selectedFeature);
+          const centroidGj = GisService.calculateCentroid(gj as GeoJSONFeature);
+          const centroidFeature = format.readFeature(centroidGj);
+          centroidFeature.setId(`centroid_${Date.now()}`);
+          setFeatures((prev) => [...prev, centroidFeature as Feature<Geometry>]);
+        } else if (features.length > 0) {
+          const fc = format.writeFeaturesObject(features);
+          const centroidGj = GisService.calculateCentroid(fc);
+          const centroidFeature = format.readFeature(centroidGj);
+          centroidFeature.setId(`centroid_fc_${Date.now()}`);
+          setFeatures((prev) => [...prev, centroidFeature as Feature<Geometry>]);
+        }
+      } else if (action.action === 'convexHull') {
+        if (features.length > 0) {
+          const gjFeatures = features.map((f) => format.writeFeatureObject(f) as GeoJSONFeature);
+          const hullGj = GisService.calculateConvexHull(gjFeatures);
+          if (hullGj) {
+            const hullFeature = format.readFeature(hullGj);
+            hullFeature.setId(`convex_hull_${Date.now()}`);
+            setFeatures((prev) => [...prev, hullFeature as Feature<Geometry>]);
+          }
+        }
+      } else if (action.action === 'bbox') {
+        const targetFeat = selectedFeature || (features.length > 0 ? features[features.length - 1] : null);
+        if (targetFeat) {
+          const gj = format.writeFeatureObject(targetFeat);
+          const bboxGj = GisService.calculateBBoxPolygon(gj as GeoJSONFeature);
+          const bboxFeature = format.readFeature(bboxGj);
+          bboxFeature.setId(`bbox_${Date.now()}`);
+          setFeatures((prev) => [...prev, bboxFeature as Feature<Geometry>]);
+        } else if (features.length > 0) {
+          const fc = format.writeFeaturesObject(features);
+          const bboxGj = GisService.calculateBBoxPolygon(fc);
+          const bboxFeature = format.readFeature(bboxGj);
+          bboxFeature.setId(`bbox_fc_${Date.now()}`);
+          setFeatures((prev) => [...prev, bboxFeature as Feature<Geometry>]);
+        }
+      } else if (action.action === 'simplify') {
+        if (selectedFeature) {
+          const gj = format.writeFeatureObject(selectedFeature);
+          const simplifiedGj = GisService.simplifyGeometry(gj as GeoJSONFeature);
+          const simplifiedFeature = format.readFeature(simplifiedGj) as Feature<Geometry>;
+          simplifiedFeature.setId(selectedFeature.getId());
+          setFeatures((prev) =>
+            prev.map((f) => (f.getId() === selectedFeature.getId() ? simplifiedFeature : f))
+          );
+          setSelectedFeature(simplifiedFeature);
+        }
+      } else if (action.action === 'union') {
+        if (features.length >= 2) {
+          const gjFeatures = features.map((f) => format.writeFeatureObject(f) as GeoJSONFeature);
+          const unionGj = GisService.unionFeatures(gjFeatures);
+          if (unionGj) {
+            const unionFeature = format.readFeature(unionGj);
+            unionFeature.setId(`union_${Date.now()}`);
+            setFeatures([unionFeature as Feature<Geometry>]);
+            setSelectedFeature(unionFeature as Feature<Geometry>);
+          }
+        }
       }
     },
-    [selectedFeature]
+    [selectedFeature, features, handleClear, handleDeleteFeature]
   );
 
   const handleToggle3d = useCallback(() => {
