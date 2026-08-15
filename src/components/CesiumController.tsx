@@ -58,15 +58,16 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
       }
 
       try {
+        const customToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
+        if (win.Cesium?.Ion) {
+          win.Cesium.Ion.defaultAccessToken = customToken || '';
+        }
+
         const ol3dInstance = new OLCesium({ map });
         ol3d.current = ol3dInstance;
 
-        // Optional: only load Cesium Ion terrain if a valid access token is provided
-        const ionToken =
-          process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN ||
-          win.Cesium?.Ion?.defaultAccessToken;
-
-        if (ionToken && Cesium.createWorldTerrainAsync) {
+        // Only load Cesium Ion world terrain if user provides custom Ion token
+        if (customToken && Cesium.createWorldTerrainAsync) {
           try {
             const scene = ol3dInstance.getCesiumScene();
             const terrainProvider = await Cesium.createWorldTerrainAsync();
