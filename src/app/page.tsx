@@ -80,6 +80,7 @@ export default function Home() {
   } = useUndoHistory(defaultGeoJsonString);
 
   const skipFeaturesSync = useRef(false);
+  const isEditingInMonaco = useRef(false);
 
   const syncFeaturesFromString = useCallback((str: string) => {
     try {
@@ -155,7 +156,8 @@ export default function Home() {
 
   const handleGeojsonChange = useCallback(
     (value: string | undefined) => {
-      const newGeojsonString = value || '';
+      const newGeojsonString = value ?? '';
+      isEditingInMonaco.current = true;
       setGeojsonString(newGeojsonString);
 
       if (!newGeojsonString.trim() || newGeojsonString.trim() === defaultGeoJsonString) {
@@ -173,7 +175,7 @@ export default function Home() {
         skipFeaturesSync.current = true;
         setFeatures(featuresFromGeojson);
       } catch {
-        /* ignore */
+        // When user is typing manual GeoJSON (in-progress/invalid syntax), keep editor string as-is
       }
     },
     [setGeojsonString]
@@ -282,21 +284,23 @@ export default function Home() {
       skipFeaturesSync.current = false;
       return;
     }
+    if (isEditingInMonaco.current) {
+      isEditingInMonaco.current = false;
+      return;
+    }
 
     try {
       const fc = format.writeFeaturesObject(features);
       const str = JSON.stringify(fc, null, 2);
-      if (str !== geojsonString) {
-        setGeojsonString(str);
-        if (isClient) {
-          const encoded = encodeGeoJSON(str);
-          updateUrlHash(encoded);
-        }
+      setGeojsonString(str);
+      if (isClient) {
+        const encoded = encodeGeoJSON(str);
+        updateUrlHash(encoded);
       }
     } catch {
       /* ignore */
     }
-  }, [features, geojsonString, setGeojsonString, isClient]);
+  }, [features, setGeojsonString, isClient]);
 
   const handleAIAction = useCallback(
     (action: SpatialIntentOutput) => {

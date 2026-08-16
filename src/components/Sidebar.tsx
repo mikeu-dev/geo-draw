@@ -706,11 +706,27 @@ export default function Sidebar({
                   }}
                   theme={theme === 'dark' ? 'vs-dark' : 'light'}
                   options={{
+                    readOnly: false,
                     minimap: { enabled: false },
                     fontSize: 12,
+                    lineNumbers: 'on',
                     wordWrap: 'on',
+                    tabSize: 2,
+                    insertSpaces: true,
+                    formatOnPaste: true,
+                    formatOnType: true,
+                    autoClosingBrackets: 'always',
+                    autoClosingQuotes: 'always',
+                    autoSurround: 'languageDefined',
+                    suggestOnTriggerCharacters: true,
+                    acceptSuggestionOnEnter: 'on',
+                    tabCompletion: 'on',
+                    quickSuggestions: { other: true, comments: false, strings: true },
+                    bracketPairColorization: { enabled: true },
                     scrollBeyondLastLine: false,
                     automaticLayout: true,
+                    renderLineHighlight: 'all',
+                    cursorBlinking: 'smooth',
                   }}
                 />
                 {validationResult && !validationResult.isValid && (
