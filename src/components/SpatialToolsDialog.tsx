@@ -28,12 +28,13 @@ import {
   generateConvexHull,
   generateCentroids,
   unkinkPolygons,
+  booleanUnionPolygons,
   type SpatialUnit,
 } from '@/lib/spatial-operations';
 import type { FeatureCollection } from 'geojson';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Sparkles, ShieldAlert, Layers, Maximize2, Compass, CircleDot } from 'lucide-react';
+import { Sparkles, ShieldAlert, Maximize2, Compass, Merge } from 'lucide-react';
 
 interface SpatialToolsDialogProps {
   open: boolean;
@@ -51,7 +52,7 @@ export default function SpatialToolsDialog({
   selectedFeatureId,
 }: SpatialToolsDialogProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'buffer' | 'simplify' | 'hull' | 'centroid' | 'unkink'>('buffer');
+  const [activeTab, setActiveTab] = useState<'buffer' | 'simplify' | 'hull' | 'centroid' | 'unkink' | 'union'>('buffer');
   const [targetScope, setTargetScope] = useState<'all' | 'selected'>('all');
   const [outputMode, setOutputMode] = useState<'add' | 'replace'>('add');
 
@@ -151,6 +152,31 @@ export default function SpatialToolsDialog({
           resultCollection = unkinkPolygons(targetData);
           break;
         }
+        case 'union': {
+          const mergedFeature = booleanUnionPolygons(targetData);
+          if (mergedFeature) {
+            mergedFeature.id = `union_${Date.now()}`;
+            mergedFeature.properties = {
+              ...(mergedFeature.properties || {}),
+              _operation: 'union',
+              fill: 'rgba(147, 51, 234, 0.3)',
+              stroke: '#9333ea',
+              strokeWidth: 2,
+            };
+            resultCollection = {
+              type: 'FeatureCollection',
+              features: [mergedFeature],
+            };
+          } else {
+            toast({
+              title: 'Gagal menggabungkan poligon',
+              description: 'Pastikan terdapat setidaknya satu atau lebih poligon aktif.',
+              variant: 'destructive',
+            });
+            return;
+          }
+          break;
+        }
       }
 
       if (resultCollection) {
@@ -172,7 +198,7 @@ export default function SpatialToolsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -184,12 +210,13 @@ export default function SpatialToolsDialog({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="w-full">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="buffer" className="text-xs">Buffer</TabsTrigger>
             <TabsTrigger value="simplify" className="text-xs">Simplify</TabsTrigger>
             <TabsTrigger value="hull" className="text-xs">Hull</TabsTrigger>
             <TabsTrigger value="centroid" className="text-xs">Centroid</TabsTrigger>
             <TabsTrigger value="unkink" className="text-xs">Unkink</TabsTrigger>
+            <TabsTrigger value="union" className="text-xs">Union</TabsTrigger>
           </TabsList>
 
           {/* Scope Target */}
@@ -200,13 +227,13 @@ export default function SpatialToolsDialog({
               onValueChange={(v) => setTargetScope(v as 'all' | 'selected')}
               className="flex gap-4 text-xs"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
                 <RadioGroupItem value="all" id="scope-all" />
                 <Label htmlFor="scope-all" className="cursor-pointer text-xs">
                   Semua Fitur ({geojson.features.length})
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
                 <RadioGroupItem
                   value="selected"
                   id="scope-selected"
@@ -214,9 +241,11 @@ export default function SpatialToolsDialog({
                 />
                 <Label
                   htmlFor="scope-selected"
-                  className={`text-xs ${selectedFeature ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+                  className={`text-xs cursor-pointer ${
+                    !selectedFeature ? 'text-muted-foreground line-through' : ''
+                  }`}
                 >
-                  Fitur Terpilih {selectedFeature ? `(ID: ${selectedFeature.id || 'Active'})` : '(Pilih di peta)'}
+                  Fitur Terpilih {selectedFeature ? `(${selectedFeature.id || 'Aktif'})` : '(Belum dipilih)'}
                 </Label>
               </div>
             </RadioGroup>
@@ -224,66 +253,67 @@ export default function SpatialToolsDialog({
 
           {/* TAB BUFFER */}
           <TabsContent value="buffer" className="space-y-4 pt-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <CircleDot className="w-4 h-4 text-primary" />
-              Menghasilkan poligon zona penyangga mengelilingi geometri.
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Jarak Radius</Label>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <Label className="text-xs">Jarak Buffer</Label>
+                <span className="font-semibold text-primary">{bufferDistance} {bufferUnits}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
                 <Input
                   type="number"
-                  min="1"
+                  min="0.1"
+                  step="any"
                   value={bufferDistance}
-                  onChange={(e) => setBufferDistance(Number(e.target.value))}
-                  className="h-8 text-xs"
+                  onChange={(e) => setBufferDistance(parseFloat(e.target.value) || 0)}
+                  className="col-span-2 text-xs"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Satuan</Label>
-                <Select value={bufferUnits} onValueChange={(v) => setBufferUnits(v as SpatialUnit)}>
-                  <SelectTrigger className="h-8 text-xs">
+                <Select
+                  value={bufferUnits}
+                  onValueChange={(val) => setBufferUnits(val as SpatialUnit)}
+                >
+                  <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="meters">Meters (m)</SelectItem>
-                    <SelectItem value="kilometers">Kilometers (km)</SelectItem>
-                    <SelectItem value="miles">Miles (mi)</SelectItem>
-                    <SelectItem value="feet">Feet (ft)</SelectItem>
+                    <SelectItem value="meters">Meters</SelectItem>
+                    <SelectItem value="kilometers">Kilometers</SelectItem>
+                    <SelectItem value="miles">Miles</SelectItem>
+                    <SelectItem value="feet">Feet</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <Slider
+                value={[bufferDistance]}
+                min={1}
+                max={bufferUnits === 'meters' ? 5000 : 50}
+                step={bufferUnits === 'meters' ? 10 : 0.5}
+                onValueChange={(v) => setBufferDistance(v[0])}
+                className="py-2"
+              />
             </div>
           </TabsContent>
 
           {/* TAB SIMPLIFY */}
           <TabsContent value="simplify" className="space-y-4 pt-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Maximize2 className="w-4 h-4 text-primary" />
-              Mereduksi jumlah vertex dengan algoritma Douglas-Peucker.
-            </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <Label className="text-xs">Toleransi Reduksi</Label>
-                <span className="font-mono text-muted-foreground">{simplifyTolerance}</span>
+                <Label className="text-xs">Toleransi Douglas-Peucker</Label>
+                <span className="font-semibold text-primary">{simplifyTolerance}</span>
               </div>
               <Slider
+                value={[simplifyTolerance]}
                 min={0.0001}
                 max={0.05}
                 step={0.0005}
-                value={[simplifyTolerance]}
-                onValueChange={(val) => setSimplifyTolerance(val[0])}
+                onValueChange={(v) => setSimplifyTolerance(v[0])}
+                className="py-2"
               />
-              <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>Presisi Tinggi (Toleransi Rendah)</span>
-                <span>Ukuran Ringan (Toleransi Tinggi)</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                <Label htmlFor="hq-switch" className="text-xs font-normal cursor-pointer">
-                  Preservasi Topologi Kualitas Tinggi (HQ Mode)
-                </Label>
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium">Preservasi Topologi Tinggi (HQ)</span>
+                  <span className="text-[11px] text-muted-foreground">Mencegah penyusutan bentuk berlebih</span>
+                </div>
                 <Switch
-                  id="hq-switch"
                   checked={simplifyHighQuality}
                   onCheckedChange={setSimplifyHighQuality}
                 />
@@ -294,8 +324,8 @@ export default function SpatialToolsDialog({
           {/* TAB CONVEX HULL */}
           <TabsContent value="hull" className="space-y-4 pt-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Layers className="w-4 h-4 text-primary" />
-              Menghitung selubung poligon terluar yang membungkus semua titik atau poligon.
+              <Maximize2 className="w-4 h-4 text-primary" />
+              Menghitung selubung poligon cembung terluar (Minimum Bounding Convex Envelope).
             </div>
             <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
               Convex Hull bertindak seperti pita karet yang diregangkan mengelilingi seluruh himpunan koordinat untuk mengidentifikasi batas perimeter terjauh.
@@ -321,6 +351,17 @@ export default function SpatialToolsDialog({
             </div>
             <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
               Memecah poligon kompleks dengan simpul saling-silang menjadi kumpulan poligon sederhana yang valid sesuai standar OGC / RFC 7946.
+            </div>
+          </TabsContent>
+
+          {/* TAB UNION */}
+          <TabsContent value="union" className="space-y-4 pt-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Merge className="w-4 h-4 text-primary" />
+              Menggabungkan beberapa poligon yang bertumpukan menjadi satu poligon tunggal (Boolean Union).
+            </div>
+            <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
+              Operasi Union menyatukan batas-batas luar dan menghapus garis pemisah internal pada poligon-poligon yang saling bersentuhan atau tumpang tindih.
             </div>
           </TabsContent>
 
