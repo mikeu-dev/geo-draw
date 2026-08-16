@@ -957,7 +957,7 @@ export default function Sidebar({
               </TabsContent>
               <TabsContent
                 value="table"
-                className="flex-1 mt-2 rounded-md border border-input overflow-hidden flex flex-col min-h-0"
+                className="flex-1 mt-2 rounded-md border border-input overflow-hidden min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
               >
                 <AttributeTable
                   features={features}
