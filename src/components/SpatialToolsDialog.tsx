@@ -29,12 +29,13 @@ import {
   generateCentroids,
   unkinkPolygons,
   booleanUnionPolygons,
+  generateMultiRingBuffer,
   type SpatialUnit,
 } from '@/lib/spatial-operations';
 import type { FeatureCollection } from 'geojson';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Sparkles, ShieldAlert, Maximize2, Compass, Merge } from 'lucide-react';
+import { Sparkles, ShieldAlert, Maximize2, Compass, Merge, Radar } from 'lucide-react';
 
 interface SpatialToolsDialogProps {
   open: boolean;
@@ -52,13 +53,19 @@ export default function SpatialToolsDialog({
   selectedFeatureId,
 }: SpatialToolsDialogProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'buffer' | 'simplify' | 'hull' | 'centroid' | 'unkink' | 'union'>('buffer');
+  const [activeTab, setActiveTab] = useState<
+    'buffer' | 'simplify' | 'hull' | 'centroid' | 'unkink' | 'union' | 'rings'
+  >('buffer');
   const [targetScope, setTargetScope] = useState<'all' | 'selected'>('all');
   const [outputMode, setOutputMode] = useState<'add' | 'replace'>('add');
 
   // Buffer state
   const [bufferDistance, setBufferDistance] = useState<number>(100);
   const [bufferUnits, setBufferUnits] = useState<SpatialUnit>('meters');
+
+  // Multi-Ring state
+  const [ringDistancesInput, setRingDistancesInput] = useState<string>('100, 300, 500');
+  const [ringUnits, setRingUnits] = useState<SpatialUnit>('meters');
 
   // Simplify state
   const [simplifyTolerance, setSimplifyTolerance] = useState<number>(0.001);
@@ -93,7 +100,6 @@ export default function SpatialToolsDialog({
       switch (activeTab) {
         case 'buffer': {
           resultCollection = generateBuffer(targetData, bufferDistance, bufferUnits);
-          // Apply custom styling for buffer output
           resultCollection.features.forEach((f, idx) => {
             f.id = `buffer_${Date.now()}_${idx}`;
             f.properties = {
@@ -105,6 +111,24 @@ export default function SpatialToolsDialog({
               strokeWidth: 2,
             };
           });
+          break;
+        }
+        case 'rings': {
+          const rawDists = ringDistancesInput
+            .split(',')
+            .map((s) => parseFloat(s.trim()))
+            .filter((n) => !isNaN(n) && n > 0);
+
+          if (rawDists.length === 0) {
+            toast({
+              title: 'Jarak ring tidak valid',
+              description: 'Masukkan setidaknya satu angka jarak (misal: 100, 300, 500).',
+              variant: 'destructive',
+            });
+            return;
+          }
+          const centerFeat = targetData.features[0];
+          resultCollection = generateMultiRingBuffer(centerFeat, rawDists, ringUnits);
           break;
         }
         case 'simplify': {
@@ -198,25 +222,26 @@ export default function SpatialToolsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[580px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-primary" />
             Turf.js Spatial Analysis Toolkit
           </DialogTitle>
           <DialogDescription>
-            Jalankan transformasi geometris deterministik dan kalkulasi spasial langsung di browser.
+            Jalankan transformasi geometris deterministik dan analisis jangkauan spasial langsung di browser.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="w-full">
-          <TabsList className="grid grid-cols-6 w-full">
-            <TabsTrigger value="buffer" className="text-xs">Buffer</TabsTrigger>
-            <TabsTrigger value="simplify" className="text-xs">Simplify</TabsTrigger>
-            <TabsTrigger value="hull" className="text-xs">Hull</TabsTrigger>
-            <TabsTrigger value="centroid" className="text-xs">Centroid</TabsTrigger>
-            <TabsTrigger value="unkink" className="text-xs">Unkink</TabsTrigger>
-            <TabsTrigger value="union" className="text-xs">Union</TabsTrigger>
+          <TabsList className="grid grid-cols-7 w-full">
+            <TabsTrigger value="buffer" className="text-[11px] px-1">Buffer</TabsTrigger>
+            <TabsTrigger value="rings" className="text-[11px] px-1">Rings</TabsTrigger>
+            <TabsTrigger value="simplify" className="text-[11px] px-1">Simplify</TabsTrigger>
+            <TabsTrigger value="hull" className="text-[11px] px-1">Hull</TabsTrigger>
+            <TabsTrigger value="centroid" className="text-[11px] px-1">Centroid</TabsTrigger>
+            <TabsTrigger value="unkink" className="text-[11px] px-1">Unkink</TabsTrigger>
+            <TabsTrigger value="union" className="text-[11px] px-1">Union</TabsTrigger>
           </TabsList>
 
           {/* Scope Target */}
@@ -290,6 +315,43 @@ export default function SpatialToolsDialog({
                 onValueChange={(v) => setBufferDistance(v[0])}
                 className="py-2"
               />
+            </div>
+          </TabsContent>
+
+          {/* TAB MULTI-RING BUFFER */}
+          <TabsContent value="rings" className="space-y-4 pt-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Radar className="w-4 h-4 text-primary" />
+              Menghasilkan cincin jangkauan konsentris bertingkat dari titik acuan.
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Interval Jarak (pisahkan dengan koma)</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Input
+                  type="text"
+                  value={ringDistancesInput}
+                  onChange={(e) => setRingDistancesInput(e.target.value)}
+                  placeholder="100, 300, 500"
+                  className="col-span-2 text-xs"
+                />
+                <Select
+                  value={ringUnits}
+                  onValueChange={(val) => setRingUnits(val as SpatialUnit)}
+                >
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="meters">Meters</SelectItem>
+                    <SelectItem value="kilometers">Kilometers</SelectItem>
+                    <SelectItem value="miles">Miles</SelectItem>
+                    <SelectItem value="feet">Feet</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="p-2.5 bg-secondary/50 rounded text-[11px] text-muted-foreground">
+                Menghasilkan zonasi jangkauan radial dengan gradasi warna (*heat spectrum*) untuk analisis aksesibilitas fasilitas atau radius bahaya.
+              </div>
             </div>
           </TabsContent>
 

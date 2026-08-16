@@ -19,6 +19,7 @@ export default function HelpContent() {
       </p>
       <ul>
         <li><strong>GeoJSON</strong> (.geojson, .json) — RFC 7946 FeatureCollections & Geometries</li>
+        <li><strong>ESRI Shapefile</strong> (.zip, .shp) — Native client-side binary parser with DBF attribute extraction</li>
         <li><strong>CSV</strong> (.csv) — Auto-detects coordinate columns (lat, lon, latitude, longitude, wkt)</li>
         <li><strong>WKT</strong> (.wkt, .txt) — Well-Known Text geometric definitions</li>
         <li><strong>TopoJSON</strong> (.topojson, .json) — Topology-preserving vector data</li>
@@ -40,6 +41,7 @@ export default function HelpContent() {
         <li><strong>Polygon:</strong> Enclosed boundaries and geofenced areas</li>
         <li><strong>Rectangle:</strong> Axis-aligned bounding box (BBox)</li>
         <li><strong>Circle:</strong> Geodesic circle approximated as high-fidelity polygon</li>
+        <li><strong>Knife / Slice Tool:</strong> Draw a cutting line across any polygon to cleanly split it into separate valid geometries.</li>
         <li><strong>Magnetic Snapping:</strong> Toggle the Magnet icon to automatically snap drawn vertices to existing feature edges and corners.</li>
         <li><strong>Cursor Guide:</strong> Real-time tooltip banner following pointer mouse with gesture instructions.</li>
       </ul>
@@ -66,10 +68,12 @@ export default function HelpContent() {
       </p>
       <ul>
         <li><strong>Buffer Generator:</strong> Create geodesic buffer zones with custom radius units (meters, kilometers, miles, feet).</li>
+        <li><strong>Multi-Ring Reachability:</strong> Generate concentric buffer rings with heat spectrum color gradients for accessibility and hazard zoning.</li>
         <li><strong>Simplify Geometry:</strong> Reduce vertex density using the Douglas-Peucker algorithm with High-Quality topology preservation.</li>
         <li><strong>Convex Hull:</strong> Calculate the minimum bounding convex envelope enclosing coordinate points.</li>
         <li><strong>Centroids Generator:</strong> Extract true geometric centers of mass as Point features.</li>
         <li><strong>Unkink Polygons:</strong> Automatically resolve and split self-intersecting polygon kinks into valid geometries.</li>
+        <li><strong>Boolean Union:</strong> Merge multiple overlapping or adjacent polygons into a single seamless polygon.</li>
       </ul>
 
       <h3>Monaco Code Editor & Real-Time Validation</h3>

@@ -1,5 +1,14 @@
 import * as turf from '@turf/turf';
-import type { Feature, FeatureCollection, Geometry, Polygon, MultiPolygon, LineString, MultiLineString } from 'geojson';
+import type {
+  Feature,
+  FeatureCollection,
+  Geometry,
+  Polygon,
+  MultiPolygon,
+  LineString,
+  MultiLineString,
+  Point,
+} from 'geojson';
 
 export type SpatialUnit = 'meters' | 'kilometers' | 'miles' | 'feet';
 
@@ -243,8 +252,11 @@ export function splitPolygonByLine(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ribbon = (thinBuffer as any).type === 'Feature' ? thinBuffer : (thinBuffer as FeatureCollection).features[0];
-    const diff = turf.difference(turf.featureCollection([polygon, ribbon]));
+    const ribbonFeature = ((thinBuffer as any).type === 'Feature' ? thinBuffer : (thinBuffer as any).features[0]) as Feature<Polygon | MultiPolygon>;
+
+    const diff = turf.difference(
+      turf.featureCollection([polygon as Feature<Polygon | MultiPolygon>, ribbonFeature])
+    );
     if (!diff) {
       if (polygon.geometry.type === 'Polygon') return [polygon as Feature<Polygon>];
       return [];
@@ -313,14 +325,12 @@ export function generateMultiRingBuffer(
     if (buffered) {
       const colorIndex = i % colors.length;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const feature = ((buffered as any).type === 'Feature'
-        ? buffered
-        : (buffered as FeatureCollection).features[0]) as Feature<Polygon | MultiPolygon>;
+      const ringFeature = ((buffered as any).type === 'Feature' ? buffered : (buffered as any).features[0]) as Feature<Polygon | MultiPolygon>;
 
-      if (feature) {
-        feature.id = `ring_${dist}_${units}_${Date.now()}_${i}`;
-        feature.properties = {
-          ...(feature.properties || {}),
+      if (ringFeature) {
+        ringFeature.id = `ring_${dist}_${units}_${Date.now()}_${i}`;
+        ringFeature.properties = {
+          ...(ringFeature.properties || {}),
           _ringDistance: dist,
           _ringUnits: units,
           _operation: 'multi_ring_buffer',
@@ -328,7 +338,7 @@ export function generateMultiRingBuffer(
           stroke: '#3b82f6',
           strokeWidth: 1.5,
         };
-        rings.push(feature);
+        rings.push(ringFeature);
       }
     }
   });
