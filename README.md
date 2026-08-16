@@ -1,6 +1,6 @@
 # Geovara: Professional Geospatial Platform & GeoJSON Engineering Tool
 
-Geovara is an advanced, high-performance, stateless geospatial data engineering platform and map editor. Built with Next.js App Router, OpenLayers, CesiumJS, and Turf.js, it combines the flexibility of an interactive vector drawing canvas with a Monaco-powered code editor, deterministic RFC 7946 validation, spatial intelligence, and 3D globe visualization.
+Geovara is an advanced, high-performance, stateless geospatial data engineering platform and map editor. Built with Next.js App Router, OpenLayers, CesiumJS, and Turf.js, it combines the flexibility of an interactive vector drawing canvas with a Monaco-powered code editor, deterministic RFC 7946 validation, client-side spatial intelligence, and 3D globe visualization.
 
 ---
 
@@ -17,8 +17,9 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 
 ### 1. Vector Drawing & Geometry Manipulation
 - **Multi-Geometry Creation**: Draw Point, LineString, Polygon, Rectangle (BBox), and Circle geometries with real-time coordinate calculation.
+- **Interactive Knife / Slice Tool**: Draw a cutting line across any active polygon to cleanly split it into separate valid sub-polygons with inherited attributes.
 - **Magnetic Snapping Engine**: Automatically snaps drawn vertices to existing feature edges and corners within a 12px tolerance to prevent polygon slivers.
-- **Contextual Cursor Guide**: Real-time floating tooltip providing gesture guidance for every active drawing tool.
+- **Contextual Cursor Guide**: Real-time floating tooltip providing gesture guidance for every active drawing and measurement tool.
 - **Vertex Editing & Snapping**: Modify existing boundaries, move vertices, and drag geometries interactively.
 - **Visual Styling**: Customize fill color, stroke color, opacity, and stroke width per feature with instant map and table synchronization.
 - **Measurement Tools**: Real-time geodesic distance (meters/kilometers) and polygon area (square meters/hectares/square kilometers) calculation tools.
@@ -34,23 +35,26 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **Inline Cell Editing**: Modify property keys and values directly in the table with instant feature reflection.
 - **Batch Property Mutation**: Mass-assign values, rename fields, or delete columns across multiple features in a single click.
 - **Calculated Geometry Metrics**: Auto-compute geometric properties (`$area_ha`, `$area_m2`, `$area_km2`, `$length_m`, `$centroid_lon`, `$centroid_lat`, `$bbox`) into tabular columns.
-- **Multi-Selection Checkboxes**: Select rows individually or in bulk for targeted transformations.
+- **Multi-Selection Checkboxes**: Select rows individually or in bulk for targeted batch transformations.
 - **Search-to-Point Focus**: Filter features by keyword and zoom directly to the selected geometry on the canvas.
 
 ### 4. Turf.js Spatial Analysis Toolkit
-- **Interactive Analysis Dialog**: Dedicated visual modal for instantaneous client-side geometric calculations.
-- **Buffer Generation**: Compute geodesic buffers with custom radius units (meters, kilometers, miles, feet).
-- **Douglas-Peucker Simplification**: Reduce geometry vertex count with High-Quality topology preservation.
-- **Convex Hull**: Compute the outer bounding polygon enclosing selected coordinates.
-- **Centroids Extraction**: Generate center-of-mass Point features from complex polygon networks.
-- **Unkink Polygons**: Automatically resolve and untangle self-intersecting polygon kinks.
+- **Interactive Analysis Dialog**: Dedicated visual modal for instantaneous client-side geometric calculations:
+  - **Buffer Generator**: Compute geodesic buffers with custom radius units (meters, kilometers, miles, feet).
+  - **Multi-Ring Reachability**: Generate concentric buffer rings with heat spectrum color gradients for accessibility and hazard zoning.
+  - **Douglas-Peucker Simplification**: Reduce geometry vertex count with High-Quality topology preservation.
+  - **Convex Hull**: Compute the outer bounding polygon enclosing selected coordinates.
+  - **Centroids Extraction**: Generate center-of-mass Point features from complex polygon networks.
+  - **Unkink Polygons**: Automatically resolve and untangle self-intersecting polygon kinks.
+  - **Boolean Operations**: Perform geometric Union, Intersection, and Difference cuts between overlapping polygons.
 
 ### 5. Multi-Format Interoperability
 - **GeoJSON**: Standard RFC 7946 import and export.
+- **ESRI Shapefile Support**: Native client-side binary parser for zipped Shapefile archives (`.zip` containing `.shp` and `.dbf`) and standalone `.shp` files with zero server transmission.
 - **TopoJSON**: Export and topological conversion via `topojson-server` and `topojson-client`.
 - **CSV Support**: Auto-detects latitude/longitude coordinate columns (`lat`, `latitude`, `lng`, `lon`, `longitude`, `wkt`) or embedded WKT strings.
 - **WKT (Well-Known Text)**: Parse and generate WKT geometries (`POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON`).
-- **KML**: Native import support for Google Earth and GIS workflows.
+- **KML / KMZ**: Native import support for Google Earth and GIS workflows.
 - **Drag-and-Drop & Remote Loader**: Drag files directly onto the viewport or load external datasets using the URL query parameter (`?url=https://.../data.geojson`).
 
 ### 6. 3D Globe Visualization (CesiumJS & OLCesium)
@@ -65,12 +69,12 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **On-the-Fly Reprojection**: Toggle between projections seamlessly without data loss.
 
 ### 8. AI Natural Language Assistant (Google Gemini)
-- **Conversational Geospatial Commands**: Transform natural language instructions into spatial operations (e.g., "draw a polygon around Monas Jakarta", "create a 5km buffer around selected features").
+- **Conversational Geospatial Commands**: Transform natural language instructions into spatial operations (e.g., "draw a polygon around Monas Jakarta", "create a 5km buffer around selected features", "fix self intersecting polygon", "calculate area in hectares").
 - **Zero-Latency Pattern Matcher**: Local regex-based fast parser resolves common commands in 0ms before routing complex requests to the LLM.
 - **LRU Intent Cache**: In-memory caching layer eliminates redundant API calls for repeated prompt structures.
 
 ### 9. Developer Console API (`window.geovara`)
-Full programmatic access via the browser console:
+Full programmatic access via the browser DevTools (F12) console:
 ```javascript
 // Access the active GeoJSON dataset
 window.geovara.getGeoJSON();
@@ -81,18 +85,14 @@ window.geovara.setGeoJSON({
   features: [...]
 });
 
-// Add a single feature
-window.geovara.addFeature({
-  type: "Feature",
-  geometry: { type: "Point", coordinates: [106.8271, -6.1754] },
-  properties: { name: "National Monument" }
-});
+// Run client-side Turf.js spatial operations directly
+const buffered = window.geovara.spatial.buffer(window.geovara.getGeoJSON(), 500, 'meters');
+const rings = window.geovara.spatial.multiRingBuffer(window.geovara.getFeatures()[0], [100, 300, 500], 'meters');
+const merged = window.geovara.spatial.union(window.geovara.getGeoJSON());
+const clean = window.geovara.spatial.unkink(window.geovara.getGeoJSON());
 
 // Fit map view to current features
 window.geovara.zoomToExtent();
-
-// Access the underlying OpenLayers Map instance
-const map = window.geovara.getMap();
 ```
 
 ---
@@ -103,14 +103,15 @@ const map = window.geovara.getMap();
 | :--- | :--- |
 | **Framework** | Next.js 15+ (App Router), React 19 |
 | **Language** | TypeScript (Strict Mode) |
-| **2D Mapping Engine** | OpenLayers 9 |
+| **2D Mapping Engine** | OpenLayers 9+ |
 | **3D Visualization** | CesiumJS 1.113 & OLCesium 2.17 |
-| **Spatial Computation** | Turf.js |
+| **Spatial Computation** | Turf.js 7 |
 | **Code Editor** | Monaco Editor (`@monaco-editor/react`) |
+| **Shapefile / Archive** | `jszip`, Custom binary SHP/DBF parser |
 | **State & URL Sync** | `lz-string` (LZW algorithm) |
 | **Styling & Components** | Tailwind CSS, Radix UI, Lucide Icons |
-| **AI Integration** | Google Genkit / Gemini 1.5 Pro |
-| **Testing Suite** | Vitest, Testing Library, Playwright E2E |
+| **AI Integration** | Google Genkit / Gemini 2.0 Flash |
+| **Testing Suite** | Vitest, Playwright E2E |
 
 ---
 
@@ -120,17 +121,21 @@ const map = window.geovara.getMap();
 geovara/
 ├── public/                  # Static assets, PWA manifests, icons, Cesium bundles
 ├── src/
-│   ├── ai/                  # Genkit and Gemini AI configuration
+│   ├── ai/                  # Genkit and Gemini AI configuration & spatial intent flows
 │   ├── app/                 # Next.js App Router (layout, page, route handlers)
 │   ├── components/          # UI and map components
 │   │   ├── ui/              # Radix UI primitives (buttons, dialogs, dropdowns)
 │   │   ├── AttributeTable.tsx
+│   │   ├── BatchPropertyModal.tsx
 │   │   ├── CesiumController.tsx
+│   │   ├── CursorGuide.tsx
 │   │   ├── DrawingTools.tsx
+│   │   ├── FileDropZone.tsx
+│   │   ├── HelpContent.tsx
 │   │   ├── LocationSearch.tsx
 │   │   ├── MapComponent.tsx
 │   │   ├── MonacoEditor.tsx
-│   │   ├── SceneViewSwitcher.tsx
+│   │   ├── SpatialToolsDialog.tsx
 │   │   └── Sidebar.tsx
 │   ├── hooks/               # Custom React hooks (useMap, useUndoHistory, useToast)
 │   ├── lib/                 # Core algorithms and utilities
@@ -138,11 +143,13 @@ geovara/
 │   │   ├── csv-geojson.ts
 │   │   ├── dev-api.ts
 │   │   ├── geojson-validator.ts
-│   │   ├── spatial.ts
+│   │   ├── shapefile-parser.ts
+│   │   ├── spatial-operations.ts
 │   │   ├── url-state.ts
 │   │   └── wkt-geojson.ts
 │   └── types/               # TypeScript interfaces and schema declarations
-├── tests/                   # Vitest unit and integration test suites
+├── tests/                   # Vitest unit and integration test suites (14 suites, 93 tests)
+├── e2e/                     # Playwright automated UX usability benchmark suite
 ├── .env.example             # Environment configuration template
 ├── package.json             # Project dependencies and script definitions
 └── tsconfig.json            # TypeScript configuration
@@ -180,7 +187,7 @@ geovara/
    npm run dev
    ```
 
-5. Open your browser and navigate to `http://localhost:9002` (or the port specified in `package.json`).
+5. Open your browser and navigate to `http://localhost:9002`.
 
 ---
 
@@ -190,7 +197,7 @@ geovara/
 ```bash
 npm run test
 ```
-Executes all 12 test suites covering CSV parsing, WKT translation, URL compression, spatial calculations, and deterministic GeoJSON validation.
+Executes all 14 test suites (93 tests, 100% passed) covering Shapefile parsing, spatial operations, Boolean geometry algorithms, CSV/WKT parsing, URL compression, and deterministic GeoJSON validation.
 
 ### Run TypeScript Verification
 ```bash
@@ -213,7 +220,7 @@ npm run build
 ## Security & Compliance
 
 - **No Data Retention**: Client edits are kept in local memory and compressed in the URL hash.
-- **Input Sanitization**: All imports (CSV, WKT, GeoJSON, KML) are strictly validated before being injected into the OpenLayers data source.
+- **Input Sanitization**: All imports (CSV, WKT, GeoJSON, KML, Shapefiles) are strictly validated before being injected into the OpenLayers data source.
 - **Environment Isolation**: Secret API keys (`GEMINI_API_KEY`) remain strictly on the server-side Next.js route handler and are never exposed to the client bundle.
 
 ---
