@@ -17,6 +17,8 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 
 ### 1. Vector Drawing & Geometry Manipulation
 - **Multi-Geometry Creation**: Draw Point, LineString, Polygon, Rectangle (BBox), and Circle geometries with real-time coordinate calculation.
+- **Magnetic Snapping Engine**: Automatically snaps drawn vertices to existing feature edges and corners within a 12px tolerance to prevent polygon slivers.
+- **Contextual Cursor Guide**: Real-time floating tooltip providing gesture guidance for every active drawing tool.
 - **Vertex Editing & Snapping**: Modify existing boundaries, move vertices, and drag geometries interactively.
 - **Visual Styling**: Customize fill color, stroke color, opacity, and stroke width per feature with instant map and table synchronization.
 - **Measurement Tools**: Real-time geodesic distance (meters/kilometers) and polygon area (square meters/hectares/square kilometers) calculation tools.
@@ -27,13 +29,23 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **Interactive Error Jump**: The status bar displays syntax errors with exact line and column numbers. Clicking on the error banner instantly jumps the Monaco editor cursor to the faulty line.
 - **Schema Autocompletion**: Integrated GeoJSON JSON Schema for inline autocompletion and structural tooltips.
 
-### 3. Attribute Table & Field Management
+### 3. Attribute Table & Batch Property Engineering
 - **Interactive Data Grid**: Tabular inspection of all properties associated with GeoJSON features.
 - **Inline Cell Editing**: Modify property keys and values directly in the table with instant feature reflection.
-- **Schema Expansion**: Add custom fields and delete existing properties across all features in a single click.
+- **Batch Property Mutation**: Mass-assign values, rename fields, or delete columns across multiple features in a single click.
+- **Calculated Geometry Metrics**: Auto-compute geometric properties (`$area_ha`, `$area_m2`, `$area_km2`, `$length_m`, `$centroid_lon`, `$centroid_lat`, `$bbox`) into tabular columns.
+- **Multi-Selection Checkboxes**: Select rows individually or in bulk for targeted transformations.
 - **Search-to-Point Focus**: Filter features by keyword and zoom directly to the selected geometry on the canvas.
 
-### 4. Multi-Format Interoperability
+### 4. Turf.js Spatial Analysis Toolkit
+- **Interactive Analysis Dialog**: Dedicated visual modal for instantaneous client-side geometric calculations.
+- **Buffer Generation**: Compute geodesic buffers with custom radius units (meters, kilometers, miles, feet).
+- **Douglas-Peucker Simplification**: Reduce geometry vertex count with High-Quality topology preservation.
+- **Convex Hull**: Compute the outer bounding polygon enclosing selected coordinates.
+- **Centroids Extraction**: Generate center-of-mass Point features from complex polygon networks.
+- **Unkink Polygons**: Automatically resolve and untangle self-intersecting polygon kinks.
+
+### 5. Multi-Format Interoperability
 - **GeoJSON**: Standard RFC 7946 import and export.
 - **TopoJSON**: Export and topological conversion via `topojson-server` and `topojson-client`.
 - **CSV Support**: Auto-detects latitude/longitude coordinate columns (`lat`, `latitude`, `lng`, `lon`, `longitude`, `wkt`) or embedded WKT strings.
@@ -41,22 +53,16 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **KML**: Native import support for Google Earth and GIS workflows.
 - **Drag-and-Drop & Remote Loader**: Drag files directly onto the viewport or load external datasets using the URL query parameter (`?url=https://.../data.geojson`).
 
-### 5. 3D Globe Visualization (CesiumJS & OLCesium)
+### 6. 3D Globe Visualization (CesiumJS & OLCesium)
 - **Cesium 3D Engine**: Seamless transition between 2D flat maps and an interactive 3D WebGL globe.
 - **High-Resolution Basemap**: Integrated Carto Voyager and OpenStreetMap imagery layers projected onto the 3D ellipsoid.
 - **Zero-Token WGS84 Fallback**: Operates using the standard WGS84 ellipsoid without requiring third-party token dependencies. Supports optional Cesium Ion 3D World Terrain when an access token is provided.
 - **Memory-Safe Lifecycle**: Single-instance controller prevents WebGL canvas leaks across component re-renders.
 
-### 6. Coordinate Reference Systems (CRS)
+### 7. Coordinate Reference Systems (CRS)
 - **Web Mercator (EPSG:3857)**: Industry-standard projection for web basemaps and interactive panning.
 - **WGS 84 (EPSG:4326)**: Geographic coordinate system for spatial analysis and global data exchange.
 - **On-the-Fly Reprojection**: Toggle between projections seamlessly without data loss.
-
-### 7. Spatial Intelligence & Computation (Turf.js)
-- **Buffer Generation**: Compute geodesic buffers with custom radius units (meters, kilometers).
-- **Centroid Calculation**: Generate geometric centers for complex polygon networks.
-- **BBox & Extent Fitting**: Automated bounding box calculation with animated viewport framing.
-- **Live Geometry Metrics**: Continuous calculation of perimeter, area, and bounding coordinates.
 
 ### 8. AI Natural Language Assistant (Google Gemini)
 - **Conversational Geospatial Commands**: Transform natural language instructions into spatial operations (e.g., "draw a polygon around Monas Jakarta", "create a 5km buffer around selected features").

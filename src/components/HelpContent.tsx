@@ -8,8 +8,8 @@ export default function HelpContent() {
         <strong>Geovara</strong> is a professional geospatial platform for creating,
         viewing, editing, analyzing, and sharing geographic data. Combining an interactive
         vector canvas with a Monaco code editor, tabular attribute manager, deterministic
-        RFC 7946 validation, spatial intelligence, and 3D globe visualization, Geovara provides
-        engineering-grade tools in a browser-based environment.
+        RFC 7946 validation, Turf.js spatial intelligence, and 3D globe visualization, Geovara provides
+        engineering-grade tools in a stateless browser-based environment.
       </p>
 
       <h3>Getting Started & Data Import</h3>
@@ -27,30 +27,49 @@ export default function HelpContent() {
 
       <p>
         <strong>Location Search:</strong> Use the search bar at the top of the map to find and smoothly
-        fly to any address, city, coordinate, or landmark worldwide.
+        fly to any address, city, coordinate, or landmark worldwide, with the option to convert results directly into Point features.
       </p>
 
       <h3>Drawing & Vector Tools</h3>
       <p>
-        Use the drawing toolbar on the right side of the map to create geometries:
+        Use the drawing toolbar on the right side of the map to create geometries with live contextual guidance:
       </p>
       <ul>
         <li><strong>Point:</strong> Single coordinate landmark</li>
         <li><strong>LineString:</strong> Connected line segments, paths, or trajectories</li>
         <li><strong>Polygon:</strong> Enclosed boundaries and geofenced areas</li>
         <li><strong>Rectangle:</strong> Axis-aligned bounding box (BBox)</li>
-        <li><strong>Circle:</strong> Geodesic circle (approximated as high-fidelity polygon for GeoJSON compatibility)</li>
+        <li><strong>Circle:</strong> Geodesic circle approximated as high-fidelity polygon</li>
+        <li><strong>Magnetic Snapping:</strong> Toggle the Magnet icon to automatically snap drawn vertices to existing feature edges and corners.</li>
+        <li><strong>Cursor Guide:</strong> Real-time tooltip banner following pointer mouse with gesture instructions.</li>
       </ul>
 
-      <h3>Attribute Table & Field Management</h3>
+      <h3>Attribute Table & Batch Field Engineering</h3>
       <p>
-        Switch to the <strong>Table</strong> tab to inspect and edit your data in a spreadsheet grid:
+        Switch to the <strong>Table</strong> tab to inspect and manipulate data in a high-speed tabular grid:
       </p>
       <ul>
         <li><strong>Inline Cell Editing:</strong> Click on any property cell to edit its value directly.</li>
-        <li><strong>Add / Delete Field:</strong> Expand your dataset schema with new custom columns.</li>
-        <li><strong>Search & Filter:</strong> Filter features across all attributes in real-time.</li>
-        <li><strong>Search-to-Point Zoom:</strong> Click the target icon next to any feature row to focus the map directly on its geometry.</li>
+        <li><strong>Multi-Select Checkboxes:</strong> Select specific rows or click <em>Select All</em> in the header.</li>
+        <li><strong>Batch Edit & Calculations:</strong> Click <em>Batch Edit</em> to:
+          <ul>
+            <li>Mass assign values across multiple features.</li>
+            <li>Calculate geometric metrics automatically (<code>$area_ha</code>, <code>$area_m2</code>, <code>$area_km2</code>, <code>$length_m</code>, <code>$centroid_lon</code>, <code>$centroid_lat</code>, <code>$bbox</code>).</li>
+            <li>Rename or delete property columns across the entire dataset in a single click.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Turf.js Spatial Analysis Toolkit</h3>
+      <p>
+        Click the <strong>Sparkles</strong> icon on the drawing toolbar to open the interactive spatial operations dialog:
+      </p>
+      <ul>
+        <li><strong>Buffer Generator:</strong> Create geodesic buffer zones with custom radius units (meters, kilometers, miles, feet).</li>
+        <li><strong>Simplify Geometry:</strong> Reduce vertex density using the Douglas-Peucker algorithm with High-Quality topology preservation.</li>
+        <li><strong>Convex Hull:</strong> Calculate the minimum bounding convex envelope enclosing coordinate points.</li>
+        <li><strong>Centroids Generator:</strong> Extract true geometric centers of mass as Point features.</li>
+        <li><strong>Unkink Polygons:</strong> Automatically resolve and split self-intersecting polygon kinks into valid geometries.</li>
       </ul>
 
       <h3>Monaco Code Editor & Real-Time Validation</h3>
@@ -59,8 +78,8 @@ export default function HelpContent() {
       </p>
       <ul>
         <li><strong>Deterministic RFC 7946 Validation:</strong> Runs continuously in 0ms with zero AI token consumption.</li>
-        <li><strong>Interactive Error Locator:</strong> Syntax and structural errors show exact line and column numbers. Clicking the error banner instantly jumps the editor cursor to the exact line.</li>
-        <li><strong>JSON Schema Autocompletion:</strong> Real-time tooltip suggestions and squiggly line warnings for malformed data.</li>
+        <li><strong>Interactive Error Locator:</strong> Syntax and structural errors show exact line and column numbers. Clicking the error banner instantly jumps the editor cursor to the faulty line.</li>
+        <li><strong>JSON Schema Autocompletion:</strong> Real-time tooltip suggestions and structural validation warnings.</li>
       </ul>
 
       <h3>2D Projections & Cesium 3D Globe</h3>
@@ -70,40 +89,10 @@ export default function HelpContent() {
       <ul>
         <li><strong>Web Mercator (EPSG:3857):</strong> Standard projection for web basemaps and interactive panning.</li>
         <li><strong>WGS 84 (EPSG:4326):</strong> Unprojected geographic coordinate system for GIS data interchange.</li>
-        <li><strong>Cesium 3D Globe:</strong> Photorealistic 3D ellipsoid globe with high-resolution Carto Voyager and OpenStreetMap textures.</li>
-      </ul>
-
-      <h3>Measurement & Spatial Analysis</h3>
-      <p>
-        Use the measurement tools to compute live geodesic dimensions:
-      </p>
-      <ul>
-        <li><strong>Measure Distance (Ruler):</strong> Calculates cumulative line length in meters or kilometers.</li>
-        <li><strong>Measure Area (Square):</strong> Computes enclosed geodesic area in square meters, hectares, and square kilometers.</li>
-      </ul>
-      <p>Access the Spatial Analysis menu (crosshair icon) for geometric algorithms:</p>
-      <ul>
-        <li><strong>Buffer:</strong> Generate buffer zones around points, lines, or polygons with custom radius.</li>
-        <li><strong>Centroid:</strong> Compute true geometric centers of complex polygons.</li>
-        <li><strong>Simplify:</strong> Reduce vertex density using Douglas-Peucker algorithm.</li>
-        <li><strong>Union:</strong> Dissolve and merge overlapping polygon geometries.</li>
-      </ul>
-
-      <h3>AI Natural Language Assistant</h3>
-      <p>
-        Press <kbd>Ctrl+K</kbd> (or <kbd>Cmd+K</kbd> on macOS) to open the <strong>Ask Geovara</strong> AI prompt:
-      </p>
-      <ul>
-        <li>Execute natural language spatial commands (e.g., <em>&quot;Draw a 500m buffer around selected points&quot;</em>).</li>
-        <li>Generate custom geometries and convert data structures on the fly.</li>
-        <li>0ms Fast Pattern Matcher resolves common queries locally before routing complex requests to Gemini.</li>
+        <li><strong>Cesium 3D Globe:</strong> Interactive WebGL 3D globe with Carto Voyager and OpenStreetMap imagery.</li>
       </ul>
 
       <h3>Editing & Keyboard Shortcuts</h3>
-      <p>
-        Click the <strong>Pencil</strong> icon to enter vertex modification mode. Drag vertices to reshape geometries.
-        Hold <kbd>Shift</kbd> while dragging to move the entire geometry.
-      </p>
       <div className="not-prose my-3">
         <table className="w-full text-xs border-collapse">
           <thead>
@@ -153,19 +142,6 @@ export default function HelpContent() {
         </table>
       </div>
 
-      <h3>Feature Styling (simplestyle-spec)</h3>
-      <p>
-        Add properties to features to control visual rendering on the canvas:
-      </p>
-      <ul>
-        <li><code>fill</code> — Fill color (HEX, RGB, or RGBA, e.g. <code>#9333ea</code>)</li>
-        <li><code>fill-opacity</code> — Opacity of polygon fill (0.0 to 1.0)</li>
-        <li><code>stroke</code> — Border and line stroke color</li>
-        <li><code>stroke-width</code> — Line thickness in pixels</li>
-        <li><code>stroke-opacity</code> — Opacity of line border (0.0 to 1.0)</li>
-        <li><code>radius</code> — Point marker radius in pixels</li>
-      </ul>
-
       <h3>Exporting Data</h3>
       <p>Click the Download icon in the toolbar to export your dataset into:</p>
       <ul>
@@ -178,7 +154,6 @@ export default function HelpContent() {
 
       <h3>Developer & URL API</h3>
       <h4>1. Remote Public GeoJSON Loader</h4>
-      <p>Preload any public CORS-enabled GeoJSON directly via URL query parameter:</p>
       <p className="text-xs text-muted-foreground bg-muted p-2 rounded-md font-code break-words">
         <code>/?url=https://example.com/data.geojson</code>
       </p>
@@ -189,7 +164,6 @@ export default function HelpContent() {
       </p>
 
       <h4>3. Browser Console API (<code>window.geovara</code>)</h4>
-      <p>Open Developer Tools (F12) Console to programmatically interact with Geovara:</p>
       <ul className="text-xs space-y-1">
         <li><code>geovara.getGeoJSON()</code> — Returns current FeatureCollection object.</li>
         <li><code>geovara.setGeoJSON(data)</code> — Replaces map features with new GeoJSON object or string.</li>
@@ -201,4 +175,3 @@ export default function HelpContent() {
     </div>
   );
 }
-
