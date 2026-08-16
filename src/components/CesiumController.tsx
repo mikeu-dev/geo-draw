@@ -112,6 +112,20 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
 
           const scene = ol3dInstance.getCesiumScene();
           if (scene) {
+            if (scene.canvas) {
+              scene.canvas.style.position = 'absolute';
+              scene.canvas.style.top = '0';
+              scene.canvas.style.left = '0';
+              scene.canvas.style.zIndex = '0';
+              if (scene.canvas.parentElement) {
+                scene.canvas.parentElement.classList.add('ol-cesium-container');
+                scene.canvas.parentElement.style.position = 'absolute';
+                scene.canvas.parentElement.style.top = '0';
+                scene.canvas.parentElement.style.left = '0';
+                scene.canvas.parentElement.style.zIndex = '0';
+              }
+            }
+
             if (scene.globe) {
               scene.globe.show = true;
               scene.globe.depthTestAgainstTerrain = false;
