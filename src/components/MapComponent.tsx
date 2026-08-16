@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Overlay, Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
@@ -16,7 +16,11 @@ import CesiumController from './CesiumController';
 import MeasurementController from './MeasurementController';
 import StatusBar from './StatusBar';
 import LocationSearch from './LocationSearch';
+import CursorGuide from './CursorGuide';
+import SpatialToolsDialog from './SpatialToolsDialog';
+import GeoJSONFormat from 'ol/format/GeoJSON';
 import { OSM, XYZ } from 'ol/source';
+import type { FeatureCollection } from 'geojson';
 
 interface MapProps {
   features: Feature<Geometry>[];
@@ -58,6 +62,8 @@ export default function MapComponent({
   const mapElement = useRef<HTMLDivElement>(null);
   const popupElement = useRef<HTMLDivElement>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [snappingEnabled, setSnappingEnabled] = useState(true);
+  const [isSpatialToolsOpen, setIsSpatialToolsOpen] = useState(false);
   const { toast } = useToast();
 
   const styleFunction = useCallback((feature: Feature<Geometry>) => {
@@ -88,6 +94,7 @@ export default function MapComponent({
     vectorOpacity,
     vectorVisible,
     basemapOpacity,
+    enableSnapping: snappingEnabled,
   });
 
   useEffect(() => {
@@ -231,9 +238,55 @@ export default function MapComponent({
     [setFeatures]
   );
 
+  const currentGeoJSON = useMemo<FeatureCollection>(() => {
+    try {
+      const writer = new GeoJSONFormat();
+      return writer.writeFeaturesObject(features, {
+        featureProjection: projection,
+        dataProjection: 'EPSG:4326',
+      }) as FeatureCollection;
+    } catch {
+      return { type: 'FeatureCollection', features: [] };
+    }
+  }, [features, projection]);
+
+  const handleApplySpatialGeoJSON = useCallback(
+    (newGeoJSON: FeatureCollection, replace: boolean) => {
+      try {
+        const reader = new GeoJSONFormat();
+        const olFeatures = reader.readFeatures(newGeoJSON, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: projection,
+        }) as Feature<Geometry>[];
+
+        olFeatures.forEach((f, idx) => {
+          if (!f.getId()) {
+            f.setId(`spatial_${Date.now()}_${idx}`);
+          }
+        });
+
+        if (replace) {
+          setFeatures(olFeatures);
+        } else {
+          setFeatures((prev) => [...prev, ...olFeatures]);
+        }
+      } catch (err) {
+        toast({
+          title: 'Gagal memuat hasil kalkulasi ke peta',
+          description: err instanceof Error ? err.message : String(err),
+          variant: 'destructive',
+        });
+      }
+    },
+    [projection, setFeatures, toast]
+  );
+
   return (
     <div className="w-full h-full relative group">
       <div ref={mapElement} className="w-full h-full outline-none" />
+
+      {/* Floating Contextual Cursor Guide */}
+      <CursorGuide drawType={drawType} snappingEnabled={snappingEnabled} />
 
       <LocationSearch map={map} onAddFeature={handleAddFeature} />
       <div className="absolute top-[0.75rem] right-[0.75rem] flex flex-col gap-3 z-30 items-end">
@@ -248,6 +301,18 @@ export default function MapComponent({
           onToggle3d={onToggle3d}
           projection={projection}
           onProjectionChange={onProjectionChange}
+          snappingEnabled={snappingEnabled}
+          onToggleSnapping={() => {
+            setSnappingEnabled((prev) => {
+              const next = !prev;
+              toast({
+                title: next ? 'Magnetic Snapping Aktif' : 'Magnetic Snapping Nonaktif',
+                description: next ? 'Pointer akan otomatis menempel pada simpul terdekat.' : undefined,
+              });
+              return next;
+            });
+          }}
+          onOpenSpatialTools={() => setIsSpatialToolsOpen(true)}
         />
       </div>
 
@@ -260,6 +325,15 @@ export default function MapComponent({
       </div>
 
       <StatusBar map={map} projection={projection} />
+
+      {/* Spatial Tools Dialog */}
+      <SpatialToolsDialog
+        open={isSpatialToolsOpen}
+        onOpenChange={setIsSpatialToolsOpen}
+        geojson={currentGeoJSON}
+        onApplyGeoJSON={handleApplySpatialGeoJSON}
+        selectedFeatureId={selectedFeature ? selectedFeature.getId() : null}
+      />
 
       <div ref={popupElement} className="min-w-[300px] z-50">
         {isPopupOpen && selectedFeature && (

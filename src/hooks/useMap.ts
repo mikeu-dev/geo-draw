@@ -5,7 +5,7 @@ import OSM from 'ol/source/OSM';
 import XYZ from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 import VectorImageLayer from 'ol/layer/VectorImage';
-import { Draw, Modify, Select, DragAndDrop } from 'ol/interaction';
+import { Draw, Modify, Select, DragAndDrop, Snap } from 'ol/interaction';
 import { createBox } from 'ol/interaction/Draw';
 import GeoJSON from 'ol/format/GeoJSON';
 import KML from 'ol/format/KML';
@@ -44,6 +44,7 @@ interface UseMapOptions {
   vectorOpacity: number;
   vectorVisible: boolean;
   basemapOpacity: number;
+  enableSnapping?: boolean;
 }
 
 export function useMap({
@@ -58,6 +59,7 @@ export function useMap({
   vectorOpacity,
   vectorVisible,
   basemapOpacity,
+  enableSnapping = true,
 }: UseMapOptions) {
   const [map, setMap] = useState<Map | null>(null);
   const mapInstance = useRef<Map | null>(null);
@@ -70,6 +72,7 @@ export function useMap({
 
   const vectorLayerRef = useRef<VectorImageLayer<Feature<Geometry>> | null>(null);
   const drawInteraction = useRef<Draw | null>(null);
+  const snapInteraction = useRef<Snap | null>(null);
   const isUpdatingFromHash = useRef(false);
 
   const updateViewFromHash = useCallback(() => {
@@ -316,6 +319,11 @@ export function useMap({
       drawInteraction.current = null;
     }
 
+    if (snapInteraction.current) {
+      activeMap.removeInteraction(snapInteraction.current);
+      snapInteraction.current = null;
+    }
+
     const isDrawing =
       drawType && ['Point', 'LineString', 'Polygon', 'Rectangle', 'Circle'].includes(drawType);
     selectInteraction.setActive(!isDrawing);
@@ -341,8 +349,18 @@ export function useMap({
 
       activeMap.addInteraction(drawInteraction.current);
     }
+
+    // Attach Snap interaction if snapping is enabled and user is drawing or editing
+    if (enableSnapping && (isDrawing || drawType === 'Edit')) {
+      snapInteraction.current = new Snap({
+        source: vectorSource,
+        pixelTolerance: 12,
+      });
+      activeMap.addInteraction(snapInteraction.current);
+    }
   }, [
     drawType,
+    enableSnapping,
     setFeatures,
     setDrawType,
     onFeatureSelect,

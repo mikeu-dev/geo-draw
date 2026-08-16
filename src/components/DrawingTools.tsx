@@ -17,6 +17,8 @@ import {
   Pentagon,
   Ruler,
   Maximize,
+  Magnet,
+  Sparkles,
 } from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
@@ -35,6 +37,9 @@ interface DrawingToolsProps {
   onToggle3d: () => void;
   projection: 'EPSG:4326' | 'EPSG:3857';
   onProjectionChange: (proj: 'EPSG:4326' | 'EPSG:3857') => void;
+  snappingEnabled?: boolean;
+  onToggleSnapping?: () => void;
+  onOpenSpatialTools?: () => void;
 }
 
 export default function DrawingTools({
@@ -47,6 +52,9 @@ export default function DrawingTools({
   onToggle3d,
   projection,
   onProjectionChange,
+  snappingEnabled = true,
+  onToggleSnapping,
+  onOpenSpatialTools,
 }: DrawingToolsProps) {
   const controlRef = useRef<HTMLDivElement>(null);
   const customControlRef = useRef<Control | null>(null);
@@ -210,6 +218,44 @@ export default function DrawingTools({
               <p>Measure Area</p>
             </TooltipContent>
           </Tooltip>
+
+          <Separator orientation="horizontal" className="my-1 bg-border" />
+
+          {/* Snapping Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Toggle Snapping"
+                pressed={snappingEnabled}
+                onPressedChange={() => onToggleSnapping && onToggleSnapping()}
+                className={snappingEnabled ? 'text-primary bg-primary/10' : ''}
+              >
+                <Magnet className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Magnetic Snapping ({snappingEnabled ? 'On' : 'Off'})</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Spatial Tools Dialog Trigger */}
+          {onOpenSpatialTools && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Toggle
+                  aria-label="Spatial analysis tools"
+                  pressed={false}
+                  onPressedChange={() => onOpenSpatialTools()}
+                  className="hover:text-primary"
+                >
+                  <Sparkles className="h-4 w-4 text-primary" />
+                </Toggle>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Spatial Analysis (Turf.js)</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {featuresCount > 0 && (
             <>
