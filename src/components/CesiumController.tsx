@@ -29,6 +29,7 @@ interface WindowWithCesium extends Window {
   olcs?: {
     OLCesium: new (options: { map: Map }) => {
       getCesiumScene: () => {
+        canvas?: HTMLCanvasElement;
         terrainProvider: unknown;
         globe?: {
           enableLighting?: boolean;
@@ -53,6 +54,7 @@ interface WindowWithCesium extends Window {
 export default function CesiumController({ map, enabled }: CesiumControllerProps) {
   const ol3dRef = useRef<{
     getCesiumScene: () => {
+      canvas?: HTMLCanvasElement;
       terrainProvider: unknown;
       globe?: {
         enableLighting?: boolean;
