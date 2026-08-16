@@ -1,10 +1,10 @@
-'use client';
-
 import { useState, useMemo } from 'react';
 import type { Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
+import GeoJSONFormat from 'ol/format/GeoJSON';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Table,
@@ -14,8 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Trash2, Crosshair, Search, Database } from 'lucide-react';
+import { Plus, Trash2, Crosshair, Search, Database, Layers } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import BatchPropertyModal from './BatchPropertyModal';
+import type { FeatureCollection } from 'geojson';
 
 interface AttributeTableProps {
   features: Feature<Geometry>[];
@@ -35,6 +37,8 @@ export default function AttributeTable({
   const [searchTerm, setSearchTerm] = useState('');
   const [newColumnName, setNewColumnName] = useState('');
   const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [editingCell, setEditingCell] = useState<{ id: string | number; key: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const { toast } = useToast();
@@ -123,6 +127,43 @@ export default function AttributeTable({
     }
   };
 
+  // Convert features to GeoJSON FeatureCollection for BatchPropertyModal
+  const currentGeoJSON = useMemo<FeatureCollection>(() => {
+    try {
+      const writer = new GeoJSONFormat();
+      return writer.writeFeaturesObject(features) as FeatureCollection;
+    } catch {
+      return { type: 'FeatureCollection', features: [] };
+    }
+  }, [features]);
+
+  const handleBatchUpdate = (newGeoJSON: FeatureCollection) => {
+    newGeoJSON.features.forEach((updatedFeature) => {
+      const targetId = updatedFeature.id;
+      if (targetId !== undefined && updatedFeature.properties) {
+        Object.entries(updatedFeature.properties).forEach(([k, v]) => {
+          onPropertyChange(targetId, k, v);
+        });
+      }
+    });
+  };
+
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRowIds(features.map((f) => f.getId() || '').filter(Boolean));
+    } else {
+      setSelectedRowIds([]);
+    }
+  };
+
+  const handleToggleRow = (id: string | number, checked: boolean) => {
+    if (checked) {
+      setSelectedRowIds((prev) => [...prev, id]);
+    } else {
+      setSelectedRowIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
   if (features.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center text-muted-foreground">
@@ -150,40 +191,53 @@ export default function AttributeTable({
           />
         </div>
 
-        {isAddingColumn ? (
-          <form onSubmit={handleAddColumn} className="flex items-center gap-1">
-            <Input
-              type="text"
-              placeholder="Nama kolom..."
-              value={newColumnName}
-              onChange={(e) => setNewColumnName(e.target.value)}
-              className="h-8 w-28 text-xs"
-              autoFocus
-            />
-            <Button type="submit" size="sm" className="h-8 text-xs px-2">
-              Simpan
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs px-2"
-              onClick={() => setIsAddingColumn(false)}
-            >
-              Batal
-            </Button>
-          </form>
-        ) : (
+        <div className="flex items-center gap-1.5">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
-            onClick={() => setIsAddingColumn(true)}
+            onClick={() => setIsBatchModalOpen(true)}
             className="h-8 text-xs flex items-center gap-1.5 flex-shrink-0"
+            title="Batch Property & Calculated Fields"
           >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Tambah Field</span>
+            <Layers className="h-3.5 w-3.5 text-primary" />
+            <span>Batch Edit</span>
           </Button>
-        )}
+
+          {isAddingColumn ? (
+            <form onSubmit={handleAddColumn} className="flex items-center gap-1">
+              <Input
+                type="text"
+                placeholder="Nama kolom..."
+                value={newColumnName}
+                onChange={(e) => setNewColumnName(e.target.value)}
+                className="h-8 w-28 text-xs"
+                autoFocus
+              />
+              <Button type="submit" size="sm" className="h-8 text-xs px-2">
+                Simpan
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs px-2"
+                onClick={() => setIsAddingColumn(false)}
+              >
+                Batal
+              </Button>
+            </form>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddingColumn(true)}
+              className="h-8 text-xs flex items-center gap-1.5 flex-shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Tambah Field</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Table Container */}
@@ -192,6 +246,20 @@ export default function AttributeTable({
           <Table>
             <TableHeader className="sticky top-0 bg-muted/90 backdrop-blur z-10">
               <TableRow className="hover:bg-transparent">
+                <TableHead className="w-8 text-center p-1">
+                  <Checkbox
+                    checked={
+                      selectedRowIds.length === features.length && features.length > 0
+                        ? true
+                        : selectedRowIds.length > 0
+                          ? 'indeterminate'
+                          : false
+                    }
+                    onCheckedChange={(checked) => handleToggleSelectAll(Boolean(checked))}
+                    aria-label="Select all rows"
+                    className="translate-y-[2px]"
+                  />
+                </TableHead>
                 <TableHead className="w-12 text-center text-[11px] font-bold">Aksi</TableHead>
                 <TableHead className="w-24 text-[11px] font-bold">Feature ID</TableHead>
                 <TableHead className="w-20 text-[11px] font-bold">Geometri</TableHead>
@@ -209,13 +277,25 @@ export default function AttributeTable({
                 const id = feature.getId() || 'unknown';
                 const geomType = feature.getGeometry()?.getType() || 'None';
                 const props = feature.getProperties();
+                const isRowSelected = selectedRowIds.includes(id);
 
                 return (
                   <TableRow
                     key={String(id)}
-                    className="hover:bg-accent/5 transition-colors cursor-pointer group"
+                    className={`hover:bg-accent/5 transition-colors cursor-pointer group ${
+                      isRowSelected ? 'bg-primary/5' : ''
+                    }`}
                     onClick={() => onFeatureSelect(feature)}
                   >
+                    <TableCell className="p-1 text-center" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={isRowSelected}
+                        onCheckedChange={(checked) => handleToggleRow(id, Boolean(checked))}
+                        aria-label={`Select row ${id}`}
+                        className="translate-y-[2px]"
+                      />
+                    </TableCell>
+
                     <TableCell className="p-1 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1">
                         <button
@@ -288,9 +368,21 @@ export default function AttributeTable({
 
       {/* Footer Info */}
       <div className="px-3 py-1.5 border-t border-border bg-card/40 text-[10px] text-muted-foreground flex justify-between items-center">
-        <span>Menampilkan {filteredFeatures.length} dari {features.length} fitur</span>
-        <span className="italic">Klik sel untuk mengedit nilai</span>
+        <span>
+          Menampilkan {filteredFeatures.length} dari {features.length} fitur
+          {selectedRowIds.length > 0 && ` (${selectedRowIds.length} terpilih)`}
+        </span>
+        <span className="italic">Klik sel untuk mengedit nilai • Pilih baris untuk batch mutation</span>
       </div>
+
+      {/* Batch Property Modal */}
+      <BatchPropertyModal
+        open={isBatchModalOpen}
+        onOpenChange={setIsBatchModalOpen}
+        geojson={currentGeoJSON}
+        onUpdateGeoJSON={handleBatchUpdate}
+        selectedIds={selectedRowIds}
+      />
     </div>
   );
 }
