@@ -19,6 +19,7 @@ import {
   Maximize,
   Magnet,
   Sparkles,
+  Scissors,
 } from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
@@ -185,6 +186,23 @@ export default function DrawingTools({
             </TooltipTrigger>
             <TooltipContent side="left">
               <p>Draw Circle</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Knife / Split Tool */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                aria-label="Split polygon (Knife Tool)"
+                pressed={drawType === 'Slice'}
+                onPressedChange={() => handleDrawTypeChange('Slice')}
+                className="data-[state=on]:bg-amber-500/20 data-[state=on]:text-amber-500"
+              >
+                <Scissors className="h-4 w-4" />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Knife / Slice Polygon</p>
             </TooltipContent>
           </Tooltip>
 

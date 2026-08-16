@@ -9,6 +9,8 @@ import {
   booleanUnionPolygons,
   booleanIntersectPolygons,
   booleanDifferencePolygons,
+  splitPolygonByLine,
+  generateMultiRingBuffer,
 } from '@/lib/spatial-operations';
 import type { Feature, FeatureCollection, Polygon, Point, LineString } from 'geojson';
 
@@ -203,6 +205,64 @@ describe('spatial-operations', () => {
       const diff = booleanDifferencePolygons(polyA, polyB);
       expect(diff).not.toBeNull();
       expect(diff?.geometry.type).toBe('Polygon');
+    });
+  });
+
+  describe('splitPolygonByLine', () => {
+    it('splits a square polygon in half with a straight line', () => {
+      const square: Feature<Polygon> = {
+        type: 'Feature',
+        id: 'sq_1',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [0, 0],
+              [4, 0],
+              [4, 4],
+              [0, 4],
+              [0, 0],
+            ],
+          ],
+        },
+        properties: { name: 'Square' },
+      };
+
+      const cutLine: Feature<LineString> = {
+        type: 'Feature',
+        id: 'knife_1',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [2, -1],
+            [2, 5],
+          ],
+        },
+        properties: {},
+      };
+
+      const parts = splitPolygonByLine(square, cutLine);
+      expect(parts.length).toBe(2);
+      expect(parts[0].geometry.type).toBe('Polygon');
+      expect(parts[1].geometry.type).toBe('Polygon');
+    });
+  });
+
+  describe('generateMultiRingBuffer', () => {
+    it('generates multi-ring buffer concentric polygons with heat spectrum styling', () => {
+      const centerPt: Feature<Point> = {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [106.8271, -6.1754],
+        },
+        properties: { name: 'Monas' },
+      };
+
+      const rings = generateMultiRingBuffer(centerPt, [100, 300, 500], 'meters');
+      expect(rings.type).toBe('FeatureCollection');
+      expect(rings.features.length).toBe(3);
+      expect(rings.features[0].properties?._ringDistance).toBeDefined();
     });
   });
 });

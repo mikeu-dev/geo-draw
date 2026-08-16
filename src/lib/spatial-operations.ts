@@ -210,3 +210,132 @@ export function booleanDifferencePolygons(
     return null;
   }
 }
+
+/**
+ * Splits a Polygon or MultiPolygon with a cutting LineString into multiple separate Polygons.
+ */
+export function splitPolygonByLine(
+  polygon: Feature<Polygon | MultiPolygon>,
+  line: Feature<LineString>
+): Feature<Polygon>[] {
+  try {
+    // Check if line and polygon bounding boxes overlap
+    const bboxLine = turf.bbox(line);
+    const bboxPoly = turf.bbox(polygon);
+    const overlaps = !(
+      bboxLine[2] < bboxPoly[0] ||
+      bboxLine[0] > bboxPoly[2] ||
+      bboxLine[3] < bboxPoly[1] ||
+      bboxLine[1] > bboxPoly[3]
+    );
+
+    if (!overlaps) {
+      if (polygon.geometry.type === 'Polygon') return [polygon as Feature<Polygon>];
+      return [];
+    }
+
+    // Buffer the cutting line by a razor-thin ribbon
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const thinBuffer = turf.buffer(line as any, 0.000002, { units: 'kilometers' });
+    if (!thinBuffer) {
+      if (polygon.geometry.type === 'Polygon') return [polygon as Feature<Polygon>];
+      return [];
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ribbon = (thinBuffer as any).type === 'Feature' ? thinBuffer : (thinBuffer as FeatureCollection).features[0];
+    const diff = turf.difference(turf.featureCollection([polygon, ribbon]));
+    if (!diff) {
+      if (polygon.geometry.type === 'Polygon') return [polygon as Feature<Polygon>];
+      return [];
+    }
+
+    const result: Feature<Polygon>[] = [];
+    if (diff.geometry.type === 'Polygon') {
+      result.push({
+        type: 'Feature',
+        id: `${polygon.id || 'poly'}_1`,
+        geometry: diff.geometry as Polygon,
+        properties: { ...(polygon.properties || {}) },
+      });
+    } else if (diff.geometry.type === 'MultiPolygon') {
+      const coords = diff.geometry.coordinates;
+      coords.forEach((polyCoords, idx) => {
+        result.push({
+          type: 'Feature',
+          id: `${polygon.id || 'poly'}_split_${idx + 1}`,
+          geometry: {
+            type: 'Polygon',
+            coordinates: polyCoords,
+          },
+          properties: {
+            ...(polygon.properties || {}),
+            _splitIndex: idx + 1,
+          },
+        });
+      });
+    }
+
+    return result.length > 0
+      ? result
+      : polygon.geometry.type === 'Polygon'
+      ? [polygon as Feature<Polygon>]
+      : [];
+  } catch (err) {
+    console.error('Failed to split polygon by line:', err);
+    if (polygon.geometry.type === 'Polygon') return [polygon as Feature<Polygon>];
+    return [];
+  }
+}
+
+/**
+ * Generates multi-ring concentric buffer zones from a point or feature
+ */
+export function generateMultiRingBuffer(
+  centerFeature: Feature<Point | Geometry>,
+  distances: number[],
+  units: SpatialUnit = 'meters'
+): FeatureCollection<Polygon | MultiPolygon> {
+  const rings: Feature<Polygon | MultiPolygon>[] = [];
+  const sortedDistances = [...distances].sort((a, b) => b - a); // largest first for rendering stack
+
+  // Heat spectrum colors from outer to inner
+  const colors = [
+    'rgba(59, 130, 246, 0.2)',  // Blue (outer)
+    'rgba(16, 185, 129, 0.3)',  // Green
+    'rgba(245, 158, 11, 0.35)', // Amber
+    'rgba(239, 68, 68, 0.4)',   // Red (inner)
+  ];
+
+  sortedDistances.forEach((dist, i) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const buffered = turf.buffer(centerFeature as any, dist, { units });
+    if (buffered) {
+      const colorIndex = i % colors.length;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const feature = ((buffered as any).type === 'Feature'
+        ? buffered
+        : (buffered as FeatureCollection).features[0]) as Feature<Polygon | MultiPolygon>;
+
+      if (feature) {
+        feature.id = `ring_${dist}_${units}_${Date.now()}_${i}`;
+        feature.properties = {
+          ...(feature.properties || {}),
+          _ringDistance: dist,
+          _ringUnits: units,
+          _operation: 'multi_ring_buffer',
+          fill: colors[colorIndex],
+          stroke: '#3b82f6',
+          strokeWidth: 1.5,
+        };
+        rings.push(feature);
+      }
+    }
+  });
+
+  return {
+    type: 'FeatureCollection',
+    features: rings,
+  };
+}
+

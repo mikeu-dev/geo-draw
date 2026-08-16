@@ -10,6 +10,8 @@ import {
   booleanUnionPolygons,
   booleanIntersectPolygons,
   booleanDifferencePolygons,
+  splitPolygonByLine,
+  generateMultiRingBuffer,
 } from './spatial-operations';
 
 export interface GeovaraDevApi {
@@ -33,6 +35,8 @@ export interface GeovaraDevApi {
     union: typeof booleanUnionPolygons;
     intersect: typeof booleanIntersectPolygons;
     difference: typeof booleanDifferencePolygons;
+    split: typeof splitPolygonByLine;
+    multiRingBuffer: typeof generateMultiRingBuffer;
   };
 }
 
@@ -55,6 +59,8 @@ export const defaultDevSpatial = {
   union: booleanUnionPolygons,
   intersect: booleanIntersectPolygons,
   difference: booleanDifferencePolygons,
+  split: splitPolygonByLine,
+  multiRingBuffer: generateMultiRingBuffer,
 };
 
 /**

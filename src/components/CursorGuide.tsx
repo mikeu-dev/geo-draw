@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { DrawType } from '@/hooks/useMap';
-import { MapPin, Spline, Pentagon, Square, Circle, Ruler, Maximize, Magnet } from 'lucide-react';
+import { MapPin, Spline, Pentagon, Square, Circle, Ruler, Maximize, Magnet, Scissors } from 'lucide-react';
 
 interface CursorGuideProps {
   drawType: DrawType | null;
@@ -34,6 +34,11 @@ const GUIDE_MESSAGES: Record<string, { icon: typeof MapPin; title: string; instr
     icon: Circle,
     title: 'Draw Circle',
     instruction: 'Klik titik pusat lalu seret keluar untuk menentukan radius lingkaran',
+  },
+  Slice: {
+    icon: Scissors,
+    title: 'Knife / Slice Polygon',
+    instruction: 'Tarik garis pemotong melintasi poligon • Klik ganda untuk membelah poligon',
   },
   MeasureDistance: {
     icon: Ruler,

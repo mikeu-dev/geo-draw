@@ -20,6 +20,7 @@ import { Zoom, Attribution, ScaleLine, defaults as defaultControls } from 'ol/co
 import { Style } from 'ol/style';
 import type { StyleLike } from 'ol/style/Style';
 import type { Type } from 'ol/geom/Geometry';
+import { splitPolygonByLine } from '@/lib/spatial-operations';
 
 export type DrawType =
   | 'Point'
@@ -30,7 +31,8 @@ export type DrawType =
   | 'Edit'
   | 'Delete'
   | 'MeasureDistance'
-  | 'MeasureArea';
+  | 'MeasureArea'
+  | 'Slice';
 
 interface UseMapOptions {
   target: React.RefObject<HTMLDivElement | null>;
@@ -325,22 +327,59 @@ export function useMap({
     }
 
     const isDrawing =
-      drawType && ['Point', 'LineString', 'Polygon', 'Rectangle', 'Circle'].includes(drawType);
+      drawType && ['Point', 'LineString', 'Polygon', 'Rectangle', 'Circle', 'Slice'].includes(drawType);
     selectInteraction.setActive(!isDrawing);
     modifyInteraction.setActive(drawType === 'Edit');
 
     if (isDrawing) {
-      const type = (drawType === 'Rectangle' ? 'Circle' : drawType) as Type;
+      const type = (drawType === 'Rectangle' ? 'Circle' : drawType === 'Slice' ? 'LineString' : drawType) as Type;
       const geometryFunction = drawType === 'Rectangle' ? createBox() : undefined;
 
       drawInteraction.current = new Draw({
-        source: vectorSource,
+        source: drawType === 'Slice' ? undefined : vectorSource,
         type,
         geometryFunction,
       });
 
       drawInteraction.current.on('drawend', (event: DrawEvent) => {
         const feature = event.feature;
+
+        if (drawType === 'Slice') {
+          try {
+            const format = new GeoJSON({ featureProjection: 'EPSG:3857', dataProjection: 'EPSG:4326' });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const lineGeojson = format.writeFeatureObject(feature) as any;
+            const allOlFeatures = vectorSource.getFeatures();
+            let didSplit = false;
+
+            allOlFeatures.forEach((olFeat) => {
+              const geomType = olFeat.getGeometry()?.getType();
+              if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const polyGeojson = format.writeFeatureObject(olFeat) as any;
+                const parts = splitPolygonByLine(polyGeojson, lineGeojson);
+                if (parts.length > 1) {
+                  didSplit = true;
+                  vectorSource.removeFeature(olFeat);
+                  parts.forEach((p, idx) => {
+                    const newFeat = format.readFeature(p) as Feature<Geometry>;
+                    newFeat.setId(`${olFeat.getId() || 'split'}_${idx + 1}`);
+                    vectorSource.addFeature(newFeat);
+                  });
+                }
+              }
+            });
+
+            if (didSplit) {
+              setFeatures(vectorSource.getFeatures());
+            }
+          } catch (err) {
+            console.error('Error slicing polygon:', err);
+          }
+          setTimeout(() => setDrawType(null), 0);
+          return;
+        }
+
         feature.setId(`${drawType}_${Date.now()}`);
         setFeatures((prev) => [...prev, feature]);
         setTimeout(() => setDrawType(null), 0);

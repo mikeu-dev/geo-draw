@@ -33,7 +33,8 @@ export type DrawType =
   | 'Edit'
   | 'Delete'
   | 'MeasureDistance'
-  | 'MeasureArea';
+  | 'MeasureArea'
+  | 'Slice';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
