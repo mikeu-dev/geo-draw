@@ -1,5 +1,13 @@
 import type { Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
+import {
+  generateBuffer,
+  simplifyGeoJSON,
+  generateConvexHull,
+  generateCentroids,
+  unkinkPolygons,
+  calculateGeometryMetrics,
+} from './spatial-operations';
 
 export interface GeovaraDevApi {
   version: string;
@@ -12,6 +20,14 @@ export interface GeovaraDevApi {
   fitBounds: () => void;
   setBasemap: (basemapId: string) => void;
   setProjection: (projection: 'EPSG:4326' | 'EPSG:3857') => void;
+  spatial: {
+    buffer: typeof generateBuffer;
+    simplify: typeof simplifyGeoJSON;
+    convexHull: typeof generateConvexHull;
+    centroids: typeof generateCentroids;
+    unkink: typeof unkinkPolygons;
+    metrics: typeof calculateGeometryMetrics;
+  };
 }
 
 declare global {
@@ -19,6 +35,18 @@ declare global {
     geovara?: GeovaraDevApi;
   }
 }
+
+/**
+ * Default spatial algorithms toolkit for dev console
+ */
+export const defaultDevSpatial = {
+  buffer: generateBuffer,
+  simplify: simplifyGeoJSON,
+  convexHull: generateConvexHull,
+  centroids: generateCentroids,
+  unkink: unkinkPolygons,
+  metrics: calculateGeometryMetrics,
+};
 
 /**
  * Registers global `window.geovara` console debugging API.

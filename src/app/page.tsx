@@ -16,7 +16,7 @@ import {
   getRemoteUrlFromParams,
   fetchRemoteGeoJSON,
 } from '@/lib/url-state';
-import { registerGeovaraDevApi, unregisterGeovaraDevApi } from '@/lib/dev-api';
+import { registerGeovaraDevApi, unregisterGeovaraDevApi, defaultDevSpatial } from '@/lib/dev-api';
 import { useToast } from '@/hooks/use-toast';
 import { useUndoHistory } from '@/hooks/useUndoHistory';
 import { GisService } from '@/lib/spatial';
@@ -270,6 +270,7 @@ export default function Home() {
       setProjection: (proj: 'EPSG:4326' | 'EPSG:3857') => {
         setProjection(proj);
       },
+      spatial: defaultDevSpatial,
     });
 
     return () => unregisterGeovaraDevApi();
