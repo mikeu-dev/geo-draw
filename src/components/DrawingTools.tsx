@@ -1,7 +1,5 @@
 'use client';
 
-import { Control } from 'ol/control';
-import { useEffect, useRef } from 'react';
 import type { Map } from 'ol';
 import type { DrawType } from '@/app/page';
 import { Toggle } from '@/components/ui/toggle';
@@ -57,41 +55,12 @@ export default function DrawingTools({
   onToggleSnapping,
   onOpenSpatialTools,
 }: DrawingToolsProps) {
-  const controlRef = useRef<HTMLDivElement>(null);
-  const customControlRef = useRef<Control | null>(null);
-
-  useEffect(() => {
-    if (!map || !controlRef.current) return;
-
-    if (!customControlRef.current) {
-      customControlRef.current = new Control({
-        element: controlRef.current,
-      });
-    }
-
-    const customControl = customControlRef.current;
-
-    // Check if control is already added to avoid duplicates
-    const isControlAdded = map.getControls().getArray().includes(customControl);
-    if (!isControlAdded) {
-      map.addControl(customControl);
-    }
-
-    return () => {
-      // On cleanup, remove the control only if the map instance still exists
-      // and the control is part of the map's controls.
-      if (map && map.getControls().getArray().includes(customControl)) {
-        map.removeControl(customControl);
-      }
-    };
-  }, [map]);
-
   const handleDrawTypeChange = (type: DrawType) => {
     setDrawType(drawType === type ? null : type);
   };
 
   return (
-    <div ref={controlRef} className="drawing-tools ol-control ol-unselectable">
+    <div className="drawing-tools">
       <div className="flex flex-col items-center gap-2">
         <SceneViewSwitcher
           is3d={is3d}
