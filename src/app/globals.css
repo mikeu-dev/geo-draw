@@ -199,28 +199,49 @@
       0 0 0 1px rgb(0 0 0 / 0.02);
   }
 
-  .drawing-tools button {
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .drawing-tools button,
+  .drawing-tools [role='button'],
+  .drawing-tools [data-state] {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     color: hsl(var(--card-foreground));
     background-color: transparent;
     border-radius: var(--radius);
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .drawing-tools button:hover {
+  .drawing-tools button:hover,
+  .drawing-tools [role='button']:hover,
+  .drawing-tools [data-state]:hover {
     background-color: hsl(var(--secondary));
     color: hsl(var(--secondary-foreground));
     transform: scale(1.05);
   }
 
-  .drawing-tools button[data-state='on'] {
+  .drawing-tools button[data-state='on'],
+  .drawing-tools [data-state='on'] {
     background-color: hsl(var(--accent));
     color: hsl(var(--accent-foreground));
     box-shadow: 0 0 0 2px hsl(var(--accent) / 0.3);
+  }
+
+  .drawing-tools button svg,
+  .drawing-tools [role='button'] svg,
+  .drawing-tools [data-state] svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    min-width: 1rem !important;
+    min-height: 1rem !important;
+    max-width: 1rem !important;
+    max-height: 1rem !important;
+    stroke-width: 2 !important;
+    flex-shrink: 0 !important;
   }
 
   .basemap-switcher.ol-control {

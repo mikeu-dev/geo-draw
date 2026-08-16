@@ -235,7 +235,7 @@ export default function DrawingTools({
                   onPressedChange={() => onOpenSpatialTools()}
                   className="hover:text-primary"
                 >
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Sparkles className="h-4 w-4" />
                 </Toggle>
               </TooltipTrigger>
               <TooltipContent side="left">

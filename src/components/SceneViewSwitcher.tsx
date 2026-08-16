@@ -49,19 +49,17 @@ export default function SceneViewSwitcher({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-8 h-8 rounded-[var(--radius)] flex flex-col items-center justify-center gap-0.5 p-0 hover:bg-secondary"
+                className="w-8 h-8 rounded-[var(--radius)] flex items-center justify-center p-0 hover:bg-secondary"
+                aria-label={`Map View & Projection: ${is3d ? '3D Globe' : getActiveLabel()}`}
               >
                 {is3d ? <Globe className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
-                <span className="text-[8px] font-bold opacity-70 leading-none">
-                  {getActiveLabel()}
-                </span>
               </Button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Map View & Projection</p>
-            </TooltipContent>
-          </Tooltip>
+          <TooltipContent side="left">
+            <p>View: {is3d ? '3D Globe' : `2D (${projection})`}</p>
+          </TooltipContent>
+        </Tooltip>
 
           <DropdownMenuContent side="right" align="start" className="w-48">
             <DropdownMenuLabel className="text-xs">2D Flat Mode</DropdownMenuLabel>
