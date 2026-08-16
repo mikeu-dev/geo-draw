@@ -141,6 +141,23 @@ export function matchQuickSpatialIntent(prompt: string): SpatialIntentOutput | n
     };
   }
 
+  // Unkink / Fix self-intersecting polygon
+  if (/\b(unkink|fix\s*kink|perbaiki\s*poligon|self\s*-?\s*intersect\w*)\b/i.test(p)) {
+    return {
+      action: 'unkink',
+      narrative: 'Repairing self-intersecting polygons...',
+    };
+  }
+
+  // Calculate field (area / length)
+  if (/\b(hitung\s*luas|calculate\s*area|hitung\s*keliling|calculate\s*length)\b/i.test(p)) {
+    return {
+      action: 'calculateField',
+      params: { propKey: 'area_ha' },
+      narrative: 'Calculating geometric metrics for features...',
+    };
+  }
+
   // Union
   if (/\b(union|merge\s*polygons|combine\s*features|gabung)\b/i.test(p)) {
     return {

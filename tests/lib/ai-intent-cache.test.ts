@@ -60,6 +60,12 @@ describe('ai-intent-cache', () => {
 
       const centroid = matchQuickSpatialIntent('Find centroid');
       expect(centroid?.action).toBe('centroid');
+
+      const unkink = matchQuickSpatialIntent('Fix self intersecting polygon');
+      expect(unkink?.action).toBe('unkink');
+
+      const calc = matchQuickSpatialIntent('Hitung luas area');
+      expect(calc?.action).toBe('calculateField');
     });
 
     it('should match export and download format commands', () => {
