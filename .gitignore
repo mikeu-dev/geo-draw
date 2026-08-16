@@ -50,3 +50,7 @@ firestore-debug.log
 /test-results/
 /blob-report/
 docs/*
+!docs/geojson-io-riset-mendalam.md
+!docs/geojson-io-ux-riset-mendalam.md
+!docs/plan-pengembangan-geovara.md
+!docs/plan-pengembangan.md
