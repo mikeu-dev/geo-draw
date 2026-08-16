@@ -98,7 +98,7 @@ export default function MapScreenshot({ map }: MapScreenshotProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="w-[2.25rem] h-[2.25rem]"
+            className="w-8 h-8 rounded-[var(--radius)] p-0 flex items-center justify-center hover:bg-secondary"
             onClick={handleScreenshot}
           >
             <Camera className="h-4 w-4" />

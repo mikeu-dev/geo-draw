@@ -41,24 +41,23 @@ export default function SceneViewSwitcher({
   };
 
   return (
-    <div className="bg-card/80 backdrop-filter-[4px] rounded-md p-0.5">
-      <TooltipProvider>
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-[2rem] h-[2rem] flex flex-col items-center justify-center gap-0.5"
-                >
-                  {is3d ? <Globe className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
-                  <span className="text-[8px] font-bold opacity-70 leading-none">
-                    {getActiveLabel()}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
+    <TooltipProvider>
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-8 h-8 rounded-[var(--radius)] flex flex-col items-center justify-center gap-0.5 p-0 hover:bg-secondary"
+              >
+                {is3d ? <Globe className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
+                <span className="text-[8px] font-bold opacity-70 leading-none">
+                  {getActiveLabel()}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
             <TooltipContent side="right">
               <p>Map View & Projection</p>
             </TooltipContent>
@@ -102,6 +101,5 @@ export default function SceneViewSwitcher({
           </DropdownMenuContent>
         </DropdownMenu>
       </TooltipProvider>
-    </div>
   );
 }

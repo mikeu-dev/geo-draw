@@ -61,7 +61,7 @@ export default function DrawingTools({
 
   return (
     <div className="drawing-tools">
-      <div className="flex flex-col items-center gap-2">
+      <div className="drawing-controls">
         <SceneViewSwitcher
           is3d={is3d}
           onToggle3d={onToggle3d}

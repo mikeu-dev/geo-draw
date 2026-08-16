@@ -80,48 +80,50 @@ export default function BasemapSwitcher({ tileLayer }: BasemapSwitcherProps) {
   if (!tileLayer) return null;
 
   return (
-    <div className="bg-card/80 backdrop-filter-[4px] rounded-md p-0.5">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="w-[2.25rem] h-[2.25rem]">
-            <Layers className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="end" className="w-48">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-            Basemap
-          </DropdownMenuLabel>
-          {basemaps.map((basemap) => (
-            <DropdownMenuItem key={basemap.id} onSelect={() => handleBasemapChange(basemap.id)}>
-              <div className="w-4 mr-2 flex-shrink-0">
-                {activeBasemap === basemap.id && <Check className="h-3.5 w-3.5 text-accent" />}
-              </div>
-              <span className="text-sm">{basemap.name}</span>
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <div className="px-2 py-2">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                Opacity
-              </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                {Math.round(opacity * 100)}%
-              </span>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-8 h-8 rounded-[var(--radius)] p-0 flex items-center justify-center hover:bg-secondary"
+        >
+          <Layers className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="end" className="w-48">
+        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+          Basemap
+        </DropdownMenuLabel>
+        {basemaps.map((basemap) => (
+          <DropdownMenuItem key={basemap.id} onSelect={() => handleBasemapChange(basemap.id)}>
+            <div className="w-4 mr-2 flex-shrink-0">
+              {activeBasemap === basemap.id && <Check className="h-3.5 w-3.5 text-accent" />}
             </div>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={opacity}
-              onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-accent"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            />
+            <span className="text-sm">{basemap.name}</span>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <div className="px-2 py-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Opacity
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              {Math.round(opacity * 100)}%
+            </span>
           </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={opacity}
+            onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-accent"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          />
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

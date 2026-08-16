@@ -989,7 +989,7 @@ export default function Sidebar({
               className={`
                 absolute top-1/2 -translate-y-1/2 z-50
                 flex items-center justify-center
-                w-5 h-12 rounded-r-md border border-l-0 border-border
+                w-5 h-12 rounded-r-[var(--radius)] border border-l-0 border-border
                 bg-card/95 hover:bg-accent text-muted-foreground hover:text-accent-foreground
                 backdrop-blur-md shadow-md
                 transition-all duration-300 ease-in-out group cursor-pointer

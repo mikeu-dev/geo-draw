@@ -154,7 +154,7 @@ export default function LocationSearch({ map, onAddFeature }: LocationSearchProp
     >
       <div
         className={`
-        flex items-center gap-2 px-3 py-2 rounded-lg
+        flex items-center gap-2 px-3 py-2 rounded-[var(--radius)]
         bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))]
         transition-all duration-200
         ${isFocused ? 'ring-2 ring-accent/40 shadow-lg' : 'shadow-sm'}
@@ -188,7 +188,7 @@ export default function LocationSearch({ map, onAddFeature }: LocationSearchProp
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="mt-1.5 rounded-lg overflow-hidden bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-xl animate-fade-in-up">
+        <div className="mt-1.5 rounded-[var(--radius)] overflow-hidden bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-xl animate-fade-in-up">
           {results.map((result) => (
             <div
               key={result.place_id}
