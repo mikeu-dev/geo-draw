@@ -98,7 +98,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Draw Point</p>
+              <p>Draw point</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -112,7 +112,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Draw Line</p>
+              <p>Draw line</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -126,7 +126,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Draw Polygon</p>
+              <p>Draw polygon</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -140,7 +140,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Draw Rectangle</p>
+              <p>Draw rectangle</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -154,7 +154,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Draw Circle</p>
+              <p>Draw circle</p>
             </TooltipContent>
           </Tooltip>
 
@@ -171,7 +171,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Knife / Slice Polygon</p>
+              <p>Split polygon (Knife Tool)</p>
             </TooltipContent>
           </Tooltip>
 
@@ -188,7 +188,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Measure Distance</p>
+              <p>Measure distance</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -202,7 +202,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Measure Area</p>
+              <p>Measure area</p>
             </TooltipContent>
           </Tooltip>
 
@@ -221,7 +221,7 @@ export default function DrawingTools({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Magnetic Snapping ({snappingEnabled ? 'On' : 'Off'})</p>
+              <p>Magnetic snapping ({snappingEnabled ? 'on' : 'off'})</p>
             </TooltipContent>
           </Tooltip>
 
@@ -239,7 +239,7 @@ export default function DrawingTools({
                 </Toggle>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p>Spatial Analysis (Turf.js)</p>
+                <p>Spatial analysis (Turf.js)</p>
               </TooltipContent>
             </Tooltip>
           )}
@@ -258,7 +258,7 @@ export default function DrawingTools({
                   </Toggle>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>Edit Feature</p>
+                  <p>Edit feature</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -272,7 +272,7 @@ export default function DrawingTools({
                   </Toggle>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>Delete Feature</p>
+                  <p>Delete feature</p>
                 </TooltipContent>
               </Tooltip>
             </>

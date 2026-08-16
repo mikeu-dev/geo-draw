@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import OSM_Source from 'ol/source/OSM';
 import XYZ_Source from 'ol/source/XYZ';
 
@@ -80,16 +81,25 @@ export default function BasemapSwitcher({ tileLayer }: BasemapSwitcherProps) {
   if (!tileLayer) return null;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-8 h-8 rounded-[var(--radius)] p-0 flex items-center justify-center hover:bg-secondary"
-        >
-          <Layers className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
+    <TooltipProvider>
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-8 h-8 rounded-[var(--radius)] p-0 flex items-center justify-center hover:bg-secondary"
+                aria-label="Basemap & Opacity"
+              >
+                <Layers className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>Basemap & Opacity</p>
+          </TooltipContent>
+        </Tooltip>
       <DropdownMenuContent side="top" align="end" className="w-48">
         <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
           Basemap
@@ -125,5 +135,6 @@ export default function BasemapSwitcher({ tileLayer }: BasemapSwitcherProps) {
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
+    </TooltipProvider>
   );
 }

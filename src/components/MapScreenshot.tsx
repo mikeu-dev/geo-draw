@@ -105,7 +105,7 @@ export default function MapScreenshot({ map }: MapScreenshotProps) {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>Export as Image</p>
+          <p>Export as image</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
