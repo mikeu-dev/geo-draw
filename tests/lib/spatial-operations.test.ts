@@ -6,6 +6,9 @@ import {
   generateConvexHull,
   generateCentroids,
   unkinkPolygons,
+  booleanUnionPolygons,
+  booleanIntersectPolygons,
+  booleanDifferencePolygons,
 } from '@/lib/spatial-operations';
 import type { Feature, FeatureCollection, Polygon, Point, LineString } from 'geojson';
 
@@ -143,6 +146,63 @@ describe('spatial-operations', () => {
       });
 
       expect(result.features.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('boolean operations', () => {
+    const polyA: Feature<Polygon> = {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [0, 0],
+            [2, 0],
+            [2, 2],
+            [0, 2],
+            [0, 0],
+          ],
+        ],
+      },
+      properties: { id: 'A' },
+    };
+
+    const polyB: Feature<Polygon> = {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [1, 1],
+            [3, 1],
+            [3, 3],
+            [1, 3],
+            [1, 1],
+          ],
+        ],
+      },
+      properties: { id: 'B' },
+    };
+
+    it('unions two overlapping polygons', () => {
+      const unionResult = booleanUnionPolygons({
+        type: 'FeatureCollection',
+        features: [polyA, polyB],
+      });
+      expect(unionResult).not.toBeNull();
+      expect(unionResult?.geometry.type).toBeDefined();
+    });
+
+    it('computes intersection of two polygons', () => {
+      const intersection = booleanIntersectPolygons(polyA, polyB);
+      expect(intersection).not.toBeNull();
+      expect(intersection?.geometry.type).toBe('Polygon');
+    });
+
+    it('computes difference of two polygons', () => {
+      const diff = booleanDifferencePolygons(polyA, polyB);
+      expect(diff).not.toBeNull();
+      expect(diff?.geometry.type).toBe('Polygon');
     });
   });
 });

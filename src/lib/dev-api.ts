@@ -7,6 +7,9 @@ import {
   generateCentroids,
   unkinkPolygons,
   calculateGeometryMetrics,
+  booleanUnionPolygons,
+  booleanIntersectPolygons,
+  booleanDifferencePolygons,
 } from './spatial-operations';
 
 export interface GeovaraDevApi {
@@ -27,6 +30,9 @@ export interface GeovaraDevApi {
     centroids: typeof generateCentroids;
     unkink: typeof unkinkPolygons;
     metrics: typeof calculateGeometryMetrics;
+    union: typeof booleanUnionPolygons;
+    intersect: typeof booleanIntersectPolygons;
+    difference: typeof booleanDifferencePolygons;
   };
 }
 
@@ -46,6 +52,9 @@ export const defaultDevSpatial = {
   centroids: generateCentroids,
   unkink: unkinkPolygons,
   metrics: calculateGeometryMetrics,
+  union: booleanUnionPolygons,
+  intersect: booleanIntersectPolygons,
+  difference: booleanDifferencePolygons,
 };
 
 /**

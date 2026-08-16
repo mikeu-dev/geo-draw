@@ -159,3 +159,54 @@ export function unkinkPolygons(
     features: cleanFeatures,
   };
 }
+
+/**
+ * Merges multiple overlapping or adjacent polygons into a single unified geometry
+ */
+export function booleanUnionPolygons(
+  geojson: FeatureCollection
+): Feature<Polygon | MultiPolygon> | null {
+  const polygons = geojson.features.filter(
+    (f) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+  ) as Feature<Polygon | MultiPolygon>[];
+
+  if (polygons.length === 0) return null;
+  if (polygons.length === 1) return polygons[0];
+
+  try {
+    return turf.union(turf.featureCollection(polygons));
+  } catch (err) {
+    console.error('Failed to compute boolean union:', err);
+    return null;
+  }
+}
+
+/**
+ * Computes intersection between two polygon features
+ */
+export function booleanIntersectPolygons(
+  poly1: Feature<Polygon | MultiPolygon>,
+  poly2: Feature<Polygon | MultiPolygon>
+): Feature<Polygon | MultiPolygon> | null {
+  try {
+    return turf.intersect(turf.featureCollection([poly1, poly2]));
+  } catch (err) {
+    console.error('Failed to compute boolean intersect:', err);
+    return null;
+  }
+}
+
+/**
+ * Computes geometric difference (poly1 minus poly2)
+ */
+export function booleanDifferencePolygons(
+  poly1: Feature<Polygon | MultiPolygon>,
+  poly2: Feature<Polygon | MultiPolygon>
+): Feature<Polygon | MultiPolygon | Geometry> | null {
+  try {
+    return turf.difference(turf.featureCollection([poly1, poly2]));
+  } catch (err) {
+    console.error('Failed to compute boolean difference:', err);
+    return null;
+  }
+}
