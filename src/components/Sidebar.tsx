@@ -12,8 +12,6 @@ import {
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Copy,
   Trash2,
@@ -480,27 +478,28 @@ export default function Sidebar({
           }
         `}
       >
-        <div className="w-[350px] lg:w-[400px] h-full flex flex-col overflow-y-auto sidebar-panel">
-          <div className="p-4 border-b border-border animate-slide-in-left">
-        <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{
-            background: 'linear-gradient(135deg, hsl(173, 58%, 39%), hsl(210, 70%, 50%))',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          Geovara
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Professional geospatial analysis toolkit
-        </p>
-      </div>
-      <div className="flex flex-col flex-grow p-4 min-h-0">
-        <Card className="flex flex-col flex-grow">
-          <CardContent className="flex-grow flex flex-col pt-4">
+        <div className="w-[350px] lg:w-[400px] h-full flex flex-col min-h-0 overflow-hidden sidebar-panel">
+          {/* Brand Header */}
+          <div className="p-4 border-b border-border flex-shrink-0 animate-slide-in-left">
+            <h1
+              className="text-2xl font-bold tracking-tight"
+              style={{
+                background: 'linear-gradient(135deg, hsl(173, 58%, 39%), hsl(210, 70%, 50%))',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Geovara
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Professional geospatial analysis toolkit
+            </p>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col p-3 min-h-0 overflow-hidden">
             <TooltipProvider>
-              <Menubar className="mb-2 h-auto p-1 justify-between">
+              <Menubar className="mb-2 h-auto p-1 justify-between flex-shrink-0">
                 <div className="flex items-center">
                   <MenubarMenu>
                     <Tooltip>
@@ -621,30 +620,29 @@ export default function Sidebar({
                   </MenubarMenu>
                 </div>
               </Menubar>
-            </TooltipProvider>
 
-            <Tabs defaultValue="json" className="flex-grow flex flex-col">
-              <TabsList className="w-full grid grid-cols-5">
-                <TabsTrigger value="json" className="text-xs">
-                  JSON
-                </TabsTrigger>
-                <TabsTrigger value="table" className="text-xs">
-                  Table
-                </TabsTrigger>
-                <TabsTrigger value="features" className="text-xs">
-                  Features ({features.length})
-                </TabsTrigger>
-                <TabsTrigger value="layers" className="text-xs">
-                  Layers
-                </TabsTrigger>
-                <TabsTrigger value="help" className="text-xs">
-                  Help
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent
-                value="json"
-                className="flex-grow relative mt-2 rounded-md border border-input overflow-hidden"
-              >
+              <Tabs defaultValue="json" className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <TabsList className="w-full grid grid-cols-5 flex-shrink-0">
+                  <TabsTrigger value="json" className="text-xs">
+                    JSON
+                  </TabsTrigger>
+                  <TabsTrigger value="table" className="text-xs">
+                    Table
+                  </TabsTrigger>
+                  <TabsTrigger value="features" className="text-xs">
+                    Features ({features.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="layers" className="text-xs">
+                    Layers
+                  </TabsTrigger>
+                  <TabsTrigger value="help" className="text-xs">
+                    Help
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent
+                  value="json"
+                  className="flex-1 relative mt-2 rounded-md border border-input overflow-hidden min-h-0"
+                >
                 {geojsonString && (
                   <TooltipProvider>
                     <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
@@ -751,7 +749,7 @@ export default function Sidebar({
                   </div>
                 )}
               </TabsContent>
-              <TabsContent value="features" className="flex-grow mt-2 overflow-y-auto">
+              <TabsContent value="features" className="flex-1 mt-2 overflow-y-auto min-h-0">
                 <div className="space-y-2">
                   <FileDropZone
                     onFileLoad={async (content, filename) => {
@@ -817,9 +815,9 @@ export default function Sidebar({
                         stat = len > 1000 ? `${(len / 1000).toFixed(2)} km` : `${len.toFixed(0)} m`;
                       }
                       return (
-                        <Card
+                        <div
                           key={feature.getId() || idx}
-                          className="p-2.5 mb-1.5 hover:bg-accent/50 transition-all duration-150 cursor-pointer border-border/60"
+                          className="p-2.5 mb-1.5 rounded-[var(--radius)] border border-border/60 bg-card hover:bg-accent/50 transition-all duration-150 cursor-pointer"
                           onClick={() => onFeatureSelect(feature)}
                         >
                           <div className="flex items-center justify-between">
@@ -830,10 +828,10 @@ export default function Sidebar({
                                     ? 'bg-accent'
                                     : geomType?.includes('Line')
                                       ? 'bg-blue-500'
-                                      : 'bg-orange-500'
+                                      : 'bg-emerald-500'
                                 }`}
                               />
-                              <div className="flex flex-col">
+                              <div className="flex flex-col min-w-0">
                                 <span className="text-xs font-medium truncate w-28">
                                   {String(feature.getId() || `Feature ${idx}`)}
                                 </span>
@@ -890,13 +888,13 @@ export default function Sidebar({
                               </TooltipProvider>
                             </div>
                           </div>
-                        </Card>
+                        </div>
                       );
                     })
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="layers" className="flex-grow mt-2 overflow-y-auto">
+              <TabsContent value="layers" className="flex-1 mt-2 overflow-y-auto min-h-0">
                 <div className="space-y-6 pt-2 px-1">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -959,7 +957,7 @@ export default function Sidebar({
               </TabsContent>
               <TabsContent
                 value="table"
-                className="flex-grow mt-2 rounded-md border border-input overflow-hidden flex flex-col min-h-0"
+                className="flex-1 mt-2 rounded-md border border-input overflow-hidden flex flex-col min-h-0"
               >
                 <AttributeTable
                   features={features}
@@ -969,15 +967,14 @@ export default function Sidebar({
                   onDeleteFeature={onDeleteFeature}
                 />
               </TabsContent>
-              <TabsContent value="help" className="flex-grow mt-2 overflow-y-auto">
+              <TabsContent value="help" className="flex-1 mt-2 overflow-y-auto min-h-0">
                 <HelpContent />
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
+          </TooltipProvider>
+        </div>
       </div>
-    </div>
-      </aside>
+    </aside>
 
       {/* Protruding Sidebar Toggle Button (Menonjol & Menempel pada Sisi Sidebar) */}
       <TooltipProvider>
