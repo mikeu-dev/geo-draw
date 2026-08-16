@@ -32,6 +32,8 @@ import {
   Layers,
   Eye,
   EyeOff,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -128,6 +130,15 @@ export default function Sidebar({
   const [theme, setTheme] = useState('light');
   const [isCopied, setIsCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Synchronize map viewport whenever sidebar is toggled
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [isCollapsed]);
 
   // Automatic real-time GeoJSON validation (0ms, offline RFC 7946)
   useEffect(() => {
@@ -457,8 +468,20 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-full md:w-[350px] lg:w-[400px] flex-shrink-0 flex flex-col border-r border-border h-full overflow-y-auto sidebar-panel">
-      <div className="p-4 border-b border-border animate-slide-in-left">
+    <div className="relative flex-shrink-0 h-full z-40">
+      <aside
+        className={`
+          flex flex-col border-r border-border h-full bg-background
+          transition-all duration-300 ease-in-out overflow-hidden
+          ${
+            isCollapsed
+              ? 'w-0 opacity-0 border-r-0 pointer-events-none'
+              : 'w-full md:w-[350px] lg:w-[400px] opacity-100'
+          }
+        `}
+      >
+        <div className="w-[350px] lg:w-[400px] h-full flex flex-col overflow-y-auto sidebar-panel">
+          <div className="p-4 border-b border-border animate-slide-in-left">
         <h1
           className="text-2xl font-bold tracking-tight"
           style={{
@@ -953,6 +976,39 @@ export default function Sidebar({
           </CardContent>
         </Card>
       </div>
-    </aside>
+    </div>
+      </aside>
+
+      {/* Protruding Sidebar Toggle Button (Menonjol & Menempel pada Sisi Sidebar) */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed((prev) => !prev)}
+              className={`
+                absolute top-1/2 -translate-y-1/2 z-50
+                flex items-center justify-center
+                w-5 h-12 rounded-r-md border border-l-0 border-border
+                bg-card/95 hover:bg-accent text-muted-foreground hover:text-accent-foreground
+                backdrop-blur-md shadow-md
+                transition-all duration-300 ease-in-out group cursor-pointer
+                ${isCollapsed ? 'left-0' : 'left-[350px] lg:left-[400px]'}
+              `}
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-3.5 w-3.5 group-hover:scale-125 transition-transform" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5 group-hover:scale-125 transition-transform" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p className="text-xs">{isCollapsed ? 'Buka Sidebar' : 'Tutup Sidebar'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }
