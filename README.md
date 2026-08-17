@@ -1,6 +1,6 @@
 # Geovara: Professional Geospatial Platform & GeoJSON Engineering Tool
 
-Geovara is an advanced, high-performance, stateless geospatial data engineering platform and map editor. Built with Next.js App Router, OpenLayers, CesiumJS, and Turf.js, it combines the flexibility of an interactive vector drawing canvas with a Monaco-powered code editor, deterministic RFC 7946 validation, client-side spatial intelligence, and 3D globe visualization.
+Geovara is an advanced, high-performance, stateless geospatial data engineering platform and map editor. Built with Next.js App Router, OpenLayers, CesiumJS, and Turf.js, it combines the flexibility of an interactive vector drawing canvas with a Monaco-powered code editor, deterministic RFC 7946 validation, client-side spatial intelligence, and realistic 3D globe visualization.
 
 ---
 
@@ -10,6 +10,7 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **Client-Side Privacy**: Data stays inside the client browser. No feature collections are stored on external servers unless requested explicitly via third-party export.
 - **Dual View Synchronization**: Bidirectional, non-blocking synchronization between the interactive OpenLayers vector layer, the Attribute Table grid, and the Monaco code editor.
 - **Deterministic Accuracy**: Zero-latency spatial algorithms and strict RFC 7946 GeoJSON schema validation operating completely offline.
+- **Indonesian Archipelago Default Extent**: Default 2D map and 3D globe viewports are centered around the Indonesian archipelago (`[118.0148, -2.5489]`, `zoom = 5`).
 
 ---
 
@@ -29,6 +30,7 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **Deterministic RFC 7946 Validator**: High-speed schema validator that verifies geometry types, coordinate bounds, closure rules, and nesting levels in 0ms without consuming AI tokens.
 - **Interactive Error Jump**: The status bar displays syntax errors with exact line and column numbers. Clicking on the error banner instantly jumps the Monaco editor cursor to the faulty line.
 - **Schema Autocompletion**: Integrated GeoJSON JSON Schema for inline autocompletion and structural tooltips.
+- **Safe Deletion & Confirmation Modals**: Interactive modal dialogs (*AlertDialog*) prevent accidental data loss when clearing datasets or deleting individual features.
 
 ### 3. Attribute Table & Batch Property Engineering
 - **Interactive Data Grid**: Tabular inspection of all properties associated with GeoJSON features.
@@ -39,7 +41,7 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
 - **Search-to-Point Focus**: Filter features by keyword and zoom directly to the selected geometry on the canvas.
 
 ### 4. Turf.js Spatial Analysis Toolkit
-- **Interactive Analysis Dialog**: Dedicated visual modal for instantaneous client-side geometric calculations:
+- **Client-Side Spatial Operations**: Dedicated visual modal for instantaneous geometric calculations:
   - **Buffer Generator**: Compute geodesic buffers with custom radius units (meters, kilometers, miles, feet).
   - **Multi-Ring Reachability**: Generate concentric buffer rings with heat spectrum color gradients for accessibility and hazard zoning.
   - **Douglas-Peucker Simplification**: Reduce geometry vertex count with High-Quality topology preservation.
@@ -48,32 +50,38 @@ Geovara is an advanced, high-performance, stateless geospatial data engineering 
   - **Unkink Polygons**: Automatically resolve and untangle self-intersecting polygon kinks.
   - **Boolean Operations**: Perform geometric Union, Intersection, and Difference cuts between overlapping polygons.
 
-### 5. Multi-Format Interoperability
+### 5. Multi-Format Interoperability & Auto-Reprojection
 - **GeoJSON**: Standard RFC 7946 import and export.
-- **ESRI Shapefile Support**: Native client-side binary parser for zipped Shapefile archives (`.zip` containing `.shp` and `.dbf`) and standalone `.shp` files with zero server transmission.
+- **ESRI Shapefile with Proj4 Reprojection**: Native client-side binary parser for zipped Shapefile archives (`.zip` containing `.shp`, `.dbf`, `.prj`, and `.cpg`) and standalone `.shp` files. Automatically reads `.prj` files to reproject projected coordinate systems (such as UTM Zone 48S / EPSG:32748, Web Mercator, State Plane) into standard WGS84 (`EPSG:4326`), with `.cpg` charset decoding.
 - **TopoJSON**: Export and topological conversion via `topojson-server` and `topojson-client`.
 - **CSV Support**: Auto-detects latitude/longitude coordinate columns (`lat`, `latitude`, `lng`, `lon`, `longitude`, `wkt`) or embedded WKT strings.
 - **WKT (Well-Known Text)**: Parse and generate WKT geometries (`POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON`).
 - **KML / KMZ**: Native import support for Google Earth and GIS workflows.
 - **Drag-and-Drop & Remote Loader**: Drag files directly onto the viewport or load external datasets using the URL query parameter (`?url=https://.../data.geojson`).
 
-### 6. 3D Globe Visualization (CesiumJS & OLCesium)
-- **Cesium 3D Engine**: Seamless transition between 2D flat maps and an interactive 3D WebGL globe.
-- **High-Resolution Basemap**: Integrated Carto Voyager and OpenStreetMap imagery layers projected onto the 3D ellipsoid.
-- **Zero-Token WGS84 Fallback**: Operates using the standard WGS84 ellipsoid without requiring third-party token dependencies. Supports optional Cesium Ion 3D World Terrain when an access token is provided.
-- **Memory-Safe Lifecycle**: Single-instance controller prevents WebGL canvas leaks across component re-renders.
+### 6. Realistic 3D Globe Visualization (CesiumJS)
+- **Interactive 3D WebGL Globe**: Realistic Earth representation featuring dynamic solar/lunar lighting, star-field space skybox, and realistic atmospheric haze.
+- **Global Hybrid Reference Overlay**: Multi-layered cartographic place labels, cities, islands, and country boundaries (Google Earth and geojson.io style).
+- **Synchronized Basemap Engine**: Real-time basemap synchronization between 2D flat maps and the 3D globe across OpenStreetMap, Esri World Imagery (Satellite), OpenTopoMap (Topography), and CartoDB Dark Matter.
+- **Mini Preview Cards UI**: 2x2 SVG visual thumbnail switcher with zero layout shift and dynamic opacity controls.
+- **Zero-Token WGS84 Fallback**: Operates using the standard WGS84 ellipsoid without third-party token dependencies. Supports optional Cesium Ion 3D World Terrain when an access token is provided.
 
-### 7. Coordinate Reference Systems (CRS)
+### 7. Resizable Workspace Layout
+- **Horizontal Drag Resize**: Click and drag the right edge of the sidebar horizontally to expand up to 50% of the viewport width (`50vw`).
+- **Drag-to-Collapse**: Dragging past the threshold collapses the sidebar completely to maximize the map canvas.
+- **Conditional Toggle Button**: A subtle toggle button appears on the edge only when the sidebar is hidden.
+
+### 8. Coordinate Reference Systems (CRS)
 - **Web Mercator (EPSG:3857)**: Industry-standard projection for web basemaps and interactive panning.
 - **WGS 84 (EPSG:4326)**: Geographic coordinate system for spatial analysis and global data exchange.
 - **On-the-Fly Reprojection**: Toggle between projections seamlessly without data loss.
 
-### 8. AI Natural Language Assistant (Google Gemini)
+### 9. AI Natural Language Assistant (Google Gemini)
 - **Conversational Geospatial Commands**: Transform natural language instructions into spatial operations (e.g., "draw a polygon around Monas Jakarta", "create a 5km buffer around selected features", "fix self intersecting polygon", "calculate area in hectares").
 - **Zero-Latency Pattern Matcher**: Local regex-based fast parser resolves common commands in 0ms before routing complex requests to the LLM.
 - **LRU Intent Cache**: In-memory caching layer eliminates redundant API calls for repeated prompt structures.
 
-### 9. Developer Console API (`window.geovara`)
+### 10. Developer Console API (`window.geovara`)
 Full programmatic access via the browser DevTools (F12) console:
 ```javascript
 // Access the active GeoJSON dataset
@@ -106,8 +114,9 @@ window.geovara.zoomToExtent();
 | **2D Mapping Engine** | OpenLayers 9+ |
 | **3D Visualization** | CesiumJS 1.113 & OLCesium 2.17 |
 | **Spatial Computation** | Turf.js 7 |
+| **Projection Engine** | `proj4` (on-the-fly coordinate reprojection) |
 | **Code Editor** | Monaco Editor (`@monaco-editor/react`) |
-| **Shapefile / Archive** | `jszip`, Custom binary SHP/DBF parser |
+| **Shapefile / Archive** | `jszip`, Custom binary SHP/DBF parser with `.prj` & `.cpg` support |
 | **State & URL Sync** | `lz-string` (LZW algorithm) |
 | **Styling & Components** | Tailwind CSS, Radix UI, Lucide Icons |
 | **AI Integration** | Google Genkit / Gemini 2.0 Flash |
@@ -124,8 +133,9 @@ geovara/
 │   ├── ai/                  # Genkit and Gemini AI configuration & spatial intent flows
 │   ├── app/                 # Next.js App Router (layout, page, route handlers)
 │   ├── components/          # UI and map components
-│   │   ├── ui/              # Radix UI primitives (buttons, dialogs, dropdowns)
+│   │   ├── ui/              # Radix UI primitives (alert-dialog, buttons, dialogs, dropdowns)
 │   │   ├── AttributeTable.tsx
+│   │   ├── BasemapSwitcher.tsx
 │   │   ├── BatchPropertyModal.tsx
 │   │   ├── CesiumController.tsx
 │   │   ├── CursorGuide.tsx
@@ -148,7 +158,7 @@ geovara/
 │   │   ├── url-state.ts
 │   │   └── wkt-geojson.ts
 │   └── types/               # TypeScript interfaces and schema declarations
-├── tests/                   # Vitest unit and integration test suites (14 suites, 93 tests)
+├── tests/                   # Vitest unit and integration test suites (15 suites, 103 tests)
 ├── e2e/                     # Playwright automated UX usability benchmark suite
 ├── .env.example             # Environment configuration template
 ├── package.json             # Project dependencies and script definitions
@@ -197,7 +207,7 @@ geovara/
 ```bash
 npm run test
 ```
-Executes all 14 test suites (93 tests, 100% passed) covering Shapefile parsing, spatial operations, Boolean geometry algorithms, CSV/WKT parsing, URL compression, and deterministic GeoJSON validation.
+Executes all 15 test suites (103 tests, 100% passed) covering Shapefile parsing with `proj4` projection transforms, spatial operations, Boolean geometry algorithms, CSV/WKT parsing, URL compression, and deterministic GeoJSON validation.
 
 ### Run TypeScript Verification
 ```bash
@@ -208,6 +218,11 @@ Ensures strict type compliance with zero compilation warnings.
 ### Run Linting
 ```bash
 npm run lint
+```
+
+### Run End-to-End Tests
+```bash
+npm run test:e2e
 ```
 
 ### Build Production Bundle

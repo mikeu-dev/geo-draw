@@ -8,7 +8,7 @@ export default function HelpContent() {
         <strong>Geovara</strong> is a professional geospatial platform for creating,
         viewing, editing, analyzing, and sharing geographic data. Combining an interactive
         vector canvas with a Monaco code editor, tabular attribute manager, deterministic
-        RFC 7946 validation, Turf.js spatial intelligence, and 3D globe visualization, Geovara provides
+        RFC 7946 validation, Turf.js spatial intelligence, and realistic 3D globe visualization, Geovara provides
         engineering-grade tools in a stateless browser-based environment.
       </p>
 
@@ -19,7 +19,9 @@ export default function HelpContent() {
       </p>
       <ul>
         <li><strong>GeoJSON</strong> (.geojson, .json) — RFC 7946 FeatureCollections & Geometries</li>
-        <li><strong>ESRI Shapefile</strong> (.zip, .shp) — Native client-side binary parser with DBF attribute extraction</li>
+        <li>
+          <strong>ESRI Shapefile</strong> (.zip, .shp) — Native client-side parser with automatic <code>proj4</code> reprojection for projected coordinate systems (e.g., UTM Zone 48S / EPSG:32748) and <code>.cpg</code> charset decoding for DBF tables
+        </li>
         <li><strong>CSV</strong> (.csv) — Auto-detects coordinate columns (lat, lon, latitude, longitude, wkt)</li>
         <li><strong>WKT</strong> (.wkt, .txt) — Well-Known Text geometric definitions</li>
         <li><strong>TopoJSON</strong> (.topojson, .json) — Topology-preserving vector data</li>
@@ -64,7 +66,7 @@ export default function HelpContent() {
 
       <h3>Turf.js Spatial Analysis Toolkit</h3>
       <p>
-        Click the <strong>Sparkles</strong> icon on the drawing toolbar to open the interactive spatial operations dialog:
+        Access client-side geometric calculations via the spatial operations interface:
       </p>
       <ul>
         <li><strong>Buffer Generator:</strong> Create geodesic buffer zones with custom radius units (meters, kilometers, miles, feet).</li>
@@ -84,16 +86,29 @@ export default function HelpContent() {
         <li><strong>Deterministic RFC 7946 Validation:</strong> Runs continuously in 0ms with zero AI token consumption.</li>
         <li><strong>Interactive Error Locator:</strong> Syntax and structural errors show exact line and column numbers. Clicking the error banner instantly jumps the editor cursor to the faulty line.</li>
         <li><strong>JSON Schema Autocompletion:</strong> Real-time tooltip suggestions and structural validation warnings.</li>
+        <li><strong>Confirmation Dialogs:</strong> Safe deletion workflow with interactive confirmation modals before clearing datasets or removing features.</li>
       </ul>
 
-      <h3>2D Projections & Cesium 3D Globe</h3>
+      <h3>2D Projections, Basemap Engine & Cesium 3D Globe</h3>
       <p>
-        Toggle projections and visual dimensions from the Projection Switcher icon in the toolbar:
+        Toggle visual dimensions, projections, and map styles from the toolbar:
       </p>
       <ul>
         <li><strong>Web Mercator (EPSG:3857):</strong> Standard projection for web basemaps and interactive panning.</li>
         <li><strong>WGS 84 (EPSG:4326):</strong> Unprojected geographic coordinate system for GIS data interchange.</li>
-        <li><strong>Cesium 3D Globe:</strong> Interactive WebGL 3D globe with Carto Voyager and OpenStreetMap imagery.</li>
+        <li>
+          <strong>Realistic 3D Globe (CesiumJS):</strong> Interactive 3D WebGL globe with dynamic solar/lunar lighting, star-field space skybox, realistic atmosphere, and global hybrid cartographic place labels and country boundaries (Google Earth / geojson.io style).
+        </li>
+        <li>
+          <strong>Synchronized Basemaps:</strong> Switch between OpenStreetMap, Esri World Imagery (Satellite), OpenTopoMap (Topography), and CartoDB Dark Matter with 2x2 mini visual preview cards, synchronized across both 2D and 3D globe views.
+        </li>
+      </ul>
+
+      <h3>Resizable Workspace</h3>
+      <ul>
+        <li><strong>Horizontal Drag Resize:</strong> Click and drag the right edge of the sidebar horizontally to expand up to 50% of the screen width.</li>
+        <li><strong>Drag to Collapse:</strong> Drag the sidebar to the left edge to collapse it completely.</li>
+        <li><strong>Conditional Toggle Button:</strong> A sleek toggle button appears on the edge only when the sidebar is collapsed.</li>
       </ul>
 
       <h3>Editing & Keyboard Shortcuts</h3>
