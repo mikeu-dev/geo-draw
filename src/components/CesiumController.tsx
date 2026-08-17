@@ -23,11 +23,13 @@ interface WindowWithCesium extends Window {
       url: string;
       subdomains?: string[] | string;
       maximumLevel?: number;
+      credit?: string;
     }) => unknown;
     Color?: {
       fromCssColorString: (color: string) => unknown;
       BLACK: unknown;
       WHITE: unknown;
+      TRANSPARENT: unknown;
     };
   };
   olcs?: {
@@ -36,12 +38,24 @@ interface WindowWithCesium extends Window {
         canvas?: HTMLCanvasElement;
         terrainProvider: unknown;
         backgroundColor?: unknown;
+        sun?: { show?: boolean };
+        sunBloom?: boolean;
+        moon?: { show?: boolean };
+        skyBox?: { show?: boolean };
+        skyAtmosphere?: {
+          show?: boolean;
+          saturationShift?: number;
+          brightnessShift?: number;
+        };
         globe?: {
           enableLighting?: boolean;
+          dynamicAtmosphereLighting?: boolean;
+          dynamicAtmosphereLightingFromSun?: boolean;
           depthTestAgainstTerrain?: boolean;
           showGroundAtmosphere?: boolean;
           show?: boolean;
           baseColor?: unknown;
+          nightColor?: unknown;
           atmosphereSaturationShift?: number;
           atmosphereBrightnessShift?: number;
         };
@@ -61,22 +75,34 @@ interface WindowWithCesium extends Window {
 export default function CesiumController({
   map,
   enabled,
-  backgroundColor = '#02040a',
+  backgroundColor,
   enableAtmosphere = true,
-  atmosphereSaturationShift = -0.25,
-  atmosphereBrightnessShift = -0.1,
+  atmosphereSaturationShift = 0.0,
+  atmosphereBrightnessShift = 0.0,
 }: CesiumControllerProps) {
   const ol3dRef = useRef<{
     getCesiumScene: () => {
       canvas?: HTMLCanvasElement;
       terrainProvider: unknown;
       backgroundColor?: unknown;
+      sun?: { show?: boolean };
+      sunBloom?: boolean;
+      moon?: { show?: boolean };
+      skyBox?: { show?: boolean };
+      skyAtmosphere?: {
+        show?: boolean;
+        saturationShift?: number;
+        brightnessShift?: number;
+      };
       globe?: {
         enableLighting?: boolean;
+        dynamicAtmosphereLighting?: boolean;
+        dynamicAtmosphereLightingFromSun?: boolean;
         depthTestAgainstTerrain?: boolean;
         showGroundAtmosphere?: boolean;
         show?: boolean;
         baseColor?: unknown;
+        nightColor?: unknown;
         atmosphereSaturationShift?: number;
         atmosphereBrightnessShift?: number;
       };
@@ -93,7 +119,7 @@ export default function CesiumController({
 
   const isInitializingRef = useRef(false);
 
-  // Dynamic Scene updates for experiments
+  // Dynamic Scene updates for atmosphere, background, stars, and lighting
   useEffect(() => {
     if (!ol3dRef.current || !enabled) return;
     const win = window as unknown as WindowWithCesium;
@@ -104,7 +130,12 @@ export default function CesiumController({
       const scene = ol3dRef.current.getCesiumScene();
       if (!scene) return;
 
-      if (Cesium.Color && scene.backgroundColor !== undefined) {
+      // Handle background / starfield skybox
+      if (scene.skyBox) {
+        scene.skyBox.show = true;
+      }
+
+      if (backgroundColor && Cesium.Color && scene.backgroundColor !== undefined) {
         scene.backgroundColor = Cesium.Color.fromCssColorString(backgroundColor);
       }
 
@@ -112,19 +143,24 @@ export default function CesiumController({
         scene.globe.showGroundAtmosphere = enableAtmosphere;
         scene.globe.atmosphereSaturationShift = atmosphereSaturationShift;
         scene.globe.atmosphereBrightnessShift = atmosphereBrightnessShift;
+        scene.globe.enableLighting = true;
+        scene.globe.dynamicAtmosphereLighting = true;
+        scene.globe.dynamicAtmosphereLightingFromSun = true;
       }
 
-      const anyScene = scene as unknown as {
-        skyAtmosphere?: {
-          show?: boolean;
-          saturationShift?: number;
-          brightnessShift?: number;
-        };
-      };
-      if (anyScene.skyAtmosphere) {
-        anyScene.skyAtmosphere.show = enableAtmosphere;
-        anyScene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
-        anyScene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
+      if (scene.sun) {
+        scene.sun.show = true;
+      }
+      scene.sunBloom = true;
+
+      if (scene.moon) {
+        scene.moon.show = true;
+      }
+
+      if (scene.skyAtmosphere) {
+        scene.skyAtmosphere.show = enableAtmosphere;
+        scene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
+        scene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
       }
     } catch {
       // Ignore update errors
@@ -183,55 +219,57 @@ export default function CesiumController({
               }
             }
 
-            // Deep space background (#02040a) to create quiet negative space
-            if (Cesium.Color && scene.backgroundColor !== undefined) {
+            // 1. Starfield Universe / Skybox (Bintang-bintang luar angkasa)
+            if (scene.skyBox) {
+              scene.skyBox.show = true;
+            }
+
+            if (backgroundColor && Cesium.Color && scene.backgroundColor !== undefined) {
               scene.backgroundColor = Cesium.Color.fromCssColorString(backgroundColor);
             }
 
+            // 2. Dynamic Sun & Celestial Environment
+            if (scene.sun) {
+              scene.sun.show = true;
+            }
+            scene.sunBloom = true;
+
+            if (scene.moon) {
+              scene.moon.show = true; // Bulan alami dalam orbit
+            }
+
+            // 3. Globe Shading & Dynamic Sun Lighting (Pencahayaan dinamis bumi)
             if (scene.globe) {
               scene.globe.show = true;
               scene.globe.depthTestAgainstTerrain = false;
-              scene.globe.enableLighting = true; // Spherical depth & volume perception
+              scene.globe.enableLighting = true; // Pencahayaan matahari dinamis & terminator siang/malam
+              scene.globe.dynamicAtmosphereLighting = true;
+              scene.globe.dynamicAtmosphereLightingFromSun = true;
               scene.globe.showGroundAtmosphere = enableAtmosphere;
-              // Subtle, low-saturation atmospheric rim (avoids aggressive neon sci-fi glow)
-              if (scene.globe.atmosphereSaturationShift !== undefined) {
-                scene.globe.atmosphereSaturationShift = atmosphereSaturationShift;
-              }
-              if (scene.globe.atmosphereBrightnessShift !== undefined) {
-                scene.globe.atmosphereBrightnessShift = atmosphereBrightnessShift;
-              }
+              scene.globe.atmosphereSaturationShift = atmosphereSaturationShift;
+              scene.globe.atmosphereBrightnessShift = atmosphereBrightnessShift;
               if (Cesium.Color) {
-                scene.globe.baseColor = Cesium.Color.fromCssColorString('#0d1b2a');
+                scene.globe.baseColor = Cesium.Color.fromCssColorString('#0a1128'); // Deep ocean blue
+                scene.globe.nightColor = Cesium.Color.fromCssColorString('#020914'); // Bayangan malam
               }
             }
 
-            // Subtle Sky Atmosphere
-            const anyScene = scene as unknown as {
-              skyAtmosphere?: {
-                show?: boolean;
-                saturationShift?: number;
-                brightnessShift?: number;
-              };
-              moon?: { show?: boolean };
-            };
-            if (anyScene.skyAtmosphere) {
-              anyScene.skyAtmosphere.show = enableAtmosphere;
-              anyScene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
-              anyScene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
-            }
-            if (anyScene.moon) {
-              anyScene.moon.show = false; // Reduce background distraction
+            // 4. Earth Rayleigh Atmosphere (Atmosfer bumi alami)
+            if (scene.skyAtmosphere) {
+              scene.skyAtmosphere.show = enableAtmosphere;
+              scene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
+              scene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
             }
 
-            // Provide crisp, reliable Carto Voyager / OSM imagery layer on 3D globe
+            // 5. Photorealistic Earth Satellite Imagery (Esri World Imagery)
             if (scene.imageryLayers) {
               try {
                 let provider: unknown = null;
                 if (Cesium.UrlTemplateImageryProvider) {
                   provider = new Cesium.UrlTemplateImageryProvider({
-                    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-                    subdomains: ['a', 'b', 'c', 'd'],
+                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                     maximumLevel: 19,
+                    credit: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                   });
                 } else if (Cesium.OpenStreetMapImageryProvider) {
                   provider = new Cesium.OpenStreetMapImageryProvider({
@@ -317,6 +355,3 @@ export default function CesiumController({
 
   return null;
 }
-
-
-
