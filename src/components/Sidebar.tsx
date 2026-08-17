@@ -54,6 +54,16 @@ import { getArea, getLength } from 'ol/sphere';
 import { parseGeoJsonStringInWorker, shouldParseGeoJsonInWorker } from '@/lib/geojson-worker-parse';
 import { geoJsonToCsv } from '@/lib/csv-geojson';
 import { geoJsonToWkt } from '@/lib/wkt-geojson';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -135,6 +145,8 @@ export default function Sidebar({
   const [sidebarWidth, setSidebarWidth] = useState<number>(380);
   const [lastWidth, setLastWidth] = useState<number>(380);
   const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [featureToDelete, setFeatureToDelete] = useState<string | number | null>(null);
 
   const startResizing = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -258,6 +270,14 @@ export default function Sidebar({
   const handleClear = () => {
     onClear();
     setValidationResult(null);
+    setIsClearConfirmOpen(false);
+  };
+
+  const handleConfirmDeleteFeature = (id: string | number | null) => {
+    if (id !== null && id !== undefined) {
+      onDeleteFeature(id);
+      setFeatureToDelete(null);
+    }
   };
 
   const handleCopy = () => {
@@ -605,15 +625,16 @@ export default function Sidebar({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
-                            onClick={handleClear}
-                            disabled={featuresCount === 0}
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
+                            onClick={() => setIsClearConfirmOpen(true)}
+                            disabled={featuresCount === 0 && (!geojsonString || !geojsonString.trim())}
+                            aria-label="Hapus semua fitur"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Clear</p>
+                          <p>Hapus Semua Fitur</p>
                         </TooltipContent>
                       </Tooltip>
                       <Tooltip>
@@ -842,17 +863,18 @@ export default function Sidebar({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 text-destructive hover:text-destructive"
+                                      className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        onDeleteFeature(feature.getId());
+                                        setFeatureToDelete(feature.getId() ?? null);
                                       }}
+                                      aria-label={`Hapus fitur ${String(feature.getId() || '')}`}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Delete</p>
+                                    <p>Hapus Fitur</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -992,6 +1014,59 @@ export default function Sidebar({
           </Tooltip>
         </TooltipProvider>
       )}
+
+      {/* Modal Konfirmasi Hapus Semua Data Spasial */}
+      <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-foreground">
+              Hapus Semua Data Spasial?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Tindakan ini akan mengosongkan seluruh fitur dari peta serta menghapus konten dari editor GeoJSON. Anda dapat membatalkan tindakan ini sewaktu-waktu menggunakan tombol <strong>Undo</strong> (Ctrl+Z).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel onClick={() => setIsClearConfirmOpen(false)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleClear}
+            >
+              Hapus Semua
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Modal Konfirmasi Hapus Fitur Tunggal */}
+      <AlertDialog
+        open={featureToDelete !== null}
+        onOpenChange={(open) => !open && setFeatureToDelete(null)}
+      >
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-foreground">
+              Hapus Fitur Ini?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Apakah Anda yakin ingin menghapus fitur <strong className="font-mono text-foreground">{String(featureToDelete || '')}</strong> dari peta dan editor data?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel onClick={() => setFeatureToDelete(null)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => handleConfirmDeleteFeature(featureToDelete)}
+            >
+              Hapus Fitur
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

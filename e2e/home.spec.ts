@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Geovara E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Navigasi ke halaman utama dan tunggu hidrasi client penuh
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForSelector('.ol-viewport', { timeout: 30000 });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('aside', { timeout: 30000 });
     await expect(page.locator('aside')).toBeVisible({ timeout: 30000 });
   });
 
@@ -134,5 +134,53 @@ test.describe('Geovara E2E Tests', () => {
     await darkCard.click();
     await expect(darkCard).toHaveClass(/border-primary/);
   });
+
+  test('should support clear and delete features with confirmation modal and full editor synchronization', async ({ page }) => {
+    // Inject external dataset via window.geovara API
+    await page.evaluate(() => {
+      window.geovara?.setGeoJSON({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            id: 'ext_feature_01',
+            geometry: { type: 'Point', coordinates: [106.8456, -6.2088] },
+            properties: { name: 'Monas Jakarta' },
+          },
+        ],
+      });
+    });
+
+    // Verify clear button is visible and enabled in editor header
+    const clearBtn = page.locator('button[aria-label="Hapus semua fitur"]');
+    await expect(clearBtn).toBeVisible({ timeout: 10000 });
+    await expect(clearBtn).toBeEnabled();
+
+    // Click clear button to open confirmation modal
+    await clearBtn.click();
+    const modalTitle = page.locator('text=Hapus Semua Data Spasial?');
+    await expect(modalTitle).toBeVisible({ timeout: 5000 });
+
+    // Test Cancel button
+    const cancelBtn = page.getByRole('button', { name: 'Batal' });
+    await cancelBtn.click();
+    await expect(modalTitle).not.toBeVisible();
+
+    // Re-open and confirm deletion
+    await clearBtn.click();
+    await expect(modalTitle).toBeVisible();
+
+    const confirmBtn = page.getByRole('button', { name: 'Hapus Semua' });
+    await confirmBtn.click();
+    await expect(modalTitle).not.toBeVisible();
+
+    // Verify editor data and map features are cleared
+    const featuresCount = await page.evaluate(() => window.geovara?.getFeaturesCount());
+    expect(featuresCount).toBe(0);
+
+    const currentGj = await page.evaluate(() => window.geovara?.getGeoJSON());
+    expect(currentGj).toContain('"features": []');
+  });
 });
+
 

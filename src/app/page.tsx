@@ -117,20 +117,42 @@ export default function Home() {
   }, []);
 
   const handleClear = useCallback(() => {
+    skipFeaturesSync.current = false;
+    isEditingInMonaco.current = false;
     setFeatures([]);
+    const emptyFc = JSON.stringify({ type: 'FeatureCollection', features: [] }, null, 2);
+    setGeojsonString(emptyFc);
+    if (isClient) {
+      updateUrlHash(encodeGeoJSON(emptyFc));
+    }
     setSelectedFeature(null);
-  }, []);
+  }, [isClient, setGeojsonString]);
 
   const handleDeleteFeature = useCallback(
     (featureId: string | number | undefined) => {
-      if (featureId) {
-        setFeatures((prev) => prev.filter((f) => f.getId() !== featureId));
+      if (featureId !== undefined) {
+        skipFeaturesSync.current = false;
+        isEditingInMonaco.current = false;
+        setFeatures((prev) => {
+          const updated = prev.filter((f) => f.getId() !== featureId);
+          try {
+            const fc = format.writeFeaturesObject(updated);
+            const str = JSON.stringify(fc, null, 2);
+            setGeojsonString(str);
+            if (isClient) {
+              updateUrlHash(encodeGeoJSON(str));
+            }
+          } catch {
+            /* ignore */
+          }
+          return updated;
+        });
         if (selectedFeature && selectedFeature.getId() === featureId) {
           setSelectedFeature(null);
         }
       }
     },
-    [selectedFeature]
+    [selectedFeature, isClient, setGeojsonString]
   );
 
   const handleFeaturePropertyChange = useCallback(
@@ -158,7 +180,6 @@ export default function Home() {
   const handleGeojsonChange = useCallback(
     (value: string | undefined) => {
       const newGeojsonString = value ?? '';
-      isEditingInMonaco.current = true;
       setGeojsonString(newGeojsonString);
 
       if (!newGeojsonString.trim() || newGeojsonString.trim() === defaultGeoJsonString) {
