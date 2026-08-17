@@ -112,8 +112,12 @@ export function useMap({
     });
     vectorLayerRef.current = vectorLayer;
 
-    let center = fromLonLat([0, 0]);
-    let zoom = 2;
+    // Default initial center & zoom focused on Indonesia Archipelago
+    const INDONESIA_CENTER_LONLAT: [number, number] = [118.0148634, -2.548926];
+    const INDONESIA_DEFAULT_ZOOM = 5;
+
+    let center = fromLonLat(INDONESIA_CENTER_LONLAT);
+    let zoom = INDONESIA_DEFAULT_ZOOM;
     const initialHash = window.location.hash
       .substring(1)
       .split('&')
@@ -121,7 +125,7 @@ export function useMap({
     if (initialHash) {
       const parts = initialHash.substring(4).split('/');
       if (parts.length === 3) {
-        zoom = parseFloat(parts[0]) || 2;
+        zoom = parseFloat(parts[0]) || INDONESIA_DEFAULT_ZOOM;
         center = fromLonLat([parseFloat(parts[2]), parseFloat(parts[1])]) || center;
       }
     }
