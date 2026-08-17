@@ -52,6 +52,8 @@ firestore-debug.log
 docs/*
 !docs/geojson-io-riset-mendalam.md
 !docs/geojson-io-ux-riset-mendalam.md
+!docs/geojson-io-3d-globe-ui-ux-research.md
+!docs/laporan-uji-usabilitas-formal-3d-globe.md
 !docs/plan-pengembangan-geovara.md
 !docs/plan-pengembangan.md
 !docs/plan-pengembangan-fase-10-12.md
