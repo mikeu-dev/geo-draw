@@ -59,5 +59,49 @@ test.describe('Geovara E2E Tests', () => {
     const mapCanvas = page.locator('.ol-viewport canvas');
     await expect(mapCanvas).toBeVisible({ timeout: 15000 });
   });
+
+  test('should support horizontal drag resizing and conditional toggle button', async ({ page }) => {
+    const resizeHandle = page.locator('div[aria-label="Resize sidebar width"]');
+    await expect(resizeHandle).toBeVisible({ timeout: 10000 });
+
+    // Ensure toggle button is NOT visible when sidebar is open
+    const toggleBtnHidden = page.locator('button[aria-label="Buka sidebar"]');
+    await expect(toggleBtnHidden).toHaveCount(0);
+
+    // Get initial width of sidebar
+    const aside = page.locator('aside');
+    const initialBox = await aside.boundingBox();
+    expect(initialBox).not.toBeNull();
+    expect(initialBox!.width).toBeGreaterThanOrEqual(300);
+
+    // Drag resize to the right
+    const handleBox = await resizeHandle.boundingBox();
+    expect(handleBox).not.toBeNull();
+
+    await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + 100);
+    await page.mouse.down();
+    await page.mouse.move(handleBox!.x + 80, handleBox!.y + 100, { steps: 5 });
+    await page.mouse.up();
+
+    // Verify width expanded
+    const expandedBox = await aside.boundingBox();
+    expect(expandedBox!.width).toBeGreaterThan(initialBox!.width - 10);
+
+    // Drag to the left past collapse threshold to close
+    const updatedHandleBox = await resizeHandle.boundingBox();
+    await page.mouse.move(updatedHandleBox!.x + updatedHandleBox!.width / 2, updatedHandleBox!.y + 100);
+    await page.mouse.down();
+    await page.mouse.move(50, updatedHandleBox!.y + 100, { steps: 8 });
+    await page.mouse.up();
+
+    // Now sidebar is collapsed, toggle button MUST appear
+    const toggleBtn = page.locator('button[aria-label="Buka sidebar"]');
+    await expect(toggleBtn).toBeVisible({ timeout: 10000 });
+
+    // Clicking toggle button restores the sidebar
+    await toggleBtn.click();
+    await expect(aside).toBeVisible({ timeout: 10000 });
+    await expect(resizeHandle).toBeVisible({ timeout: 10000 });
+  });
 });
 

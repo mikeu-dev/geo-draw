@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -29,7 +29,6 @@ import {
   Layers,
   Eye,
   EyeOff,
-  ChevronLeft,
   ChevronRight,
   Grid,
 } from 'lucide-react';
@@ -133,8 +132,80 @@ export default function Sidebar({
   const [isCopied, setIsCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(380);
+  const [lastWidth, setLastWidth] = useState<number>(380);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
 
-  // Synchronize map viewport whenever sidebar is toggled
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const handleExpandSidebar = useCallback(() => {
+    setIsCollapsed(false);
+    const targetWidth = lastWidth >= 160 ? lastWidth : 380;
+    const maxWidth = Math.floor(window.innerWidth * 0.5);
+    const clamped = Math.min(targetWidth, maxWidth);
+    setSidebarWidth(clamped);
+    setLastWidth(clamped);
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
+  }, [lastWidth]);
+
+  // Handle live horizontal drag resize
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const maxWidth = Math.floor(window.innerWidth * 0.5);
+      const newWidth = e.clientX;
+
+      if (newWidth < 140) {
+        // Dragged past left threshold -> collapse completely
+        setIsCollapsed(true);
+        setSidebarWidth(0);
+      } else {
+        setIsCollapsed(false);
+        const clampedWidth = Math.min(newWidth, maxWidth);
+        setSidebarWidth(clampedWidth);
+        setLastWidth(clampedWidth);
+      }
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
+  // Adjust max width when browser window resizes
+  useEffect(() => {
+    const handleWindowResize = () => {
+      const maxWidth = Math.floor(window.innerWidth * 0.5);
+      setSidebarWidth((prev) => (prev > maxWidth ? maxWidth : prev));
+    };
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, []);
+
+  // Synchronize map viewport whenever sidebar is toggled or resized
   useEffect(() => {
     const timer = setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
@@ -359,17 +430,25 @@ export default function Sidebar({
   return (
     <div className="relative flex-shrink-0 h-full z-40">
       <aside
+        style={{
+          width: isCollapsed ? 0 : `${sidebarWidth}px`,
+          maxWidth: '50vw',
+        }}
         className={`
-          flex flex-col border-r border-border h-full bg-background
-          transition-all duration-300 ease-in-out overflow-hidden
+          relative flex flex-col border-r border-border h-full bg-background
+          ${isResizing ? '' : 'transition-[width,opacity] duration-300 ease-in-out'}
+          overflow-hidden
           ${
             isCollapsed
               ? 'w-0 opacity-0 border-r-0 pointer-events-none'
-              : 'w-full md:w-[350px] lg:w-[400px] opacity-100'
+              : 'opacity-100'
           }
         `}
       >
-        <div className="w-[350px] lg:w-[400px] h-full flex flex-col min-h-0 overflow-hidden sidebar-panel">
+        <div
+          style={{ width: `${sidebarWidth}px`, maxWidth: '50vw' }}
+          className="h-full flex flex-col min-h-0 overflow-hidden sidebar-panel"
+        >
           {/* Brand Header */}
           <div className="p-4 border-b border-border flex-shrink-0 animate-slide-in-left">
             <h1
@@ -865,38 +944,54 @@ export default function Sidebar({
           </TooltipProvider>
         </div>
       </div>
-    </aside>
 
-      {/* Protruding Sidebar Toggle Button (Menonjol & Menempel pada Sisi Sidebar) */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={() => setIsCollapsed((prev) => !prev)}
-              className={`
-                absolute top-1/2 -translate-y-1/2 z-50
-                flex items-center justify-center
-                w-5 h-12 rounded-r-[var(--radius)] border border-l-0 border-border
-                bg-card/95 hover:bg-accent text-muted-foreground hover:text-accent-foreground
-                backdrop-blur-md shadow-md
-                transition-all duration-300 ease-in-out group cursor-pointer
-                ${isCollapsed ? 'left-0' : 'left-[350px] lg:left-[400px]'}
-              `}
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {isCollapsed ? (
+        {/* Right Edge Resizable Handle (Trigger klik dan tahan pada tepi sidebar kanan) */}
+        {!isCollapsed && (
+          <div
+            onMouseDown={startResizing}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize sidebar width"
+            className={`
+              absolute top-0 right-0 w-2 h-full z-50 cursor-col-resize
+              hover:bg-primary/40 active:bg-primary/60 transition-colors
+              flex items-center justify-center group select-none
+              ${isResizing ? 'bg-primary/50' : 'bg-transparent'}
+            `}
+            title="Klik dan tahan untuk mengubah lebar sidebar (geser ke kiri untuk menutup)"
+          >
+            <div className="w-[2px] h-10 bg-border/80 group-hover:bg-primary group-active:bg-primary rounded-full transition-colors" />
+          </div>
+        )}
+      </aside>
+
+      {/* Protruding Sidebar Toggle Button - HANYA MUNCUL KETIKA SIDEBAR BENAR-BENAR MENGHILANG */}
+      {isCollapsed && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleExpandSidebar}
+                className="
+                  absolute top-1/2 -translate-y-1/2 left-0 z-50
+                  flex items-center justify-center
+                  w-5 h-12 rounded-r-[var(--radius)] border border-l-0 border-border
+                  bg-card/95 hover:bg-accent text-muted-foreground hover:text-accent-foreground
+                  backdrop-blur-md shadow-md
+                  transition-all duration-300 ease-in-out group cursor-pointer
+                "
+                aria-label="Buka sidebar"
+              >
                 <ChevronRight className="h-3.5 w-3.5 group-hover:scale-125 transition-transform" />
-              ) : (
-                <ChevronLeft className="h-3.5 w-3.5 group-hover:scale-125 transition-transform" />
-              )}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p className="text-xs">{isCollapsed ? 'Buka Sidebar' : 'Tutup Sidebar'}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p className="text-xs">Buka Sidebar</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 }
