@@ -3,8 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Geovara E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Navigasi ke halaman utama dan tunggu hidrasi client penuh
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('aside', { timeout: 30000 });
+    await page.goto('/');
     await expect(page.locator('aside')).toBeVisible({ timeout: 30000 });
   });
 

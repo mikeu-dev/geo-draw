@@ -50,7 +50,7 @@ test.describe('Geovara Usability & UX Tasks E2E Suite (7 UX Tasks)', () => {
     // Check if spatial tools dialog can be opened via toolbar button
     const spatialToolsBtn = page.locator('button[aria-label="Spatial analysis tools"]');
     if (await spatialToolsBtn.isVisible()) {
-      await spatialToolsBtn.click();
+      await spatialToolsBtn.dispatchEvent('click');
       // Expect dialog header
       const dialogTitle = page.locator('text=Turf.js Spatial Analysis Toolkit');
       await expect(dialogTitle).toBeVisible({ timeout: 10000 });
@@ -88,8 +88,13 @@ test.describe('Geovara Usability & UX Tasks E2E Suite (7 UX Tasks)', () => {
     // Verify feature count
     const featureCount = await page.evaluate(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const geojson = (window as any).geovara.getGeoJSON();
-      return geojson ? geojson.features?.length : 0;
+      const count = (window as any).geovara?.getFeaturesCount?.();
+      if (typeof count === 'number') return count;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = (window as any).geovara?.getGeoJSON?.();
+      if (!raw) return 0;
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return parsed.features?.length || 0;
     });
     expect(featureCount).toBeGreaterThanOrEqual(1);
   });

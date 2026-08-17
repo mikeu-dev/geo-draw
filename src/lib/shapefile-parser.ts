@@ -1,12 +1,26 @@
 import JSZip from 'jszip';
-import type { Feature, FeatureCollection, Geometry, Polygon, MultiPolygon, LineString, MultiLineString, Point, MultiPoint } from 'geojson';
+import proj4 from 'proj4';
+import type {
+  Feature,
+  FeatureCollection,
+  Geometry,
+  Polygon,
+  MultiPolygon,
+  LineString,
+  MultiLineString,
+  Point,
+  MultiPoint,
+} from 'geojson';
 
 export interface ShapefileParseResult {
   geojson: FeatureCollection;
   featureCount: number;
   fileName?: string;
   shapeType: string;
+  projection?: string;
 }
+
+export type CoordinateTransformer = (x: number, y: number) => [number, number];
 
 /**
  * Shape Types as defined in the ESRI Shapefile Technical Description
@@ -28,9 +42,49 @@ const SHAPE_TYPES: Record<number, string> = {
 };
 
 /**
- * Parses binary .shp buffer into GeoJSON Geometries
+ * Creates a coordinate transformer function from an ESRI .prj WKT or proj string to EPSG:4326 (WGS84).
  */
-export function parseShpBuffer(buffer: ArrayBuffer): { type: string; geometries: Geometry[] } {
+export function createProjTransformer(prjText?: string): CoordinateTransformer {
+  if (!prjText || !prjText.trim()) {
+    return (x: number, y: number) => [x, y];
+  }
+
+  const trimmed = prjText.trim();
+  // Check if projection is already standard geographic WGS84
+  if (
+    trimmed === 'EPSG:4326' ||
+    trimmed === 'WGS84' ||
+    trimmed === '+proj=longlat +datum=WGS84 +no_defs'
+  ) {
+    return (x: number, y: number) => [x, y];
+  }
+
+  try {
+    const projConverter = proj4(trimmed, 'EPSG:4326');
+    return (x: number, y: number): [number, number] => {
+      try {
+        const [lng, lat] = projConverter.forward([x, y]);
+        if (Number.isFinite(lng) && Number.isFinite(lat)) {
+          return [lng, lat];
+        }
+        return [x, y];
+      } catch {
+        return [x, y];
+      }
+    };
+  } catch (err) {
+    console.warn('Could not initialize projection with proj4, falling back to raw coordinates:', err);
+    return (x: number, y: number) => [x, y];
+  }
+}
+
+/**
+ * Parses binary .shp buffer into GeoJSON Geometries with optional coordinate reprojection.
+ */
+export function parseShpBuffer(
+  buffer: ArrayBuffer,
+  transformCoord: CoordinateTransformer = (x, y) => [x, y]
+): { type: string; geometries: Geometry[] } {
   const view = new DataView(buffer);
   if (buffer.byteLength < 100) {
     throw new Error('File buffer terlalu kecil untuk format ESRI Shapefile yang valid.');
@@ -66,11 +120,12 @@ export function parseShpBuffer(buffer: ArrayBuffer): { type: string; geometries:
 
     if (recordShapeType === 1 || recordShapeType === 11 || recordShapeType === 21) {
       // Point (X, Y)
-      const x = view.getFloat64(recordContentOffset + 4, true);
-      const y = view.getFloat64(recordContentOffset + 12, true);
+      const rawX = view.getFloat64(recordContentOffset + 4, true);
+      const rawY = view.getFloat64(recordContentOffset + 12, true);
+      const [lng, lat] = transformCoord(rawX, rawY);
       const pointGeom: Point = {
         type: 'Point',
-        coordinates: [x, y],
+        coordinates: [lng, lat],
       };
       geometries.push(pointGeom);
     } else if (recordShapeType === 8 || recordShapeType === 18 || recordShapeType === 28) {
@@ -79,9 +134,9 @@ export function parseShpBuffer(buffer: ArrayBuffer): { type: string; geometries:
       const coords: [number, number][] = [];
       let ptOffset = recordContentOffset + 40;
       for (let i = 0; i < numPoints; i++) {
-        const x = view.getFloat64(ptOffset, true);
-        const y = view.getFloat64(ptOffset + 8, true);
-        coords.push([x, y]);
+        const rawX = view.getFloat64(ptOffset, true);
+        const rawY = view.getFloat64(ptOffset + 8, true);
+        coords.push(transformCoord(rawX, rawY));
         ptOffset += 16;
       }
       const multiPt: MultiPoint = {
@@ -103,9 +158,9 @@ export function parseShpBuffer(buffer: ArrayBuffer): { type: string; geometries:
       const points: [number, number][] = [];
       let ptOffset = recordContentOffset + 44 + numParts * 4;
       for (let i = 0; i < numPoints; i++) {
-        const x = view.getFloat64(ptOffset, true);
-        const y = view.getFloat64(ptOffset + 8, true);
-        points.push([x, y]);
+        const rawX = view.getFloat64(ptOffset, true);
+        const rawY = view.getFloat64(ptOffset + 8, true);
+        points.push(transformCoord(rawX, rawY));
         ptOffset += 16;
       }
 
@@ -142,9 +197,9 @@ export function parseShpBuffer(buffer: ArrayBuffer): { type: string; geometries:
       const points: [number, number][] = [];
       let ptOffset = recordContentOffset + 44 + numParts * 4;
       for (let i = 0; i < numPoints; i++) {
-        const x = view.getFloat64(ptOffset, true);
-        const y = view.getFloat64(ptOffset + 8, true);
-        points.push([x, y]);
+        const rawX = view.getFloat64(ptOffset, true);
+        const rawY = view.getFloat64(ptOffset + 8, true);
+        points.push(transformCoord(rawX, rawY));
         ptOffset += 16;
       }
 
@@ -186,9 +241,9 @@ export function parseShpBuffer(buffer: ArrayBuffer): { type: string; geometries:
 }
 
 /**
- * Parses binary .dbf buffer into an array of property record objects
+ * Parses binary .dbf buffer into an array of property record objects with optional encoding.
  */
-export function parseDbfBuffer(buffer: ArrayBuffer): Record<string, unknown>[] {
+export function parseDbfBuffer(buffer: ArrayBuffer, encoding = 'utf-8'): Record<string, unknown>[] {
   const view = new DataView(buffer);
   const bytes = new Uint8Array(buffer);
   if (buffer.byteLength < 32) return [];
@@ -215,7 +270,21 @@ export function parseDbfBuffer(buffer: ArrayBuffer): Record<string, unknown>[] {
     fieldOffset += 32;
   }
 
-  const decoder = new TextDecoder('utf-8');
+  // Resolve encoding (e.g. '1252' -> 'windows-1252', 'utf-8', etc.)
+  let cleanEncoding = encoding.trim().toLowerCase();
+  if (cleanEncoding === '1252' || cleanEncoding === 'cp1252') {
+    cleanEncoding = 'windows-1252';
+  } else if (cleanEncoding === 'latin1' || cleanEncoding === 'iso-8859-1') {
+    cleanEncoding = 'iso-8859-1';
+  }
+
+  let decoder: TextDecoder;
+  try {
+    decoder = new TextDecoder(cleanEncoding);
+  } catch {
+    decoder = new TextDecoder('utf-8');
+  }
+
   const records: Record<string, unknown>[] = [];
   let rowOffset = headerLength;
 
@@ -251,12 +320,14 @@ export function parseDbfBuffer(buffer: ArrayBuffer): Record<string, unknown>[] {
 }
 
 /**
- * Parses a zipped Shapefile (.zip) containing .shp, .dbf, and optional .prj
+ * Parses a zipped Shapefile (.zip) containing .shp, .dbf, and optional .prj and .cpg files.
  */
 export async function parseZippedShapefile(zipData: ArrayBuffer | Blob): Promise<ShapefileParseResult> {
   const zip = await JSZip.loadAsync(zipData);
   let shpFile: JSZip.JSZipObject | null = null;
   let dbfFile: JSZip.JSZipObject | null = null;
+  let prjFile: JSZip.JSZipObject | null = null;
+  let cpgFile: JSZip.JSZipObject | null = null;
 
   zip.forEach((relativePath, file) => {
     const lower = relativePath.toLowerCase();
@@ -264,6 +335,10 @@ export async function parseZippedShapefile(zipData: ArrayBuffer | Blob): Promise
       shpFile = file;
     } else if (lower.endsWith('.dbf') && !lower.startsWith('__macosx') && !file.dir) {
       dbfFile = file;
+    } else if (lower.endsWith('.prj') && !lower.startsWith('__macosx') && !file.dir) {
+      prjFile = file;
+    } else if (lower.endsWith('.cpg') && !lower.startsWith('__macosx') && !file.dir) {
+      cpgFile = file;
     }
   });
 
@@ -271,14 +346,33 @@ export async function parseZippedShapefile(zipData: ArrayBuffer | Blob): Promise
     throw new Error('Tidak ditemukan file biner .shp di dalam arsip ZIP.');
   }
 
+  let prjText: string | undefined;
+  if (prjFile) {
+    try {
+      prjText = await (prjFile as JSZip.JSZipObject).async('text');
+    } catch (err) {
+      console.warn('Gagal membaca file proyeksi .prj:', err);
+    }
+  }
+
+  let cpgText: string | undefined;
+  if (cpgFile) {
+    try {
+      cpgText = await (cpgFile as JSZip.JSZipObject).async('text');
+    } catch (err) {
+      console.warn('Gagal membaca file encoding .cpg:', err);
+    }
+  }
+
+  const transformer = createProjTransformer(prjText);
   const shpBuffer = await (shpFile as JSZip.JSZipObject).async('arraybuffer');
-  const { type: shapeType, geometries } = parseShpBuffer(shpBuffer);
+  const { type: shapeType, geometries } = parseShpBuffer(shpBuffer, transformer);
 
   let propertiesList: Record<string, unknown>[] = [];
   if (dbfFile) {
     try {
       const dbfBuffer = await (dbfFile as JSZip.JSZipObject).async('arraybuffer');
-      propertiesList = parseDbfBuffer(dbfBuffer);
+      propertiesList = parseDbfBuffer(dbfBuffer, cpgText);
     } catch (err) {
       console.warn('Gagal membaca atribut .dbf shapefile:', err);
     }
@@ -299,5 +393,6 @@ export async function parseZippedShapefile(zipData: ArrayBuffer | Blob): Promise
     featureCount: features.length,
     fileName: (shpFile as JSZip.JSZipObject).name,
     shapeType,
+    projection: prjText?.trim(),
   };
 }
