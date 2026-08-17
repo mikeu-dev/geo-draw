@@ -300,25 +300,33 @@ export default function CesiumController({
               scene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
             }
 
-            // 5. Photorealistic Earth Satellite Imagery (Esri World Imagery)
+            // 5. Photorealistic Earth Satellite Imagery with Hybrid Reference Labels (Google Earth & geojson.io style)
             if (scene.imageryLayers) {
               try {
-                let provider: unknown = null;
+                scene.imageryLayers.removeAll(true);
+
                 if (Cesium.UrlTemplateImageryProvider) {
-                  provider = new Cesium.UrlTemplateImageryProvider({
+                  // Layer 1: High-resolution Earth Satellite Imagery
+                  const satelliteProvider = new Cesium.UrlTemplateImageryProvider({
                     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                     maximumLevel: 19,
-                    credit: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                    credit:
+                      'Imagery © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                   });
+                  scene.imageryLayers.addImageryProvider(satelliteProvider);
+
+                  // Layer 2: Global Hybrid Reference Overlay (Countries, Provinces/States, Cities, Oceans, Places)
+                  const referenceLabelsProvider = new Cesium.UrlTemplateImageryProvider({
+                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+                    maximumLevel: 19,
+                    credit: 'Boundaries & Places © Esri',
+                  });
+                  scene.imageryLayers.addImageryProvider(referenceLabelsProvider);
                 } else if (Cesium.OpenStreetMapImageryProvider) {
-                  provider = new Cesium.OpenStreetMapImageryProvider({
+                  const osmProvider = new Cesium.OpenStreetMapImageryProvider({
                     url: 'https://tile.openstreetmap.org/',
                   });
-                }
-
-                if (provider) {
-                  scene.imageryLayers.removeAll(true);
-                  scene.imageryLayers.addImageryProvider(provider);
+                  scene.imageryLayers.addImageryProvider(osmProvider);
                 }
               } catch (imgErr) {
                 console.warn('Could not setup Cesium imagery provider:', imgErr);
