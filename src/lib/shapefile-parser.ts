@@ -322,8 +322,10 @@ export function parseDbfBuffer(buffer: ArrayBuffer, encoding = 'utf-8'): Record<
 /**
  * Parses a zipped Shapefile (.zip) containing .shp, .dbf, and optional .prj and .cpg files.
  */
-export async function parseZippedShapefile(zipData: ArrayBuffer | Blob): Promise<ShapefileParseResult> {
-  const zip = await JSZip.loadAsync(zipData);
+export async function parseZippedShapefile(
+  zipData: ArrayBuffer | Blob | Uint8Array
+): Promise<ShapefileParseResult> {
+  const zip = await JSZip.loadAsync(zipData as Parameters<typeof JSZip.loadAsync>[0]);
   let shpFile: JSZip.JSZipObject | null = null;
   let dbfFile: JSZip.JSZipObject | null = null;
   let prjFile: JSZip.JSZipObject | null = null;

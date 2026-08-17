@@ -140,8 +140,7 @@ describe('shapefile-parser', () => {
     if (!fs.existsSync(filePath)) return;
 
     const fileBuf = fs.readFileSync(filePath);
-    const arrayBuffer = fileBuf.buffer.slice(fileBuf.byteOffset, fileBuf.byteOffset + fileBuf.byteLength);
-    const parsed = await parseZippedShapefile(arrayBuffer);
+    const parsed = await parseZippedShapefile(fileBuf);
 
     expect(parsed.featureCount).toBe(183);
     expect(parsed.geojson.features.length).toBe(183);
