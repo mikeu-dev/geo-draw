@@ -18,7 +18,7 @@ import {
   Magnet,
   Scissors,
   FlaskConical,
-  Layers,
+  Shapes,
 } from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
@@ -264,11 +264,11 @@ export default function DrawingTools({
                   onPressedChange={() => onOpenSpatialTools()}
                   className="hover:text-primary"
                 >
-                  <Layers className="h-4 w-4" />
+                  <Shapes className="h-4 w-4" />
                 </Toggle>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p>Spatial analysis (Turf.js)</p>
+                <p>Spatial analysis</p>
               </TooltipContent>
             </Tooltip>
           )}
