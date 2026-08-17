@@ -15,7 +15,7 @@ test.describe('Geovara Usability & UX Tasks E2E Suite (7 UX Tasks)', () => {
       await page.waitForTimeout(500);
     }
     // Verify toolbar is present and interactive
-    const drawControls = page.locator('.drawing-controls');
+    const drawControls = page.locator('.drawing-controls').first();
     await expect(drawControls).toBeVisible();
   });
 
