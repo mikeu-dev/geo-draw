@@ -1,8 +1,15 @@
 'use client';
 
 import React from 'react';
+import { Sun, Moon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-export default function Header() {
+interface HeaderProps {
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
+}
+
+export default function Header({ theme = 'light', onToggleTheme }: HeaderProps) {
   return (
     <header className="h-9 px-3 flex-shrink-0 border-b border-border bg-card/90 backdrop-blur-md flex items-center justify-between z-30 select-none">
       {/* Left: Brand Header */}
@@ -19,15 +26,41 @@ export default function Header() {
         </h1>
       </div>
 
-      {/* Right: Copyright & GitHub Link */}
+      {/* Right: Theme Toggle, Copyright, & GitHub Link */}
       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+        {onToggleTheme && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onToggleTheme}
+                  className="w-7 h-7 rounded-[var(--radius)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  aria-label={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                >
+                  {theme === 'light' ? (
+                    <Sun className="h-3.5 w-3.5" />
+                  ) : (
+                    <Moon className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        <div className="h-3 w-[1px] bg-border" aria-hidden="true" />
+
         <a
-          href="https://www.mikeudev.my.id"
+          href="https://mikeudev.my.id"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-foreground transition-colors font-medium text-[11px] sm:text-xs"
         >
-          © {new Date().getFullYear()} www.mikeudev.my.id
+          © {new Date().getFullYear()} mikeudev.my.id
         </a>
 
         <div className="h-3 w-[1px] bg-border" aria-hidden="true" />

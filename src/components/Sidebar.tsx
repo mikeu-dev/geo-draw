@@ -18,8 +18,6 @@ import {
   CheckCircle,
   AlertTriangle,
   FileDown,
-  Sun,
-  Moon,
   Check,
   Map as MapIcon,
   Crosshair,
@@ -93,6 +91,7 @@ interface SidebarProps {
   onBasemapOpacityChange: (value: number) => void;
   showGraticule?: boolean;
   onToggleGraticule?: () => void;
+  theme?: 'light' | 'dark';
 }
 
 const geojsonFormat = new GeoJSON({
@@ -134,11 +133,11 @@ export default function Sidebar({
   onBasemapOpacityChange,
   showGraticule = false,
   onToggleGraticule,
+  theme = 'light',
 }: SidebarProps) {
   const { toast } = useToast();
   const editorRef = useRef<MonacoCodeEditor | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [theme, setTheme] = useState('light');
   const [isCopied, setIsCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -243,28 +242,6 @@ export default function Sidebar({
     editorRef.current.revealLineInCenter(line);
     editorRef.current.setPosition({ lineNumber: line, column: column || 1 });
     editorRef.current.focus();
-  };
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const initialTheme = savedTheme || 'light';
-    setTheme(initialTheme);
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const handleThemeToggle = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
   };
 
   const handleClear = () => {
@@ -474,23 +451,6 @@ export default function Sidebar({
             <TooltipProvider>
               <Menubar className="mb-2 h-auto p-1 justify-between flex-shrink-0">
                 <div className="flex items-center">
-                  <MenubarMenu>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <MenubarTrigger className="w-9 h-9" onClick={handleThemeToggle}>
-                          {theme === 'light' ? (
-                            <Sun className="h-4 w-4" />
-                          ) : (
-                            <Moon className="h-4 w-4" />
-                          )}
-                        </MenubarTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Toggle Theme</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </MenubarMenu>
-
                   <MenubarMenu>
                     <Tooltip>
                       <TooltipTrigger asChild>

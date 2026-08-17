@@ -69,7 +69,31 @@ export default function Home() {
   const [zoomToId, setZoomToId] = useState<string | number | null>(null);
   const [is3d, setIs3d] = useState(false);
   const [showGraticule, setShowGraticule] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { toast } = useToast();
+
+  useEffect(() => {
+    const savedTheme = (localStorage.getItem('theme') as 'light' | 'dark' | null) || 'light';
+    setTheme(savedTheme);
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const handleToggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', next);
+      if (next === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return next;
+    });
+  }, []);
 
   const {
     state: geojsonString,
@@ -475,9 +499,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground selection:bg-accent/20">
-      <Header />
+      <Header theme={theme} onToggleTheme={handleToggleTheme} />
       <main className="flex flex-1 min-h-0 w-full overflow-hidden relative">
         <Sidebar
+          theme={theme}
           geojsonString={geojsonString}
           onGeojsonChange={handleGeojsonChange}
           featuresCount={features.length}
