@@ -13,10 +13,24 @@ interface CesiumControllerProps {
 }
 
 interface WindowWithCesium extends Window {
+  CESIUM_BASE_URL?: string;
   Cesium?: {
     Ion?: {
       defaultAccessToken: string;
     };
+    SkyBox?: new (options: {
+      sources: {
+        positiveX: string;
+        negativeX: string;
+        positiveY: string;
+        negativeY: string;
+        positiveZ: string;
+        negativeZ: string;
+      };
+      show?: boolean;
+    }) => unknown;
+    Sun?: new () => unknown;
+    Moon?: new () => unknown;
     createWorldTerrainAsync?: () => Promise<unknown>;
     OpenStreetMapImageryProvider?: new (options: { url: string }) => unknown;
     UrlTemplateImageryProvider?: new (options: {
@@ -130,13 +144,14 @@ export default function CesiumController({
       const scene = ol3dRef.current.getCesiumScene();
       if (!scene) return;
 
-      // Handle background / starfield skybox
       if (scene.skyBox) {
         scene.skyBox.show = true;
       }
 
       if (backgroundColor && Cesium.Color && scene.backgroundColor !== undefined) {
         scene.backgroundColor = Cesium.Color.fromCssColorString(backgroundColor);
+      } else if (Cesium.Color && scene.backgroundColor !== undefined) {
+        scene.backgroundColor = Cesium.Color.TRANSPARENT;
       }
 
       if (scene.globe) {
@@ -219,30 +234,54 @@ export default function CesiumController({
               }
             }
 
-            // 1. Starfield Universe / Skybox (Bintang-bintang luar angkasa)
+            // 1. Starfield Universe & Cosmic Background (Tycho-2 Star Catalog SkyBox)
+            const baseUrl =
+              win.CESIUM_BASE_URL ||
+              'https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/';
+
+            if (!scene.skyBox && Cesium.SkyBox) {
+              try {
+                scene.skyBox = new Cesium.SkyBox({
+                  sources: {
+                    positiveX: `${baseUrl}Assets/Textures/SkyBox/tycho2t3_80_px.jpg`,
+                    negativeX: `${baseUrl}Assets/Textures/SkyBox/tycho2t3_80_mx.jpg`,
+                    positiveY: `${baseUrl}Assets/Textures/SkyBox/tycho2t3_80_py.jpg`,
+                    negativeY: `${baseUrl}Assets/Textures/SkyBox/tycho2t3_80_my.jpg`,
+                    positiveZ: `${baseUrl}Assets/Textures/SkyBox/tycho2t3_80_pz.jpg`,
+                    negativeZ: `${baseUrl}Assets/Textures/SkyBox/tycho2t3_80_mz.jpg`,
+                  },
+                  show: true,
+                }) as { show?: boolean };
+              } catch (sbErr) {
+                console.warn('Could not initialize SkyBox:', sbErr);
+              }
+            }
+
             if (scene.skyBox) {
               scene.skyBox.show = true;
             }
 
             if (backgroundColor && Cesium.Color && scene.backgroundColor !== undefined) {
               scene.backgroundColor = Cesium.Color.fromCssColorString(backgroundColor);
+            } else if (Cesium.Color && scene.backgroundColor !== undefined) {
+              scene.backgroundColor = Cesium.Color.TRANSPARENT;
             }
 
-            // 2. Dynamic Sun & Celestial Environment
+            // 2. Dynamic Sun & Celestial Environment (Matahari & Bulan Riil)
             if (scene.sun) {
               scene.sun.show = true;
             }
             scene.sunBloom = true;
 
             if (scene.moon) {
-              scene.moon.show = true; // Bulan alami dalam orbit
+              scene.moon.show = true;
             }
 
-            // 3. Globe Shading & Dynamic Sun Lighting (Pencahayaan dinamis bumi)
+            // 3. Globe Shading & Dynamic Sun Lighting (Pencahayaan dinamis & terminator siang/malam)
             if (scene.globe) {
               scene.globe.show = true;
               scene.globe.depthTestAgainstTerrain = false;
-              scene.globe.enableLighting = true; // Pencahayaan matahari dinamis & terminator siang/malam
+              scene.globe.enableLighting = true; // Pencahayaan matahari dinamis
               scene.globe.dynamicAtmosphereLighting = true;
               scene.globe.dynamicAtmosphereLightingFromSun = true;
               scene.globe.showGroundAtmosphere = enableAtmosphere;
@@ -254,7 +293,7 @@ export default function CesiumController({
               }
             }
 
-            // 4. Earth Rayleigh Atmosphere (Atmosfer bumi alami)
+            // 4. Earth Rayleigh Atmosphere (Atmosfer biru bumi alami)
             if (scene.skyAtmosphere) {
               scene.skyAtmosphere.show = enableAtmosphere;
               scene.skyAtmosphere.saturationShift = atmosphereSaturationShift;

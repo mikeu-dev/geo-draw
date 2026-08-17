@@ -375,4 +375,40 @@
     backdrop-filter: blur(12px) saturate(180%);
     @apply border border-white/10;
   }
+
+  /* ─── 3D Globe Cosmic Space Environment (Starfield & Galaxy Backdrop) ─── */
+  .ol-cesium-container {
+    background-color: #02040a !important;
+    background-image:
+      radial-gradient(1px 1px at 25px 35px, rgba(255, 255, 255, 0.95), transparent),
+      radial-gradient(1.5px 1.5px at 150px 75px, rgba(255, 255, 255, 0.85), transparent),
+      radial-gradient(1px 1px at 320px 180px, rgba(165, 243, 252, 0.9), transparent),
+      radial-gradient(2px 2px at 450px 90px, rgba(255, 255, 255, 0.95), transparent),
+      radial-gradient(1.5px 1.5px at 580px 290px, rgba(254, 240, 138, 0.8), transparent),
+      radial-gradient(1px 1px at 700px 120px, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(2px 2px at 850px 350px, rgba(199, 210, 254, 0.85), transparent),
+      radial-gradient(1px 1px at 980px 80px, rgba(255, 255, 255, 0.9), transparent),
+      radial-gradient(1.5px 1.5px at 1120px 220px, rgba(255, 255, 255, 0.75), transparent),
+      radial-gradient(2px 2px at 1280px 150px, rgba(165, 243, 252, 0.8), transparent),
+      radial-gradient(1px 1px at 1400px 320px, rgba(255, 255, 255, 0.85), transparent),
+      radial-gradient(circle 800px at 70% 20%, rgba(30, 58, 138, 0.18), transparent 70%),
+      radial-gradient(circle 600px at 20% 80%, rgba(88, 28, 135, 0.14), transparent 70%),
+      linear-gradient(180deg, #010308 0%, #030712 50%, #02040a 100%) !important;
+    background-repeat: repeat !important;
+    background-size:
+      800px 800px,
+      600px 600px,
+      900px 900px,
+      750px 750px,
+      850px 850px,
+      1000px 1000px,
+      700px 700px,
+      950px 950px,
+      820px 820px,
+      900px 900px,
+      650px 650px,
+      100% 100%,
+      100% 100%,
+      100% 100% !important;
+  }
 }
