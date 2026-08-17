@@ -31,12 +31,15 @@ interface WindowWithCesium extends Window {
       getCesiumScene: () => {
         canvas?: HTMLCanvasElement;
         terrainProvider: unknown;
+        backgroundColor?: unknown;
         globe?: {
           enableLighting?: boolean;
           depthTestAgainstTerrain?: boolean;
           showGroundAtmosphere?: boolean;
           show?: boolean;
           baseColor?: unknown;
+          atmosphereSaturationShift?: number;
+          atmosphereBrightnessShift?: number;
         };
         imageryLayers?: {
           length: number;
@@ -56,12 +59,15 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
     getCesiumScene: () => {
       canvas?: HTMLCanvasElement;
       terrainProvider: unknown;
+      backgroundColor?: unknown;
       globe?: {
         enableLighting?: boolean;
         depthTestAgainstTerrain?: boolean;
         showGroundAtmosphere?: boolean;
         show?: boolean;
         baseColor?: unknown;
+        atmosphereSaturationShift?: number;
+        atmosphereBrightnessShift?: number;
       };
       imageryLayers?: {
         length: number;
@@ -128,14 +134,44 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
               }
             }
 
+            // Deep space background (#02040a) to create quiet negative space
+            if (Cesium.Color && scene.backgroundColor !== undefined) {
+              scene.backgroundColor = Cesium.Color.fromCssColorString('#02040a');
+            }
+
             if (scene.globe) {
               scene.globe.show = true;
               scene.globe.depthTestAgainstTerrain = false;
-              scene.globe.enableLighting = false;
+              scene.globe.enableLighting = true; // Spherical depth & volume perception
               scene.globe.showGroundAtmosphere = true;
-              if (Cesium.Color) {
-                scene.globe.baseColor = Cesium.Color.fromCssColorString('#1b263b');
+              // Subtle, low-saturation atmospheric rim (avoids aggressive neon sci-fi glow)
+              if (scene.globe.atmosphereSaturationShift !== undefined) {
+                scene.globe.atmosphereSaturationShift = -0.25;
               }
+              if (scene.globe.atmosphereBrightnessShift !== undefined) {
+                scene.globe.atmosphereBrightnessShift = -0.1;
+              }
+              if (Cesium.Color) {
+                scene.globe.baseColor = Cesium.Color.fromCssColorString('#0d1b2a');
+              }
+            }
+
+            // Subtle Sky Atmosphere
+            const anyScene = scene as unknown as {
+              skyAtmosphere?: {
+                show?: boolean;
+                saturationShift?: number;
+                brightnessShift?: number;
+              };
+              moon?: { show?: boolean };
+            };
+            if (anyScene.skyAtmosphere) {
+              anyScene.skyAtmosphere.show = true;
+              anyScene.skyAtmosphere.saturationShift = -0.25;
+              anyScene.skyAtmosphere.brightnessShift = -0.15;
+            }
+            if (anyScene.moon) {
+              anyScene.moon.show = false; // Reduce background distraction
             }
 
             // Provide crisp, reliable Carto Voyager / OSM imagery layer on 3D globe

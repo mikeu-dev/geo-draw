@@ -32,6 +32,7 @@ import {
   EyeOff,
   ChevronLeft,
   ChevronRight,
+  Grid,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -82,6 +83,8 @@ interface SidebarProps {
   onVectorVisibleChange: (value: boolean) => void;
   basemapOpacity: number;
   onBasemapOpacityChange: (value: number) => void;
+  showGraticule?: boolean;
+  onToggleGraticule?: () => void;
 }
 
 const geojsonFormat = new GeoJSON({
@@ -121,6 +124,8 @@ export default function Sidebar({
   onVectorVisibleChange,
   basemapOpacity,
   onBasemapOpacityChange,
+  showGraticule = false,
+  onToggleGraticule,
 }: SidebarProps) {
   const { toast } = useToast();
   const editorRef = useRef<MonacoCodeEditor | null>(null);
@@ -545,6 +550,22 @@ export default function Sidebar({
                   </MenubarMenu>
 
                   <MenubarSeparator className="h-6 mx-1" />
+
+                  <MenubarMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <MenubarTrigger
+                          className={`w-9 h-9 ${showGraticule ? 'bg-accent text-accent-foreground' : ''}`}
+                          onClick={onToggleGraticule}
+                        >
+                          <Grid className="h-4 w-4" />
+                        </MenubarTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{showGraticule ? 'Sembunyikan Graticule (Lat/Lon Grid)' : 'Tampilkan Graticule (Lat/Lon Grid)'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </MenubarMenu>
 
                   <MenubarMenu>
                     <Tooltip>

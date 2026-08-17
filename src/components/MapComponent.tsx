@@ -7,6 +7,7 @@ import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
 import { Tile as TileLayer } from 'ol/layer';
 import VectorImageLayer from 'ol/layer/VectorImage';
 import BaseLayer from 'ol/layer/Base';
+import Graticule from 'ol/layer/Graticule';
 import DrawingTools from './DrawingTools';
 import FeaturePropertiesPopup from './FeaturePropertiesPopup';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +40,7 @@ interface MapProps {
   basemapOpacity: number;
   is3d: boolean;
   onToggle3d: () => void;
+  showGraticule?: boolean;
 }
 
 export default function MapComponent({
@@ -58,29 +60,38 @@ export default function MapComponent({
   basemapOpacity,
   is3d,
   onToggle3d,
+  showGraticule = false,
 }: MapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const popupElement = useRef<HTMLDivElement>(null);
+  const graticuleRef = useRef<Graticule | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [snappingEnabled, setSnappingEnabled] = useState(true);
   const [isSpatialToolsOpen, setIsSpatialToolsOpen] = useState(false);
   const { toast } = useToast();
 
-  const styleFunction = useCallback((feature: Feature<Geometry>) => {
-    const fill = feature.get('fill') || 'rgba(147, 51, 234, 0.2)';
-    const stroke = feature.get('stroke') || '#9333ea';
-    const strokeWidth = feature.get('strokeWidth') || 3;
+  // Evidence-based Visual Hierarchy: High-contrast data saliency
+  const styleFunction = useCallback(
+    (feature: Feature<Geometry>) => {
+      const isSelected = selectedFeature && selectedFeature.getId() === feature.getId();
+      const fill = isSelected
+        ? 'rgba(236, 72, 153, 0.3)'
+        : feature.get('fill') || 'rgba(147, 51, 234, 0.25)';
+      const stroke = isSelected ? '#ec4899' : feature.get('stroke') || '#9333ea';
+      const strokeWidth = isSelected ? 3.5 : feature.get('strokeWidth') || 2.5;
 
-    return new Style({
-      fill: new Fill({ color: fill }),
-      stroke: new Stroke({ color: stroke, width: strokeWidth }),
-      image: new CircleStyle({
-        radius: 7,
+      return new Style({
         fill: new Fill({ color: fill }),
-        stroke: new Stroke({ color: stroke, width: 2 }),
-      }),
-    });
-  }, []);
+        stroke: new Stroke({ color: stroke, width: strokeWidth }),
+        image: new CircleStyle({
+          radius: isSelected ? 8 : 6,
+          fill: new Fill({ color: stroke }),
+          stroke: new Stroke({ color: '#ffffff', width: isSelected ? 2.5 : 1.5 }),
+        }),
+      });
+    },
+    [selectedFeature]
+  );
 
   const { map, vectorSource, tileLayer } = useMap({
     target: mapElement,
@@ -281,6 +292,29 @@ export default function MapComponent({
     [projection, setFeatures, toast]
   );
 
+  // Toggleable Graticule / Lat-Lon Grid Layer
+  useEffect(() => {
+    if (!map) return;
+
+    if (showGraticule) {
+      if (!graticuleRef.current) {
+        graticuleRef.current = new Graticule({
+          strokeStyle: new Stroke({
+            color: 'rgba(255, 255, 255, 0.2)',
+            width: 1,
+            lineDash: [1, 4],
+          }),
+          showLabels: true,
+          wrapX: true,
+        });
+        map.addLayer(graticuleRef.current);
+      }
+      graticuleRef.current.setVisible(true);
+    } else if (graticuleRef.current) {
+      graticuleRef.current.setVisible(false);
+    }
+  }, [map, showGraticule]);
+
   return (
     <div className="w-full h-full relative group">
       <div ref={mapElement} className="w-full h-full outline-none" />
@@ -324,7 +358,7 @@ export default function MapComponent({
         <CesiumController map={map} enabled={is3d} />
       </div>
 
-      <StatusBar map={map} projection={projection} />
+      <StatusBar map={map} projection={projection} is3d={is3d} />
 
       {/* Spatial Tools Dialog */}
       <SpatialToolsDialog

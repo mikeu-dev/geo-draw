@@ -57,44 +57,50 @@ export default function SceneViewSwitcher({
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p>View: {is3d ? '3D Globe' : `2D (${projection})`}</p>
+            <p className="text-xs">
+              {is3d ? '3D Globe — Konteks Spasial Global' : `2D Map (${projection}) — Edit Presisi`}
+            </p>
           </TooltipContent>
         </Tooltip>
 
-          <DropdownMenuContent side="right" align="start" className="w-48">
-            <DropdownMenuLabel className="text-xs">2D Flat Mode</DropdownMenuLabel>
+          <DropdownMenuContent side="right" align="start" className="w-56">
+            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
+              Mode 2D (Edit Presisi & Simpul)
+            </DropdownMenuLabel>
             <DropdownMenuItem
               onSelect={() => handleSelectMode('3857')}
-              className="flex items-center justify-between"
+              className="flex items-center justify-between cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <MapIcon className="w-3 h-3" />
-                <span>Web Mercator (3857)</span>
+                <MapIcon className="w-3.5 h-3.5" />
+                <span className="text-xs">Web Mercator (EPSG:3857)</span>
               </div>
-              {!is3d && projection === 'EPSG:3857' && <Check className="w-3 h-3 ml-2" />}
+              {!is3d && projection === 'EPSG:3857' && <Check className="w-3.5 h-3.5 ml-2 text-primary" />}
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => handleSelectMode('4326')}
-              className="flex items-center justify-between"
+              className="flex items-center justify-between cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <MapIcon className="w-3 h-3" />
-                <span>WGS 84 (4326)</span>
+                <MapIcon className="w-3.5 h-3.5" />
+                <span className="text-xs">WGS 84 (EPSG:4326)</span>
               </div>
-              {!is3d && projection === 'EPSG:4326' && <Check className="w-3 h-3 ml-2" />}
+              {!is3d && projection === 'EPSG:4326' && <Check className="w-3.5 h-3.5 ml-2 text-primary" />}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs">3D Globe Mode</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
+              Mode 3D (Konteks & Eksplorasi)
+            </DropdownMenuLabel>
             <DropdownMenuItem
               onSelect={() => handleSelectMode('3d')}
-              className="flex items-center justify-between"
+              className="flex items-center justify-between cursor-pointer"
             >
-              <div className="flex items-center gap-2 text-cyan-600 font-medium">
-                <Globe className="w-3 h-3" />
-                <span>Cesium 3D Globe</span>
+              <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-medium">
+                <Globe className="w-3.5 h-3.5" />
+                <span className="text-xs">Cesium 3D Globe</span>
               </div>
-              {is3d && <Check className="w-3 h-3 ml-2" />}
+              {is3d && <Check className="w-3.5 h-3.5 ml-2 text-cyan-500" />}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

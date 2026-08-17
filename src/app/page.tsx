@@ -67,6 +67,7 @@ export default function Home() {
   const [isParsing, setIsParsing] = useState(false);
   const [zoomToId, setZoomToId] = useState<string | number | null>(null);
   const [is3d, setIs3d] = useState(false);
+  const [showGraticule, setShowGraticule] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -473,6 +474,17 @@ export default function Home() {
         onVectorVisibleChange={setVectorVisible}
         basemapOpacity={basemapOpacity}
         onBasemapOpacityChange={setBasemapOpacity}
+        showGraticule={showGraticule}
+        onToggleGraticule={() =>
+          setShowGraticule((prev) => {
+            const next = !prev;
+            toast({
+              title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
+              description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
+            });
+            return next;
+          })
+        }
       />
 
       <div className="flex-grow relative h-full">
@@ -504,6 +516,7 @@ export default function Home() {
           basemapOpacity={basemapOpacity}
           is3d={is3d}
           onToggle3d={handleToggle3d}
+          showGraticule={showGraticule}
         />
       </div>
 
