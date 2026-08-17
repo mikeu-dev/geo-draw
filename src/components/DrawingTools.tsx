@@ -16,9 +16,9 @@ import {
   Ruler,
   Maximize,
   Magnet,
-  Sparkles,
   Scissors,
   FlaskConical,
+  Layers,
 } from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
@@ -257,7 +257,7 @@ export default function DrawingTools({
                   onPressedChange={() => onOpenSpatialTools()}
                   className="hover:text-primary"
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <Layers className="h-4 w-4" />
                 </Toggle>
               </TooltipTrigger>
               <TooltipContent side="left">

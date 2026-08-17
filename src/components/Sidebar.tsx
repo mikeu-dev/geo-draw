@@ -18,7 +18,6 @@ import {
   CheckCircle,
   AlertTriangle,
   FileDown,
-  Sparkles,
   Sun,
   Moon,
   Check,
@@ -40,7 +39,7 @@ import {
   ValidationResult,
 } from '@/lib/geojson-validator';
 import { GisService } from '@/lib/spatial';
-import { Feature as GeoJSONFeature, FeatureCollection } from 'geojson';
+import { FeatureCollection } from 'geojson';
 import { Skeleton } from './ui/skeleton';
 import GeoJSON from 'ol/format/GeoJSON';
 import KML from 'ol/format/KML';
@@ -216,119 +215,6 @@ export default function Sidebar({
         });
       }
     );
-  };
-
-  const handleBuffer = () => {
-    if (!geojsonString) return;
-    const radius = prompt('Enter buffer radius in kilometers:', '1');
-    if (radius === null) return;
-
-    const r = parseFloat(radius);
-    if (isNaN(r)) {
-      toast({ title: 'Invalid radius', variant: 'destructive' });
-      return;
-    }
-
-    try {
-      const geojson = JSON.parse(geojsonString) as FeatureCollection;
-      const bufferedFeatures: GeoJSONFeature[] = [];
-
-      geojson.features.forEach((feature) => {
-        const buffered = GisService.createBuffer(feature as GeoJSONFeature, r);
-        buffered.properties = {
-          ...feature.properties,
-          type: 'buffer',
-          parent_id: feature.id || 'unknown',
-          buffer_radius: r,
-        };
-        bufferedFeatures.push(buffered as GeoJSONFeature);
-      });
-
-      const newGeojson = {
-        ...geojson,
-        features: [...geojson.features, ...bufferedFeatures],
-      };
-
-      onGeojsonChange(JSON.stringify(newGeojson, null, 2));
-      toast({ title: `Created ${bufferedFeatures.length} buffer(s)` });
-    } catch (error) {
-      console.error('Buffer error:', error);
-      toast({ title: 'Analysis failed', variant: 'destructive' });
-    }
-  };
-
-  const handleCentroid = () => {
-    if (!geojsonString) return;
-    try {
-      const geojson = JSON.parse(geojsonString) as FeatureCollection;
-      const centroid = GisService.calculateCentroid(geojson);
-      centroid.properties = { type: 'centroid', generated_at: new Date().toISOString() };
-
-      const newGeojson = {
-        ...geojson,
-        features: [...geojson.features, centroid as GeoJSONFeature],
-      };
-
-      onGeojsonChange(JSON.stringify(newGeojson, null, 2));
-      toast({ title: 'Centroid calculated' });
-    } catch (error) {
-      console.error('Centroid error:', error);
-      toast({ title: 'Analysis failed', variant: 'destructive' });
-    }
-  };
-
-  const handleSimplify = () => {
-    if (!geojsonString) return;
-    const tolerance = prompt('Enter simplification tolerance (e.g. 0.01):', '0.01');
-    if (tolerance === null) return;
-
-    const t = parseFloat(tolerance);
-    if (isNaN(t)) {
-      toast({ title: 'Invalid tolerance', variant: 'destructive' });
-      return;
-    }
-
-    try {
-      const geojson = JSON.parse(geojsonString) as FeatureCollection;
-      const simplifiedFeatures = geojson.features.map((f) => {
-        const simplified = GisService.simplifyGeometry(f as GeoJSONFeature, t);
-        return { ...simplified, properties: { ...f.properties, simplified: true, tolerance: t } };
-      });
-
-      const newGeojson = { ...geojson, features: simplifiedFeatures };
-      onGeojsonChange(JSON.stringify(newGeojson, null, 2));
-      toast({ title: 'Geometry simplified' });
-    } catch {
-      toast({ title: 'Simplification failed', variant: 'destructive' });
-    }
-  };
-
-  const handleUnion = () => {
-    if (!geojsonString) return;
-    try {
-      const geojson = JSON.parse(geojsonString) as FeatureCollection;
-      const polygons = geojson.features.filter(
-        (f) => f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'
-      );
-
-      if (polygons.length < 2) {
-        toast({ title: 'Need at least 2 polygons to union', variant: 'destructive' });
-        return;
-      }
-
-      const unioned = GisService.unionFeatures(polygons as GeoJSONFeature[]);
-      if (unioned) {
-        unioned.properties = { type: 'union_result', generated_at: new Date().toISOString() };
-        const otherFeatures = geojson.features.filter(
-          (f) => f.geometry.type !== 'Polygon' && f.geometry.type !== 'MultiPolygon'
-        );
-        const newGeojson = { ...geojson, features: [...otherFeatures, unioned as GeoJSONFeature] };
-        onGeojsonChange(JSON.stringify(newGeojson, null, 2));
-        toast({ title: 'Polygons unioned successfully' });
-      }
-    } catch {
-      toast({ title: 'Union failed', variant: 'destructive' });
-    }
   };
 
   const handleCopyLink = () => {
@@ -583,38 +469,6 @@ export default function Sidebar({
                       </TooltipContent>
                     </Tooltip>
                   </MenubarMenu>
-                  <MenubarMenu>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <MenubarTrigger className="w-9 h-9" disabled={!geojsonString}>
-                          <Crosshair className="h-4 w-4" />
-                        </MenubarTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Spatial Analysis</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <MenubarContent>
-                      <MenubarItem onClick={handleBuffer} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full border-2 border-primary" />
-                        Buffer Features
-                      </MenubarItem>
-                      <MenubarItem onClick={handleCentroid} className="flex items-center gap-2">
-                        <MapIcon className="w-4 h-4" />
-                        Calculate Centroid
-                      </MenubarItem>
-                      <MenubarSeparator />
-                      <MenubarItem onClick={handleSimplify} className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Simplify Geometry
-                      </MenubarItem>
-                      <MenubarItem onClick={handleUnion} className="flex items-center gap-2">
-                        <Copy className="w-4 h-4" />
-                        Union All Polygons
-                      </MenubarItem>
-                    </MenubarContent>
-                  </MenubarMenu>
-
                   <MenubarMenu>
                     <Tooltip>
                       <TooltipTrigger asChild>
