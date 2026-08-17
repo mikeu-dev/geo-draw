@@ -18,6 +18,7 @@ import {
   Magnet,
   Sparkles,
   Scissors,
+  FlaskConical,
 } from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
@@ -39,6 +40,7 @@ interface DrawingToolsProps {
   snappingEnabled?: boolean;
   onToggleSnapping?: () => void;
   onOpenSpatialTools?: () => void;
+  onOpenUsabilityLab?: () => void;
 }
 
 export default function DrawingTools({
@@ -54,6 +56,7 @@ export default function DrawingTools({
   snappingEnabled = true,
   onToggleSnapping,
   onOpenSpatialTools,
+  onOpenUsabilityLab,
 }: DrawingToolsProps) {
   const handleDrawTypeChange = (type: DrawType) => {
     setDrawType(drawType === type ? null : type);
@@ -70,6 +73,25 @@ export default function DrawingTools({
         />
         <BasemapSwitcher tileLayer={tileLayer} />
         <MapScreenshot map={map} />
+        {onOpenUsabilityLab && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onOpenUsabilityLab}
+                  className="w-8 h-8 rounded-[var(--radius)] flex items-center justify-center text-muted-foreground hover:text-cyan-400 hover:bg-secondary transition-colors"
+                  aria-label="Usability & Evaluation Lab"
+                >
+                  <FlaskConical className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Usability Lab (Eksperimen A, B, C & SUS)</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
       <div className="drawing-controls">
         <TooltipProvider>

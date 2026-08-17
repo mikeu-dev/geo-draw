@@ -19,6 +19,7 @@ import StatusBar from './StatusBar';
 import LocationSearch from './LocationSearch';
 import CursorGuide from './CursorGuide';
 import SpatialToolsDialog from './SpatialToolsDialog';
+import UsabilityLabDialog from './UsabilityLabDialog';
 import GeoJSONFormat from 'ol/format/GeoJSON';
 import { OSM, XYZ } from 'ol/source';
 import type { FeatureCollection } from 'geojson';
@@ -41,6 +42,10 @@ interface MapProps {
   is3d: boolean;
   onToggle3d: () => void;
   showGraticule?: boolean;
+  cesiumBackgroundColor?: string;
+  cesiumEnableAtmosphere?: boolean;
+  cesiumAtmosphereSaturationShift?: number;
+  cesiumAtmosphereBrightnessShift?: number;
 }
 
 export default function MapComponent({
@@ -61,6 +66,10 @@ export default function MapComponent({
   is3d,
   onToggle3d,
   showGraticule = false,
+  cesiumBackgroundColor,
+  cesiumEnableAtmosphere,
+  cesiumAtmosphereSaturationShift,
+  cesiumAtmosphereBrightnessShift,
 }: MapProps) {
   const mapElement = useRef<HTMLDivElement>(null);
   const popupElement = useRef<HTMLDivElement>(null);
@@ -68,6 +77,13 @@ export default function MapComponent({
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [snappingEnabled, setSnappingEnabled] = useState(true);
   const [isSpatialToolsOpen, setIsSpatialToolsOpen] = useState(false);
+  const [isUsabilityLabOpen, setIsUsabilityLabOpen] = useState(false);
+  const [experimentCondition, setExperimentCondition] = useState<{
+    backgroundColor?: string;
+    enableAtmosphere?: boolean;
+    atmosphereSaturationShift?: number;
+    atmosphereBrightnessShift?: number;
+  }>({});
   const { toast } = useToast();
 
   // Evidence-based Visual Hierarchy: High-contrast data saliency
@@ -347,6 +363,7 @@ export default function MapComponent({
             });
           }}
           onOpenSpatialTools={() => setIsSpatialToolsOpen(true)}
+          onOpenUsabilityLab={() => setIsUsabilityLabOpen(true)}
         />
       </div>
 
@@ -355,7 +372,26 @@ export default function MapComponent({
           map={map}
           activeType={drawType as 'MeasureArea' | 'MeasureDistance' | null}
         />
-        <CesiumController map={map} enabled={is3d} />
+        <CesiumController
+          map={map}
+          enabled={is3d}
+          backgroundColor={experimentCondition.backgroundColor || cesiumBackgroundColor}
+          enableAtmosphere={
+            experimentCondition.enableAtmosphere !== undefined
+              ? experimentCondition.enableAtmosphere
+              : cesiumEnableAtmosphere
+          }
+          atmosphereSaturationShift={
+            experimentCondition.atmosphereSaturationShift !== undefined
+              ? experimentCondition.atmosphereSaturationShift
+              : cesiumAtmosphereSaturationShift
+          }
+          atmosphereBrightnessShift={
+            experimentCondition.atmosphereBrightnessShift !== undefined
+              ? experimentCondition.atmosphereBrightnessShift
+              : cesiumAtmosphereBrightnessShift
+          }
+        />
       </div>
 
       <StatusBar map={map} projection={projection} is3d={is3d} />
@@ -367,6 +403,16 @@ export default function MapComponent({
         geojson={currentGeoJSON}
         onApplyGeoJSON={handleApplySpatialGeoJSON}
         selectedFeatureId={selectedFeature ? selectedFeature.getId() : null}
+      />
+
+      {/* Usability & Evaluation Lab Dialog */}
+      <UsabilityLabDialog
+        open={isUsabilityLabOpen}
+        onOpenChange={setIsUsabilityLabOpen}
+        is3d={is3d}
+        onToggle3d={onToggle3d}
+        onSetExperimentCondition={setExperimentCondition}
+        onLoadTestFeatures={(fc) => handleApplySpatialGeoJSON(fc, false)}
       />
 
       <div ref={popupElement} className="min-w-[300px] z-50">

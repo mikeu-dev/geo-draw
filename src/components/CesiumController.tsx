@@ -6,6 +6,10 @@ import type { Map } from 'ol';
 interface CesiumControllerProps {
   map: Map | null;
   enabled: boolean;
+  backgroundColor?: string;
+  enableAtmosphere?: boolean;
+  atmosphereSaturationShift?: number;
+  atmosphereBrightnessShift?: number;
 }
 
 interface WindowWithCesium extends Window {
@@ -54,7 +58,14 @@ interface WindowWithCesium extends Window {
   };
 }
 
-export default function CesiumController({ map, enabled }: CesiumControllerProps) {
+export default function CesiumController({
+  map,
+  enabled,
+  backgroundColor = '#02040a',
+  enableAtmosphere = true,
+  atmosphereSaturationShift = -0.25,
+  atmosphereBrightnessShift = -0.1,
+}: CesiumControllerProps) {
   const ol3dRef = useRef<{
     getCesiumScene: () => {
       canvas?: HTMLCanvasElement;
@@ -81,6 +92,44 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
   } | null>(null);
 
   const isInitializingRef = useRef(false);
+
+  // Dynamic Scene updates for experiments
+  useEffect(() => {
+    if (!ol3dRef.current || !enabled) return;
+    const win = window as unknown as WindowWithCesium;
+    const Cesium = win.Cesium;
+    if (!Cesium) return;
+
+    try {
+      const scene = ol3dRef.current.getCesiumScene();
+      if (!scene) return;
+
+      if (Cesium.Color && scene.backgroundColor !== undefined) {
+        scene.backgroundColor = Cesium.Color.fromCssColorString(backgroundColor);
+      }
+
+      if (scene.globe) {
+        scene.globe.showGroundAtmosphere = enableAtmosphere;
+        scene.globe.atmosphereSaturationShift = atmosphereSaturationShift;
+        scene.globe.atmosphereBrightnessShift = atmosphereBrightnessShift;
+      }
+
+      const anyScene = scene as unknown as {
+        skyAtmosphere?: {
+          show?: boolean;
+          saturationShift?: number;
+          brightnessShift?: number;
+        };
+      };
+      if (anyScene.skyAtmosphere) {
+        anyScene.skyAtmosphere.show = enableAtmosphere;
+        anyScene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
+        anyScene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
+      }
+    } catch {
+      // Ignore update errors
+    }
+  }, [backgroundColor, enableAtmosphere, atmosphereSaturationShift, atmosphereBrightnessShift, enabled]);
 
   useEffect(() => {
     if (!map || typeof window === 'undefined') return;
@@ -136,20 +185,20 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
 
             // Deep space background (#02040a) to create quiet negative space
             if (Cesium.Color && scene.backgroundColor !== undefined) {
-              scene.backgroundColor = Cesium.Color.fromCssColorString('#02040a');
+              scene.backgroundColor = Cesium.Color.fromCssColorString(backgroundColor);
             }
 
             if (scene.globe) {
               scene.globe.show = true;
               scene.globe.depthTestAgainstTerrain = false;
               scene.globe.enableLighting = true; // Spherical depth & volume perception
-              scene.globe.showGroundAtmosphere = true;
+              scene.globe.showGroundAtmosphere = enableAtmosphere;
               // Subtle, low-saturation atmospheric rim (avoids aggressive neon sci-fi glow)
               if (scene.globe.atmosphereSaturationShift !== undefined) {
-                scene.globe.atmosphereSaturationShift = -0.25;
+                scene.globe.atmosphereSaturationShift = atmosphereSaturationShift;
               }
               if (scene.globe.atmosphereBrightnessShift !== undefined) {
-                scene.globe.atmosphereBrightnessShift = -0.1;
+                scene.globe.atmosphereBrightnessShift = atmosphereBrightnessShift;
               }
               if (Cesium.Color) {
                 scene.globe.baseColor = Cesium.Color.fromCssColorString('#0d1b2a');
@@ -166,9 +215,9 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
               moon?: { show?: boolean };
             };
             if (anyScene.skyAtmosphere) {
-              anyScene.skyAtmosphere.show = true;
-              anyScene.skyAtmosphere.saturationShift = -0.25;
-              anyScene.skyAtmosphere.brightnessShift = -0.15;
+              anyScene.skyAtmosphere.show = enableAtmosphere;
+              anyScene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
+              anyScene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
             }
             if (anyScene.moon) {
               anyScene.moon.show = false; // Reduce background distraction
@@ -240,7 +289,14 @@ export default function CesiumController({ map, enabled }: CesiumControllerProps
         }
       }
     }
-  }, [map, enabled]);
+  }, [
+    map,
+    enabled,
+    backgroundColor,
+    enableAtmosphere,
+    atmosphereSaturationShift,
+    atmosphereBrightnessShift,
+  ]);
 
   // Destroy on unmount or map destruction
   useEffect(() => {
