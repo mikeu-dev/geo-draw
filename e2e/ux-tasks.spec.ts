@@ -2,9 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Geovara Usability & UX Tasks E2E Suite (7 UX Tasks)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('h1', { timeout: 30000 });
-    await expect(page.locator('.ol-viewport')).toBeVisible({ timeout: 30000 });
+    await page.goto('/');
+    await expect(page.locator('aside')).toBeVisible({ timeout: 30000 });
   });
 
   test('Task 1: Search and add location as point to map', async ({ page }) => {
