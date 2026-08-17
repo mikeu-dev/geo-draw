@@ -2,10 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import type { Map } from 'ol';
+import type { FeatureCollection } from 'geojson';
 
 interface CesiumControllerProps {
   map: Map | null;
   enabled: boolean;
+  geojson?: FeatureCollection;
   activeBasemap?: string;
   backgroundColor?: string;
   enableAtmosphere?: boolean;
@@ -46,6 +48,69 @@ interface WindowWithCesium extends Window {
       WHITE: unknown;
       TRANSPARENT: unknown;
     };
+    JulianDate?: {
+      now: () => unknown;
+    };
+    Cartesian2?: new (x: number, y: number) => unknown;
+    HeightReference?: {
+      CLAMP_TO_GROUND: unknown;
+    };
+    LabelStyle?: {
+      FILL_AND_OUTLINE: unknown;
+    };
+    VerticalOrigin?: {
+      BOTTOM: unknown;
+    };
+    ClassificationType?: {
+      BOTH: unknown;
+      CESIUM_3D_TILE: unknown;
+    };
+    PointGraphics?: new (options: unknown) => unknown;
+    LabelGraphics?: new (options: unknown) => unknown;
+    DataSourceCollection?: new () => {
+      add: (dataSource: unknown) => unknown;
+      remove: (dataSource: unknown, destroy?: boolean) => boolean;
+      removeAll: (destroy?: boolean) => void;
+    };
+    DataSourceDisplay?: new (options: {
+      scene: unknown;
+      dataSourceCollection: unknown;
+    }) => {
+      update: (time: unknown) => boolean;
+      destroy: () => void;
+    };
+    GeoJsonDataSource?: {
+      load: (
+        data: unknown,
+        options?: unknown
+      ) => Promise<{
+        entities: {
+          values: Array<{
+            position?: unknown;
+            polygon?: {
+              material?: unknown;
+              outline?: boolean;
+              outlineColor?: unknown;
+              outlineWidth?: number;
+              classificationType?: unknown;
+              heightReference?: unknown;
+            };
+            polyline?: {
+              material?: unknown;
+              width?: number;
+              clampToGround?: boolean;
+            };
+            billboard?: unknown;
+            point?: unknown;
+            label?: unknown;
+            name?: string;
+            properties?: {
+              getValue?: (time?: unknown) => Record<string, unknown>;
+            };
+          }>;
+        };
+      }>;
+    };
   };
   olcs?: {
     OLCesium: new (options: { map: Map }) => {
@@ -79,6 +144,10 @@ interface WindowWithCesium extends Window {
           removeAll?: (destroy?: boolean) => void;
           remove: (layer: unknown, destroy?: boolean) => boolean;
           addImageryProvider: (provider: unknown, index?: number) => unknown;
+        };
+        postRender?: {
+          addEventListener: (listener: () => void) => () => void;
+          removeEventListener: (listener: () => void) => void;
         };
       };
       setEnabled: (enabled: boolean) => void;
@@ -183,6 +252,7 @@ function setupCesiumBasemap(
 export default function CesiumController({
   map,
   enabled,
+  geojson,
   activeBasemap = 'osm',
   backgroundColor,
   enableAtmosphere = true,
@@ -190,6 +260,17 @@ export default function CesiumController({
   atmosphereBrightnessShift = 0.0,
 }: CesiumControllerProps) {
   const basemapLayersRef = useRef<unknown[]>([]);
+  const dataSourceCollectionRef = useRef<{
+    add: (dataSource: unknown) => unknown;
+    remove: (dataSource: unknown, destroy?: boolean) => boolean;
+    removeAll: (destroy?: boolean) => void;
+  } | null>(null);
+  const dataSourceDisplayRef = useRef<{
+    update: (time: unknown) => boolean;
+    destroy: () => void;
+  } | null>(null);
+  const postRenderListenerRef = useRef<(() => void) | null>(null);
+
   const ol3dRef = useRef<{
     getCesiumScene: () => {
       canvas?: HTMLCanvasElement;
@@ -220,6 +301,10 @@ export default function CesiumController({
         length: number;
         remove: (layer: unknown, destroy?: boolean) => boolean;
         addImageryProvider: (provider: unknown, index?: number) => unknown;
+      };
+      postRender?: {
+        addEventListener: (listener: () => void) => () => void;
+        removeEventListener: (listener: () => void) => void;
       };
     };
     setEnabled: (enabled: boolean) => void;
@@ -293,6 +378,109 @@ export default function CesiumController({
     enabled,
   ]);
 
+  // Synchronize GeoJSON features with Cesium 3D Globe via GeoJsonDataSource
+  useEffect(() => {
+    if (!enabled || !dataSourceCollectionRef.current) return;
+    const win = window as unknown as WindowWithCesium;
+    const Cesium = win.Cesium;
+    if (!Cesium || !Cesium.GeoJsonDataSource || !Cesium.Color) return;
+
+    const CesiumColor = Cesium.Color;
+    const collection = dataSourceCollectionRef.current;
+
+    if (!geojson || !geojson.features || geojson.features.length === 0) {
+      collection.removeAll(true);
+      if (dataSourceDisplayRef.current && Cesium.JulianDate) {
+        dataSourceDisplayRef.current.update(Cesium.JulianDate.now());
+      }
+      return;
+    }
+
+    Cesium.GeoJsonDataSource.load(geojson, {
+      clampToGround: true,
+      stroke: CesiumColor.fromCssColorString('#9333ea'),
+      fill: CesiumColor.fromCssColorString('rgba(147, 51, 234, 0.35)'),
+      strokeWidth: 3,
+    })
+      .then((ds) => {
+        // Iterate through entities and apply rich 3D styling & labels
+        for (const entity of ds.entities.values) {
+          const rawProps = entity.properties?.getValue?.(Cesium.JulianDate?.now?.()) || {};
+          const strokeHex = (rawProps.stroke as string) || '#9333ea';
+          const fillHex = (rawProps.fill as string) || 'rgba(147, 51, 234, 0.35)';
+          const strokeWidth = Number(rawProps.strokeWidth) || 3;
+          const name =
+            rawProps.name ||
+            rawProps.NAMOBJ ||
+            rawProps.DESA ||
+            rawProps.KABUPATEN ||
+            rawProps.title ||
+            entity.name;
+
+          // 1. Point / Landmark features
+          if (entity.position && !entity.polygon && !entity.polyline) {
+            entity.billboard = undefined;
+            if (Cesium.PointGraphics) {
+              entity.point = new Cesium.PointGraphics({
+                pixelSize: 10,
+                color: CesiumColor.fromCssColorString(strokeHex),
+                outlineColor: CesiumColor.WHITE,
+                outlineWidth: 2,
+                heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              });
+            }
+
+            if (name && Cesium.LabelGraphics && Cesium.Cartesian2) {
+              entity.label = new Cesium.LabelGraphics({
+                text: String(name),
+                font: '12px "Inter", "Segoe UI", sans-serif',
+                fillColor: CesiumColor.WHITE,
+                outlineColor: CesiumColor.fromCssColorString('#0f172a'),
+                outlineWidth: 3,
+                style: Cesium.LabelStyle?.FILL_AND_OUTLINE,
+                verticalOrigin: Cesium.VerticalOrigin?.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -12),
+                heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              });
+            }
+          }
+
+          // 2. Polygon features
+          if (entity.polygon) {
+            entity.polygon.material = CesiumColor.fromCssColorString(fillHex);
+            entity.polygon.outline = true;
+            entity.polygon.outlineColor = CesiumColor.fromCssColorString(strokeHex);
+            entity.polygon.outlineWidth = strokeWidth;
+            if (Cesium.ClassificationType) {
+              entity.polygon.classificationType = Cesium.ClassificationType.BOTH;
+            }
+            if (Cesium.HeightReference) {
+              entity.polygon.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
+            }
+          }
+
+          // 3. Polyline features
+          if (entity.polyline) {
+            entity.polyline.material = CesiumColor.fromCssColorString(strokeHex);
+            entity.polyline.width = strokeWidth;
+            entity.polyline.clampToGround = true;
+          }
+        }
+
+        collection.removeAll(true);
+        collection.add(ds);
+
+        if (dataSourceDisplayRef.current && Cesium.JulianDate) {
+          dataSourceDisplayRef.current.update(Cesium.JulianDate.now());
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not synchronize GeoJSON to Cesium 3D Globe:', err);
+      });
+  }, [enabled, geojson]);
+
   useEffect(() => {
     if (!map || typeof window === 'undefined') return;
 
@@ -302,11 +490,6 @@ export default function CesiumController({
       if (ol3dRef.current) {
         try {
           ol3dRef.current.setEnabled(true);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const vecSync = (ol3dRef.current as any).getVectorSynchronizer?.();
-          if (vecSync && typeof vecSync.synchronize === 'function') {
-            vecSync.synchronize();
-          }
           const scene = ol3dRef.current.getCesiumScene();
           if (scene && win.Cesium) {
             basemapLayersRef.current = setupCesiumBasemap(
@@ -315,6 +498,9 @@ export default function CesiumController({
               activeBasemap,
               basemapLayersRef.current
             );
+          }
+          if (dataSourceDisplayRef.current && win.Cesium?.JulianDate) {
+            dataSourceDisplayRef.current.update(win.Cesium.JulianDate.now());
           }
         } catch (e) {
           console.error('Error enabling Cesium 3D:', e);
@@ -406,15 +592,15 @@ export default function CesiumController({
             if (scene.globe) {
               scene.globe.show = true;
               scene.globe.depthTestAgainstTerrain = false;
-              scene.globe.enableLighting = true; // Pencahayaan matahari dinamis
+              scene.globe.enableLighting = true;
               scene.globe.dynamicAtmosphereLighting = true;
               scene.globe.dynamicAtmosphereLightingFromSun = true;
               scene.globe.showGroundAtmosphere = enableAtmosphere;
               scene.globe.atmosphereSaturationShift = atmosphereSaturationShift;
               scene.globe.atmosphereBrightnessShift = atmosphereBrightnessShift;
               if (Cesium.Color) {
-                scene.globe.baseColor = Cesium.Color.fromCssColorString('#0a1128'); // Deep ocean blue
-                scene.globe.nightColor = Cesium.Color.fromCssColorString('#020914'); // Bayangan malam
+                scene.globe.baseColor = Cesium.Color.fromCssColorString('#0a1128');
+                scene.globe.nightColor = Cesium.Color.fromCssColorString('#020914');
               }
             }
 
@@ -432,6 +618,33 @@ export default function CesiumController({
               activeBasemap,
               basemapLayersRef.current
             );
+
+            // 6. Direct GeoJSON 3D Vector & Label DataSourceDisplay
+            if (Cesium.DataSourceCollection && Cesium.DataSourceDisplay) {
+              const collection = new Cesium.DataSourceCollection();
+              const display = new Cesium.DataSourceDisplay({
+                scene: scene,
+                dataSourceCollection: collection,
+              });
+              dataSourceCollectionRef.current = collection;
+              dataSourceDisplayRef.current = display;
+
+              if (scene.postRender) {
+                const listener = () => {
+                  if (dataSourceDisplayRef.current && Cesium.JulianDate) {
+                    dataSourceDisplayRef.current.update(Cesium.JulianDate.now());
+                  }
+                };
+                scene.postRender.addEventListener(listener);
+                postRenderListenerRef.current = () => {
+                  try {
+                    scene.postRender?.removeEventListener(listener);
+                  } catch {
+                    // ignore
+                  }
+                };
+              }
+            }
           }
 
           if (customToken && Cesium.createWorldTerrainAsync) {
@@ -487,6 +700,26 @@ export default function CesiumController({
   // Destroy on unmount or map destruction
   useEffect(() => {
     return () => {
+      if (postRenderListenerRef.current) {
+        postRenderListenerRef.current();
+        postRenderListenerRef.current = null;
+      }
+      if (dataSourceDisplayRef.current) {
+        try {
+          dataSourceDisplayRef.current.destroy();
+        } catch {
+          // ignore
+        }
+        dataSourceDisplayRef.current = null;
+      }
+      if (dataSourceCollectionRef.current) {
+        try {
+          dataSourceCollectionRef.current.removeAll(true);
+        } catch {
+          // ignore
+        }
+        dataSourceCollectionRef.current = null;
+      }
       if (ol3dRef.current) {
         try {
           ol3dRef.current.setEnabled(false);

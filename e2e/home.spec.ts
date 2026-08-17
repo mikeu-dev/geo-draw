@@ -239,6 +239,49 @@ test.describe('Geovara E2E Tests', () => {
     count = await page.evaluate(() => window.geovara?.getFeaturesCount());
     expect(count).toBe(2);
   });
+
+  test('should render imported data when imported directly while 3D Globe mode is active', async ({ page }) => {
+    // 1. Switch to 3D Globe mode first
+    const viewSwitcherBtn = page.locator('button[aria-label^="Map View & Projection:"]');
+    await expect(viewSwitcherBtn).toBeVisible({ timeout: 10000 });
+    await viewSwitcherBtn.click();
+
+    const globeOption = page.getByRole('menuitem', { name: /Cesium 3D Globe/ });
+    await expect(globeOption).toBeVisible({ timeout: 5000 });
+    await globeOption.click();
+
+    // Verify 3D mode is active
+    await expect(page.locator('button[aria-label="Map View & Projection: 3D Globe"]')).toBeVisible({ timeout: 10000 });
+
+    // 2. Import / inject data while 3D Globe is already active
+    await page.evaluate(() => {
+      window.geovara?.setGeoJSON({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            id: 'feat_surabaya',
+            geometry: { type: 'Point', coordinates: [112.7521, -7.2575] },
+            properties: { name: 'Surabaya' },
+          },
+          {
+            type: 'Feature',
+            id: 'feat_jogja',
+            geometry: { type: 'Point', coordinates: [110.3695, -7.7956] },
+            properties: { name: 'Yogyakarta' },
+          },
+        ],
+      });
+    });
+
+    // 3. Verify feature count in 3D
+    const count3d = await page.evaluate(() => window.geovara?.getFeaturesCount());
+    expect(count3d).toBe(2);
+
+    const gj = await page.evaluate(() => window.geovara?.getGeoJSON());
+    expect(gj).toContain('feat_surabaya');
+    expect(gj).toContain('feat_jogja');
+  });
 });
 
 

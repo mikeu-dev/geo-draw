@@ -377,6 +377,7 @@ export default function MapComponent({
         <CesiumController
           map={map}
           enabled={is3d}
+          geojson={currentGeoJSON}
           activeBasemap={activeBasemap}
           backgroundColor={experimentCondition.backgroundColor || cesiumBackgroundColor}
           enableAtmosphere={
