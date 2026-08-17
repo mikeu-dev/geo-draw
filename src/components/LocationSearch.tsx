@@ -154,10 +154,10 @@ export default function LocationSearch({ map, onAddFeature }: LocationSearchProp
     >
       <div
         className={`
-        flex items-center gap-2 px-3 py-2 rounded-[var(--radius)]
+        flex items-center gap-2 px-3 py-2 rounded-[calc(var(--radius)+2px)]
         bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))]
         transition-all duration-200
-        ${isFocused ? 'ring-2 ring-accent/40 shadow-lg' : 'shadow-sm'}
+        ${isFocused ? 'ring-2 ring-primary/40 shadow-lg' : 'shadow-sm'}
       `}
       >
         <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -188,7 +188,7 @@ export default function LocationSearch({ map, onAddFeature }: LocationSearchProp
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="mt-1.5 rounded-[var(--radius)] overflow-hidden bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-xl animate-fade-in-up">
+        <div className="mt-1.5 rounded-[calc(var(--radius)+2px)] overflow-hidden bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-xl animate-fade-in-up">
           {results.map((result) => (
             <div
               key={result.place_id}
@@ -196,7 +196,7 @@ export default function LocationSearch({ map, onAddFeature }: LocationSearchProp
               className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-accent/10 transition-colors border-b border-border/30 last:border-0 cursor-pointer group"
             >
               <div className="flex items-start gap-2 min-w-0 flex-1">
-                <MapPin className="h-3.5 w-3.5 text-accent mt-0.5 flex-shrink-0" />
+                <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
                 <span className="text-xs text-foreground leading-tight line-clamp-2">
                   {result.display_name}
                 </span>
@@ -204,7 +204,7 @@ export default function LocationSearch({ map, onAddFeature }: LocationSearchProp
               <button
                 type="button"
                 onClick={(e) => handleAddAsPoint(e, result)}
-                className="px-2 py-1 rounded bg-accent/15 hover:bg-accent text-accent hover:text-accent-foreground text-[10px] font-semibold flex items-center gap-1 transition-colors flex-shrink-0"
+                className="px-2 py-1 rounded-[var(--radius)] bg-primary/15 hover:bg-primary text-primary hover:text-primary-foreground text-[10px] font-semibold flex items-center gap-1 transition-colors flex-shrink-0"
                 title="Sematkan sebagai Point Feature di peta"
               >
                 <Plus className="h-3 w-3" />

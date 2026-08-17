@@ -85,13 +85,13 @@ export default function CursorGuide({ drawType, snappingEnabled = false }: Curso
         top: `${position.y + 16}px`,
       }}
     >
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background/90 backdrop-blur-md border border-border/70 shadow-lg text-xs animate-in fade-in zoom-in-95 duration-100">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-[calc(var(--radius)+2px)] bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] shadow-lg text-xs animate-in fade-in zoom-in-95 duration-100">
         <IconComponent className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
         <div className="flex flex-col">
           <span className="font-semibold text-foreground flex items-center gap-1">
             {guide.title}
             {snappingEnabled && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] bg-primary/10 text-primary px-1 py-0.2 rounded font-normal">
+              <span className="inline-flex items-center gap-0.5 text-[10px] bg-primary/10 text-primary px-1 py-0.5 rounded-[var(--radius)] font-normal">
                 <Magnet className="w-2.5 h-2.5" /> Snap Active
               </span>
             )}

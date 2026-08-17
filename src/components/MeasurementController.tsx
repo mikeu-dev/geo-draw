@@ -32,8 +32,8 @@ export default function MeasurementController({ map, activeType }: MeasurementCo
       source: vectorSource.current,
       style: new Style({
         fill: new Fill({ color: 'rgba(255, 255, 255, 0.2)' }),
-        stroke: new Stroke({ color: '#ffcc33', width: 2 }),
-        image: new CircleStyle({ radius: 7, fill: new Fill({ color: '#ffcc33' }) }),
+        stroke: new Stroke({ color: '#0d9488', width: 2 }),
+        image: new CircleStyle({ radius: 5, fill: new Fill({ color: '#0d9488' }) }),
       }),
     });
     map.addLayer(vectorLayer);

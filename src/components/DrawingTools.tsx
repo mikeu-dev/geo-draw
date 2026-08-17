@@ -88,7 +88,7 @@ export default function DrawingTools({
                 <button
                   type="button"
                   onClick={onOpenUsabilityLab}
-                  className="w-8 h-8 rounded-[var(--radius)] flex items-center justify-center text-muted-foreground hover:text-cyan-400 hover:bg-secondary transition-colors"
+                  className="w-8 h-8 rounded-[var(--radius)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                   aria-label="Usability & Evaluation Lab"
                 >
                   <FlaskConical className="h-4 w-4" />
@@ -195,7 +195,6 @@ export default function DrawingTools({
                 aria-label="Split polygon (Knife Tool)"
                 pressed={drawType === 'Slice'}
                 onPressedChange={() => handleDrawTypeChange('Slice')}
-                className="data-[state=on]:bg-amber-500/20 data-[state=on]:text-amber-500"
               >
                 <Scissors className="h-4 w-4" />
               </Toggle>

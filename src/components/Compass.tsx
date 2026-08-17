@@ -44,12 +44,12 @@ export default function Compass({ map }: CompassProps) {
             <Button
               variant="secondary"
               size="icon"
-              className="h-8 w-8 rounded-[var(--radius)] shadow-sm border border-glass-border bg-glass-bg backdrop-blur-md hover:bg-accent hover:text-accent-foreground transition-all duration-200 group"
+              className="h-8 w-8 rounded-[var(--radius)] shadow-sm border border-[hsl(var(--glass-border))] bg-[hsl(var(--glass-bg))] backdrop-blur-md hover:bg-secondary hover:text-foreground text-foreground transition-all duration-200 group"
               onClick={handleResetRotation}
               style={{ transform: `rotate(${rotation}rad)` }}
             >
               <CompassIcon className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-2 bg-destructive rounded-full" />
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-2 bg-destructive rounded-[1px]" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">

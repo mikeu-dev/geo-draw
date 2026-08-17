@@ -237,7 +237,7 @@ export default function BasemapSwitcher({
         <DropdownMenuContent
           side="top"
           align="end"
-          className="w-72 p-3 bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-lg"
+          className="w-72 p-3 bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-[calc(var(--radius)+2px)]"
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/50">
@@ -261,7 +261,7 @@ export default function BasemapSwitcher({
                   type="button"
                   onClick={() => handleSelectBasemap(b.id)}
                   className={`
-                    relative group flex flex-col rounded-md overflow-hidden border text-left transition-all duration-150 cursor-pointer
+                    relative group flex flex-col rounded-[var(--radius)] overflow-hidden border text-left transition-all duration-150 cursor-pointer
                     ${
                       isSelected
                         ? 'border-primary ring-2 ring-primary/30 shadow-md bg-accent/30'
@@ -275,7 +275,7 @@ export default function BasemapSwitcher({
 
                     {/* Active Selected Check Badge */}
                     {isSelected && (
-                      <div className="absolute top-1 right-1 w-4 h-4 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-md animate-in zoom-in duration-150">
+                      <div className="absolute top-1 right-1 w-4 h-4 bg-primary text-primary-foreground rounded-[var(--radius)] flex items-center justify-center shadow-md animate-in zoom-in duration-150">
                         <Check className="h-2.5 w-2.5 stroke-[3]" />
                       </div>
                     )}

@@ -68,16 +68,10 @@ export default function StatusBar({ map, projection, is3d = false }: StatusBarPr
   }, [map]);
 
   return (
-    <div className="status-bar fixed flex items-center justify-between z-40 px-3 py-1.5 text-muted-foreground gap-6 ring-1 ring-white/10 text-xs">
+    <div className="status-bar fixed flex items-center justify-between z-40 px-3 py-1.5 text-muted-foreground gap-6 text-xs">
       <div className="flex items-center gap-3">
         {/* Mode Role Indicator */}
-        <span
-          className={`flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--radius)] font-medium text-[10px] ${
-            is3d
-              ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-              : 'bg-primary/15 text-primary border border-primary/30'
-          }`}
-        >
+        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-[var(--radius)] font-medium text-[10px] bg-primary/15 text-primary border border-primary/30">
           {is3d ? '3D Globe (Context)' : '2D Map (Precision)'}
         </span>
 

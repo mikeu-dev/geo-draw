@@ -96,11 +96,11 @@ export default function SceneViewSwitcher({
               onSelect={() => handleSelectMode('3d')}
               className="flex items-center justify-between cursor-pointer"
             >
-              <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-medium">
+              <div className="flex items-center gap-2 font-medium">
                 <Globe className="w-3.5 h-3.5" />
                 <span className="text-xs">Cesium 3D Globe</span>
               </div>
-              {is3d && <Check className="w-3.5 h-3.5 ml-2 text-cyan-500" />}
+              {is3d && <Check className="w-3.5 h-3.5 ml-2 text-primary" />}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

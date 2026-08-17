@@ -332,7 +332,7 @@
     animation: slideInLeft 0.35s ease-out forwards;
   }
 
-  /* ─── Status Bar (Floating Pill) ─── */
+  /* ─── Status Bar (Floating Glass Panel) ─── */
   .status-bar {
     width: auto;
     min-width: 320px;
@@ -340,15 +340,16 @@
     left: 50% !important;
     transform: translateX(-50%);
     bottom: 0.75rem !important;
-    padding: 0.4rem 1.25rem !important;
-    border-radius: 9999px !important;
+    padding: 0.35rem 0.85rem !important;
+    border-radius: calc(var(--radius) + 2px) !important;
     background: hsl(var(--glass-bg));
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid hsl(var(--glass-border));
     box-shadow:
       0 10px 15px -3px rgb(0 0 0 / 0.1),
-      0 4px 6px -4px rgb(0 0 0 / 0.1);
+      0 4px 6px -4px rgb(0 0 0 / 0.1),
+      0 0 0 1px rgb(0 0 0 / 0.02);
     font-size: 11px;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
