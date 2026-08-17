@@ -481,8 +481,8 @@ export default function Sidebar({
             >
               Geovara
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Professional geospatial analysis toolkit
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Modern Web GIS &amp; GeoJSON Studio
             </p>
           </div>
 
