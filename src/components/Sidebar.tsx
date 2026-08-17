@@ -469,23 +469,6 @@ export default function Sidebar({
           style={{ width: `${sidebarWidth}px`, maxWidth: '50vw' }}
           className="h-full flex flex-col min-h-0 overflow-hidden sidebar-panel"
         >
-          {/* Brand Header */}
-          <div className="p-4 border-b border-border flex-shrink-0 animate-slide-in-left">
-            <h1
-              className="text-2xl font-bold tracking-tight"
-              style={{
-                background: 'linear-gradient(135deg, hsl(173, 58%, 39%), hsl(210, 70%, 50%))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Geovara
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Modern Web GIS &amp; GeoJSON Studio
-            </p>
-          </div>
-
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col p-3 min-h-0 overflow-hidden">
             <TooltipProvider>

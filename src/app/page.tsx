@@ -5,6 +5,7 @@ import type { Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
 import GeoJSON from 'ol/format/GeoJSON';
 import dynamic from 'next/dynamic';
+import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import MapSkeleton from '@/components/MapSkeleton';
 import { Loader2 } from 'lucide-react';
@@ -473,80 +474,83 @@ export default function Home() {
   if (!isClient) return null;
 
   return (
-    <main className="flex h-screen w-screen overflow-hidden bg-background text-foreground selection:bg-accent/20">
-      <Sidebar
-        geojsonString={geojsonString}
-        onGeojsonChange={handleGeojsonChange}
-        featuresCount={features.length}
-        onClear={handleClear}
-        undo={handleUndo}
-        redo={handleRedo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        features={features}
-        onDeleteFeature={handleDeleteFeature}
-        onZoomToFeature={handleZoomTo}
-        onFeatureSelect={handleFeatureSelect}
-        onFeaturePropertyChange={handleFeaturePropertyChange}
-        onHeavyParseChange={setIsParsing}
-        vectorOpacity={vectorOpacity}
-        onVectorOpacityChange={setVectorOpacity}
-        vectorVisible={vectorVisible}
-        onVectorVisibleChange={setVectorVisible}
-        basemapOpacity={basemapOpacity}
-        onBasemapOpacityChange={setBasemapOpacity}
-        showGraticule={showGraticule}
-        onToggleGraticule={() =>
-          setShowGraticule((prev) => {
-            const next = !prev;
-            toast({
-              title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
-              description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
-            });
-            return next;
-          })
-        }
-      />
-
-      <div className="flex-grow relative h-full">
-        {isParsing && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm animate-in fade-in duration-500">
-            <div className="relative">
-              <div className="absolute inset-0 bg-accent/20 blur-3xl animate-pulse rounded-full" />
-              <Loader2 className="h-12 w-12 animate-spin text-accent relative z-10" />
-            </div>
-            <p className="mt-4 text-sm font-semibold tracking-widest uppercase text-muted-foreground animate-pulse">
-              Processing Geospatial Data
-            </p>
-          </div>
-        )}
-        <MapComponent
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground selection:bg-accent/20">
+      <Header />
+      <main className="flex flex-1 min-h-0 w-full overflow-hidden relative">
+        <Sidebar
+          geojsonString={geojsonString}
+          onGeojsonChange={handleGeojsonChange}
+          featuresCount={features.length}
+          onClear={handleClear}
+          undo={handleUndo}
+          redo={handleRedo}
+          canUndo={canUndo}
+          canRedo={canRedo}
           features={features}
-          setFeatures={setFeatures}
-          drawType={drawType}
-          setDrawType={setDrawType}
-          selectedFeature={selectedFeature}
-          onFeatureSelect={handleFeatureSelect}
           onDeleteFeature={handleDeleteFeature}
+          onZoomToFeature={handleZoomTo}
+          onFeatureSelect={handleFeatureSelect}
           onFeaturePropertyChange={handleFeaturePropertyChange}
-          projection={projection}
-          onProjectionChange={setProjection}
-          zoomToId={zoomToId}
+          onHeavyParseChange={setIsParsing}
           vectorOpacity={vectorOpacity}
+          onVectorOpacityChange={setVectorOpacity}
           vectorVisible={vectorVisible}
+          onVectorVisibleChange={setVectorVisible}
           basemapOpacity={basemapOpacity}
-          is3d={is3d}
-          onToggle3d={handleToggle3d}
+          onBasemapOpacityChange={setBasemapOpacity}
           showGraticule={showGraticule}
+          onToggleGraticule={() =>
+            setShowGraticule((prev) => {
+              const next = !prev;
+              toast({
+                title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
+                description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
+              });
+              return next;
+            })
+          }
         />
-      </div>
 
-      <AIAssistant
-        onAction={handleAIAction}
-        featureContext={
-          selectedFeature ? JSON.stringify(format.writeFeatureObject(selectedFeature)) : undefined
-        }
-      />
-    </main>
+        <div className="flex-grow relative h-full">
+          {isParsing && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm animate-in fade-in duration-500">
+              <div className="relative">
+                <div className="absolute inset-0 bg-accent/20 blur-3xl animate-pulse rounded-full" />
+                <Loader2 className="h-12 w-12 animate-spin text-accent relative z-10" />
+              </div>
+              <p className="mt-4 text-sm font-semibold tracking-widest uppercase text-muted-foreground animate-pulse">
+                Processing Geospatial Data
+              </p>
+            </div>
+          )}
+          <MapComponent
+            features={features}
+            setFeatures={setFeatures}
+            drawType={drawType}
+            setDrawType={setDrawType}
+            selectedFeature={selectedFeature}
+            onFeatureSelect={handleFeatureSelect}
+            onDeleteFeature={handleDeleteFeature}
+            onFeaturePropertyChange={handleFeaturePropertyChange}
+            projection={projection}
+            onProjectionChange={setProjection}
+            zoomToId={zoomToId}
+            vectorOpacity={vectorOpacity}
+            vectorVisible={vectorVisible}
+            basemapOpacity={basemapOpacity}
+            is3d={is3d}
+            onToggle3d={handleToggle3d}
+            showGraticule={showGraticule}
+          />
+        </div>
+
+        <AIAssistant
+          onAction={handleAIAction}
+          featureContext={
+            selectedFeature ? JSON.stringify(format.writeFeatureObject(selectedFeature)) : undefined
+          }
+        />
+      </main>
+    </div>
   );
 }
