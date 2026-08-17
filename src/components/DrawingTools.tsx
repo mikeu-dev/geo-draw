@@ -33,6 +33,8 @@ interface DrawingToolsProps {
   setDrawType: (type: DrawType | null) => void;
   featuresCount: number;
   tileLayer: TileLayer<OSM | XYZ> | null;
+  activeBasemap?: string;
+  onBasemapChange?: (basemapId: string) => void;
   is3d: boolean;
   onToggle3d: () => void;
   projection: 'EPSG:4326' | 'EPSG:3857';
@@ -49,6 +51,8 @@ export default function DrawingTools({
   setDrawType,
   featuresCount,
   tileLayer,
+  activeBasemap,
+  onBasemapChange,
   is3d,
   onToggle3d,
   projection,
@@ -71,7 +75,11 @@ export default function DrawingTools({
           projection={projection}
           onProjectionChange={onProjectionChange}
         />
-        <BasemapSwitcher tileLayer={tileLayer} />
+        <BasemapSwitcher
+          tileLayer={tileLayer}
+          activeBasemap={activeBasemap}
+          onBasemapChange={onBasemapChange}
+        />
         <MapScreenshot map={map} />
         {onOpenUsabilityLab && (
           <TooltipProvider>

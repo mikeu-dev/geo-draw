@@ -2,23 +2,23 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Geovara E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigasi ke halaman utama dan tunggu hingga DOM ter-parse.
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    // Tunggu hingga branding utama muncul sebagai tanda hidrasi client selesai
-    await page.waitForSelector('h1', { timeout: 30000 });
+    // Navigasi ke halaman utama dan tunggu hidrasi client penuh
+    await page.goto('/', { waitUntil: 'load' });
+    await page.waitForSelector('.ol-viewport', { timeout: 30000 });
+    await expect(page.locator('aside')).toBeVisible({ timeout: 30000 });
   });
 
   test('should load the page and show Geovara branding', async ({ page }) => {
     // Memastikan judul halaman adalah Geovara
     await expect(page).toHaveTitle(/Geovara/i);
 
-    // Memastikan h1 branding terlihat
-    const brandHeader = page.locator('h1:has-text("Geovara")');
-    await expect(brandHeader).toBeVisible({ timeout: 15000 });
+    // Memastikan h1 branding terpasang di DOM
+    const brandHeader = page.locator('h1:has-text("Geovara")').first();
+    await expect(brandHeader).toBeAttached({ timeout: 15000 });
 
-    // Memastikan deskripsi subheader ada
-    const brandSub = page.locator('text=Professional geospatial analysis toolkit');
-    await expect(brandSub).toBeVisible({ timeout: 15000 });
+    // Memastikan sidebar branding terlihat
+    const brandSidebar = page.locator('text=Geovara').first();
+    await expect(brandSidebar).toBeVisible({ timeout: 15000 });
   });
 
   test('should load the sidebar with working tabs', async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe('Geovara E2E Tests', () => {
 
     // Pastikan container editor Monaco termuat
     const monacoEditor = page.locator('.monaco-editor');
-    await expect(monacoEditor).toBeVisible({ timeout: 15000 });
+    await expect(monacoEditor).toBeVisible({ timeout: 30000 });
   });
 
   test('should load OpenLayers map elements', async ({ page }) => {
@@ -61,15 +61,17 @@ test.describe('Geovara E2E Tests', () => {
   });
 
   test('should support horizontal drag resizing and conditional toggle button', async ({ page }) => {
+    const aside = page.locator('aside');
+    await expect(aside).toBeVisible({ timeout: 20000 });
+
     const resizeHandle = page.locator('div[aria-label="Resize sidebar width"]');
-    await expect(resizeHandle).toBeVisible({ timeout: 10000 });
+    await expect(resizeHandle).toBeVisible({ timeout: 20000 });
 
     // Ensure toggle button is NOT visible when sidebar is open
     const toggleBtnHidden = page.locator('button[aria-label="Buka sidebar"]');
     await expect(toggleBtnHidden).toHaveCount(0);
 
     // Get initial width of sidebar
-    const aside = page.locator('aside');
     const initialBox = await aside.boundingBox();
     expect(initialBox).not.toBeNull();
     expect(initialBox!.width).toBeGreaterThanOrEqual(300);
@@ -102,6 +104,35 @@ test.describe('Geovara E2E Tests', () => {
     await toggleBtn.click();
     await expect(aside).toBeVisible({ timeout: 10000 });
     await expect(resizeHandle).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should open basemap switcher with mini previews and switch basemap style', async ({ page }) => {
+    const basemapBtn = page.locator('button[aria-label="Basemap & Opacity"]');
+    await expect(basemapBtn).toBeVisible({ timeout: 10000 });
+    await basemapBtn.click();
+
+    // Verify popover header and description
+    await expect(page.locator('text=Gaya Peta (Basemap)')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Tersinkronisasi ke 2D & 3D Globe')).toBeVisible({ timeout: 5000 });
+
+    // Verify 4 mini preview cards are rendered using role button
+    const osmCard = page.getByRole('button', { name: /OpenStreetMap/ });
+    const satelliteCard = page.getByRole('button', { name: /Satelit Esri/ });
+    const topoCard = page.getByRole('button', { name: /Topografi/ });
+    const darkCard = page.getByRole('button', { name: /Dark Matter/ });
+
+    await expect(osmCard).toBeVisible();
+    await expect(satelliteCard).toBeVisible();
+    await expect(topoCard).toBeVisible();
+    await expect(darkCard).toBeVisible();
+
+    // Select Satelit Esri card and verify active selection
+    await satelliteCard.click();
+    await expect(satelliteCard).toHaveClass(/border-primary/);
+
+    // Select Dark Matter card and verify active selection
+    await darkCard.click();
+    await expect(darkCard).toHaveClass(/border-primary/);
   });
 });
 

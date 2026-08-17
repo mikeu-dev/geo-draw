@@ -6,6 +6,7 @@ import type { Map } from 'ol';
 interface CesiumControllerProps {
   map: Map | null;
   enabled: boolean;
+  activeBasemap?: string;
   backgroundColor?: string;
   enableAtmosphere?: boolean;
   atmosphereSaturationShift?: number;
@@ -86,9 +87,84 @@ interface WindowWithCesium extends Window {
   };
 }
 
+function setupCesiumBasemap(
+  scene: {
+    imageryLayers?: {
+      length: number;
+      removeAll: (destroy?: boolean) => void;
+      addImageryProvider: (provider: unknown) => void;
+    };
+  },
+  Cesium: WindowWithCesium['Cesium'],
+  basemapId: string = 'osm'
+) {
+  if (!scene.imageryLayers || !Cesium) return;
+
+  try {
+    scene.imageryLayers.removeAll(true);
+
+    if (basemapId === 'satellite') {
+      if (Cesium.UrlTemplateImageryProvider) {
+        // Layer 1: High-resolution Earth Satellite Imagery
+        const satelliteProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          maximumLevel: 19,
+          credit:
+            'Imagery © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        });
+        scene.imageryLayers.addImageryProvider(satelliteProvider);
+
+        // Layer 2: Global Hybrid Reference Overlay (Countries, Provinces/States, Cities, Oceans, Places)
+        const referenceLabelsProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+          maximumLevel: 19,
+          credit: 'Boundaries & Places © Esri',
+        });
+        scene.imageryLayers.addImageryProvider(referenceLabelsProvider);
+      }
+    } else if (basemapId === 'topo') {
+      if (Cesium.UrlTemplateImageryProvider) {
+        const topoProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
+          maximumLevel: 17,
+          credit: '© OpenTopoMap contributors',
+        });
+        scene.imageryLayers.addImageryProvider(topoProvider);
+      }
+    } else if (basemapId === 'dark') {
+      if (Cesium.UrlTemplateImageryProvider) {
+        const darkProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+          maximumLevel: 19,
+          credit: '© CARTO',
+        });
+        scene.imageryLayers.addImageryProvider(darkProvider);
+      }
+    } else {
+      // Default: OpenStreetMap ('osm')
+      if (Cesium.OpenStreetMapImageryProvider) {
+        const osmProvider = new Cesium.OpenStreetMapImageryProvider({
+          url: 'https://tile.openstreetmap.org/',
+        });
+        scene.imageryLayers.addImageryProvider(osmProvider);
+      } else if (Cesium.UrlTemplateImageryProvider) {
+        const osmProvider = new Cesium.UrlTemplateImageryProvider({
+          url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          maximumLevel: 19,
+          credit: '© OpenStreetMap contributors',
+        });
+        scene.imageryLayers.addImageryProvider(osmProvider);
+      }
+    }
+  } catch (err) {
+    console.warn('Could not setup Cesium basemap:', err);
+  }
+}
+
 export default function CesiumController({
   map,
   enabled,
+  activeBasemap = 'osm',
   backgroundColor,
   enableAtmosphere = true,
   atmosphereSaturationShift = 0.0,
@@ -133,7 +209,7 @@ export default function CesiumController({
 
   const isInitializingRef = useRef(false);
 
-  // Dynamic Scene updates for atmosphere, background, stars, and lighting
+  // Dynamic Scene updates for atmosphere, background, stars, lighting, and basemap
   useEffect(() => {
     if (!ol3dRef.current || !enabled) return;
     const win = window as unknown as WindowWithCesium;
@@ -177,10 +253,20 @@ export default function CesiumController({
         scene.skyAtmosphere.saturationShift = atmosphereSaturationShift;
         scene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
       }
+
+      // Synchronize basemap in 3D scene
+      setupCesiumBasemap(scene, Cesium, activeBasemap);
     } catch {
       // Ignore update errors
     }
-  }, [backgroundColor, enableAtmosphere, atmosphereSaturationShift, atmosphereBrightnessShift, enabled]);
+  }, [
+    backgroundColor,
+    enableAtmosphere,
+    atmosphereSaturationShift,
+    atmosphereBrightnessShift,
+    activeBasemap,
+    enabled,
+  ]);
 
   useEffect(() => {
     if (!map || typeof window === 'undefined') return;
@@ -191,6 +277,10 @@ export default function CesiumController({
       if (ol3dRef.current) {
         try {
           ol3dRef.current.setEnabled(true);
+          const scene = ol3dRef.current.getCesiumScene();
+          if (scene && win.Cesium) {
+            setupCesiumBasemap(scene, win.Cesium, activeBasemap);
+          }
         } catch (e) {
           console.error('Error enabling Cesium 3D:', e);
         }
@@ -300,38 +390,8 @@ export default function CesiumController({
               scene.skyAtmosphere.brightnessShift = atmosphereBrightnessShift;
             }
 
-            // 5. Photorealistic Earth Satellite Imagery with Hybrid Reference Labels (Google Earth & geojson.io style)
-            if (scene.imageryLayers) {
-              try {
-                scene.imageryLayers.removeAll(true);
-
-                if (Cesium.UrlTemplateImageryProvider) {
-                  // Layer 1: High-resolution Earth Satellite Imagery
-                  const satelliteProvider = new Cesium.UrlTemplateImageryProvider({
-                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                    maximumLevel: 19,
-                    credit:
-                      'Imagery © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-                  });
-                  scene.imageryLayers.addImageryProvider(satelliteProvider);
-
-                  // Layer 2: Global Hybrid Reference Overlay (Countries, Provinces/States, Cities, Oceans, Places)
-                  const referenceLabelsProvider = new Cesium.UrlTemplateImageryProvider({
-                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-                    maximumLevel: 19,
-                    credit: 'Boundaries & Places © Esri',
-                  });
-                  scene.imageryLayers.addImageryProvider(referenceLabelsProvider);
-                } else if (Cesium.OpenStreetMapImageryProvider) {
-                  const osmProvider = new Cesium.OpenStreetMapImageryProvider({
-                    url: 'https://tile.openstreetmap.org/',
-                  });
-                  scene.imageryLayers.addImageryProvider(osmProvider);
-                }
-              } catch (imgErr) {
-                console.warn('Could not setup Cesium imagery provider:', imgErr);
-              }
-            }
+            // 5. Synchronize Basemap Imagery with 3D Globe
+            setupCesiumBasemap(scene, Cesium, activeBasemap);
           }
 
           if (customToken && Cesium.createWorldTerrainAsync) {
@@ -377,6 +437,7 @@ export default function CesiumController({
   }, [
     map,
     enabled,
+    activeBasemap,
     backgroundColor,
     enableAtmosphere,
     atmosphereSaturationShift,

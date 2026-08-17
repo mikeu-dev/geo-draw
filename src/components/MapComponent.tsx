@@ -76,6 +76,7 @@ export default function MapComponent({
   const graticuleRef = useRef<Graticule | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [snappingEnabled, setSnappingEnabled] = useState(true);
+  const [activeBasemap, setActiveBasemap] = useState<string>('osm');
   const [isSpatialToolsOpen, setIsSpatialToolsOpen] = useState(false);
   const [isUsabilityLabOpen, setIsUsabilityLabOpen] = useState(false);
   const [experimentCondition, setExperimentCondition] = useState<{
@@ -347,6 +348,8 @@ export default function MapComponent({
           setDrawType={setDrawType}
           featuresCount={features.length}
           tileLayer={tileLayer as TileLayer<OSM | XYZ>}
+          activeBasemap={activeBasemap}
+          onBasemapChange={setActiveBasemap}
           is3d={is3d}
           onToggle3d={onToggle3d}
           projection={projection}
@@ -375,6 +378,7 @@ export default function MapComponent({
         <CesiumController
           map={map}
           enabled={is3d}
+          activeBasemap={activeBasemap}
           backgroundColor={experimentCondition.backgroundColor || cesiumBackgroundColor}
           enableAtmosphere={
             experimentCondition.enableAtmosphere !== undefined
