@@ -76,8 +76,9 @@ interface WindowWithCesium extends Window {
         };
         imageryLayers?: {
           length: number;
-          removeAll: (destroy?: boolean) => void;
-          addImageryProvider: (provider: unknown) => void;
+          removeAll?: (destroy?: boolean) => void;
+          remove: (layer: unknown, destroy?: boolean) => boolean;
+          addImageryProvider: (provider: unknown, index?: number) => unknown;
         };
       };
       setEnabled: (enabled: boolean) => void;
@@ -91,17 +92,27 @@ function setupCesiumBasemap(
   scene: {
     imageryLayers?: {
       length: number;
-      removeAll: (destroy?: boolean) => void;
-      addImageryProvider: (provider: unknown) => void;
+      remove: (layer: unknown, destroy?: boolean) => boolean;
+      addImageryProvider: (provider: unknown, index?: number) => unknown;
     };
   },
   Cesium: WindowWithCesium['Cesium'],
-  basemapId: string = 'osm'
-) {
-  if (!scene.imageryLayers || !Cesium) return;
+  basemapId: string = 'osm',
+  currentBasemapLayers: unknown[] = []
+): unknown[] {
+  if (!scene.imageryLayers || !Cesium) return currentBasemapLayers;
+
+  const newLayers: unknown[] = [];
 
   try {
-    scene.imageryLayers.removeAll(true);
+    // Remove previous custom basemap layers without destroying vector or other scene layers
+    currentBasemapLayers.forEach((layer) => {
+      try {
+        scene.imageryLayers?.remove(layer, true);
+      } catch {
+        // ignore removal error
+      }
+    });
 
     if (basemapId === 'satellite') {
       if (Cesium.UrlTemplateImageryProvider) {
@@ -112,7 +123,8 @@ function setupCesiumBasemap(
           credit:
             'Imagery © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
         });
-        scene.imageryLayers.addImageryProvider(satelliteProvider);
+        const l1 = scene.imageryLayers.addImageryProvider(satelliteProvider, 0);
+        if (l1) newLayers.push(l1);
 
         // Layer 2: Global Hybrid Reference Overlay (Countries, Provinces/States, Cities, Oceans, Places)
         const referenceLabelsProvider = new Cesium.UrlTemplateImageryProvider({
@@ -120,7 +132,8 @@ function setupCesiumBasemap(
           maximumLevel: 19,
           credit: 'Boundaries & Places © Esri',
         });
-        scene.imageryLayers.addImageryProvider(referenceLabelsProvider);
+        const l2 = scene.imageryLayers.addImageryProvider(referenceLabelsProvider, 1);
+        if (l2) newLayers.push(l2);
       }
     } else if (basemapId === 'topo') {
       if (Cesium.UrlTemplateImageryProvider) {
@@ -129,7 +142,8 @@ function setupCesiumBasemap(
           maximumLevel: 17,
           credit: '© OpenTopoMap contributors',
         });
-        scene.imageryLayers.addImageryProvider(topoProvider);
+        const l = scene.imageryLayers.addImageryProvider(topoProvider, 0);
+        if (l) newLayers.push(l);
       }
     } else if (basemapId === 'dark') {
       if (Cesium.UrlTemplateImageryProvider) {
@@ -138,7 +152,8 @@ function setupCesiumBasemap(
           maximumLevel: 19,
           credit: '© CARTO',
         });
-        scene.imageryLayers.addImageryProvider(darkProvider);
+        const l = scene.imageryLayers.addImageryProvider(darkProvider, 0);
+        if (l) newLayers.push(l);
       }
     } else {
       // Default: OpenStreetMap ('osm')
@@ -146,19 +161,23 @@ function setupCesiumBasemap(
         const osmProvider = new Cesium.OpenStreetMapImageryProvider({
           url: 'https://tile.openstreetmap.org/',
         });
-        scene.imageryLayers.addImageryProvider(osmProvider);
+        const l = scene.imageryLayers.addImageryProvider(osmProvider, 0);
+        if (l) newLayers.push(l);
       } else if (Cesium.UrlTemplateImageryProvider) {
         const osmProvider = new Cesium.UrlTemplateImageryProvider({
           url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           maximumLevel: 19,
           credit: '© OpenStreetMap contributors',
         });
-        scene.imageryLayers.addImageryProvider(osmProvider);
+        const l = scene.imageryLayers.addImageryProvider(osmProvider, 0);
+        if (l) newLayers.push(l);
       }
     }
   } catch (err) {
     console.warn('Could not setup Cesium basemap:', err);
   }
+
+  return newLayers;
 }
 
 export default function CesiumController({
@@ -170,6 +189,7 @@ export default function CesiumController({
   atmosphereSaturationShift = 0.0,
   atmosphereBrightnessShift = 0.0,
 }: CesiumControllerProps) {
+  const basemapLayersRef = useRef<unknown[]>([]);
   const ol3dRef = useRef<{
     getCesiumScene: () => {
       canvas?: HTMLCanvasElement;
@@ -198,8 +218,8 @@ export default function CesiumController({
       };
       imageryLayers?: {
         length: number;
-        removeAll: (destroy?: boolean) => void;
-        addImageryProvider: (provider: unknown) => void;
+        remove: (layer: unknown, destroy?: boolean) => boolean;
+        addImageryProvider: (provider: unknown, index?: number) => unknown;
       };
     };
     setEnabled: (enabled: boolean) => void;
@@ -255,7 +275,12 @@ export default function CesiumController({
       }
 
       // Synchronize basemap in 3D scene
-      setupCesiumBasemap(scene, Cesium, activeBasemap);
+      basemapLayersRef.current = setupCesiumBasemap(
+        scene,
+        Cesium,
+        activeBasemap,
+        basemapLayersRef.current
+      );
     } catch {
       // Ignore update errors
     }
@@ -277,9 +302,19 @@ export default function CesiumController({
       if (ol3dRef.current) {
         try {
           ol3dRef.current.setEnabled(true);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const vecSync = (ol3dRef.current as any).getVectorSynchronizer?.();
+          if (vecSync && typeof vecSync.synchronize === 'function') {
+            vecSync.synchronize();
+          }
           const scene = ol3dRef.current.getCesiumScene();
           if (scene && win.Cesium) {
-            setupCesiumBasemap(scene, win.Cesium, activeBasemap);
+            basemapLayersRef.current = setupCesiumBasemap(
+              scene,
+              win.Cesium,
+              activeBasemap,
+              basemapLayersRef.current
+            );
           }
         } catch (e) {
           console.error('Error enabling Cesium 3D:', e);
@@ -391,7 +426,12 @@ export default function CesiumController({
             }
 
             // 5. Synchronize Basemap Imagery with 3D Globe
-            setupCesiumBasemap(scene, Cesium, activeBasemap);
+            basemapLayersRef.current = setupCesiumBasemap(
+              scene,
+              Cesium,
+              activeBasemap,
+              basemapLayersRef.current
+            );
           }
 
           if (customToken && Cesium.createWorldTerrainAsync) {

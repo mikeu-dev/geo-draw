@@ -4,8 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Overlay, Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
-import { Tile as TileLayer } from 'ol/layer';
-import VectorImageLayer from 'ol/layer/VectorImage';
+import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import BaseLayer from 'ol/layer/Base';
 import Graticule from 'ol/layer/Graticule';
 import DrawingTools from './DrawingTools';
@@ -205,7 +204,7 @@ export default function MapComponent({
     if (!map) return;
     map.getLayers().forEach((layer: BaseLayer) => {
       if (layer instanceof TileLayer) layer.setOpacity(basemapOpacity);
-      if (layer instanceof VectorImageLayer) {
+      if (layer instanceof VectorLayer) {
         layer.setOpacity(vectorOpacity);
         layer.setVisible(vectorVisible);
       }

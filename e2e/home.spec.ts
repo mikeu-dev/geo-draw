@@ -180,6 +180,65 @@ test.describe('Geovara E2E Tests', () => {
     const currentGj = await page.evaluate(() => window.geovara?.getGeoJSON());
     expect(currentGj).toContain('"features": []');
   });
+
+  test('should preserve imported data features when switching to 3D Globe and back to 2D', async ({ page }) => {
+    // 1. Import / set GeoJSON data with multiple features
+    await page.evaluate(() => {
+      window.geovara?.setGeoJSON({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            id: 'feat_jkt',
+            geometry: { type: 'Point', coordinates: [106.8456, -6.2088] },
+            properties: { name: 'Jakarta' },
+          },
+          {
+            type: 'Feature',
+            id: 'feat_bdg',
+            geometry: { type: 'Point', coordinates: [107.6191, -6.9175] },
+            properties: { name: 'Bandung' },
+          },
+        ],
+      });
+    });
+
+    // Verify initial feature count in 2D
+    let count = await page.evaluate(() => window.geovara?.getFeaturesCount());
+    expect(count).toBe(2);
+
+    // 2. Switch to 3D Globe mode
+    const viewSwitcherBtn = page.locator('button[aria-label^="Map View & Projection:"]');
+    await expect(viewSwitcherBtn).toBeVisible({ timeout: 10000 });
+    await viewSwitcherBtn.click();
+
+    const globeOption = page.getByRole('menuitem', { name: /Cesium 3D Globe/ });
+    await expect(globeOption).toBeVisible({ timeout: 5000 });
+    await globeOption.click();
+
+    // Verify 3D mode is active and features count remains intact
+    await expect(page.locator('button[aria-label="Map View & Projection: 3D Globe"]')).toBeVisible({ timeout: 10000 });
+    count = await page.evaluate(() => window.geovara?.getFeaturesCount());
+    expect(count).toBe(2);
+
+    const gj3d = await page.evaluate(() => window.geovara?.getGeoJSON());
+    expect(gj3d).toContain('feat_jkt');
+    expect(gj3d).toContain('feat_bdg');
+
+    // 3. Switch back to 2D Web Mercator mode
+    await page.waitForTimeout(600);
+    const globeBtn = page.locator('button[aria-label="Map View & Projection: 3D Globe"]');
+    await expect(globeBtn).toBeVisible({ timeout: 5000 });
+    await globeBtn.click();
+    const mercatorOption = page.locator('[role="menuitem"]:has-text("Web Mercator")');
+    await expect(mercatorOption).toBeVisible({ timeout: 5000 });
+    await mercatorOption.click();
+
+    // Verify 2D mode restored and features still intact
+    await expect(page.locator('button[aria-label="Map View & Projection: 3857"]')).toBeVisible({ timeout: 10000 });
+    count = await page.evaluate(() => window.geovara?.getFeaturesCount());
+    expect(count).toBe(2);
+  });
 });
 
 

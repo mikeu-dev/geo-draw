@@ -4,7 +4,7 @@ import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import XYZ from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
-import VectorImageLayer from 'ol/layer/VectorImage';
+import VectorLayer from 'ol/layer/Vector';
 import { Draw, Modify, Select, DragAndDrop, Snap } from 'ol/interaction';
 import { createBox } from 'ol/interaction/Draw';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -72,7 +72,7 @@ export function useMap({
   const [selectInteraction] = useState(() => new Select({ hitTolerance: 5 }));
   const [modifyInteraction] = useState(() => new Modify({ source: vectorSource }));
 
-  const vectorLayerRef = useRef<VectorImageLayer<Feature<Geometry>> | null>(null);
+  const vectorLayerRef = useRef<VectorLayer<Feature<Geometry>> | null>(null);
   const drawInteraction = useRef<Draw | null>(null);
   const snapInteraction = useRef<Snap | null>(null);
   const isUpdatingFromHash = useRef(false);
@@ -103,10 +103,9 @@ export function useMap({
   useEffect(() => {
     if (!target.current || mapInstance.current) return;
 
-    const vectorLayer = new VectorImageLayer({
+    const vectorLayer = new VectorLayer({
       source: vectorSource,
       style: styleFunction as StyleLike,
-      imageRatio: 2,
       opacity: vectorOpacity,
       visible: vectorVisible,
     });
@@ -278,7 +277,7 @@ export function useMap({
     if (!activeMap) return;
     activeMap.getLayers().forEach((layer) => {
       if (layer instanceof TileLayer) layer.setOpacity(basemapOpacity);
-      if (layer instanceof VectorImageLayer) {
+      if (layer instanceof VectorLayer) {
         layer.setOpacity(vectorOpacity);
         layer.setVisible(vectorVisible);
       }
