@@ -240,6 +240,15 @@ npm run build
 
 ---
 
+## Author & Maintainer
+
+- **Author**: [mikeu-dev](https://github.com/mikeu-dev)
+- **Contact**: `rikiruswandi28@gmail.com`
+
+---
+
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for full details.
+
+Copyright (c) 2026 mikeu-dev &lt;rikiruswandi28@gmail.com&gt;
