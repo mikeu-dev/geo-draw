@@ -594,6 +594,12 @@ export default function Home() {
             onToggle3d={handleToggle3d}
             showGraticule={showGraticule}
           />
+          <AIAssistant
+            onAction={handleAIAction}
+            featureContext={
+              selectedFeature ? JSON.stringify(format.writeFeatureObject(selectedFeature)) : undefined
+            }
+          />
         </div>
 
         <RightSidebar
@@ -619,13 +625,6 @@ export default function Home() {
               });
               return next;
             })
-          }
-        />
-
-        <AIAssistant
-          onAction={handleAIAction}
-          featureContext={
-            selectedFeature ? JSON.stringify(format.writeFeatureObject(selectedFeature)) : undefined
           }
         />
       </main>

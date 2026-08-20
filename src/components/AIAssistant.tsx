@@ -142,7 +142,7 @@ export default function AIAssistant({ onAction, featureContext }: AIAssistantPro
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-6 z-30 flex items-center gap-2.5 px-4 py-2.5 rounded-full glass-pill shadow-2xl hover:scale-105 hover:shadow-accent/40 transition-all border border-white/10 bg-accent/15 group active:scale-95"
+        className="absolute bottom-20 right-3 z-30 flex items-center gap-2.5 px-4 py-2.5 rounded-full glass-pill shadow-2xl hover:scale-105 hover:shadow-accent/40 transition-all border border-white/10 bg-accent/15 group active:scale-95"
         title="Ask Geovara Intelligence (Ctrl+K)"
       >
         <div className="relative">
