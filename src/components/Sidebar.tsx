@@ -46,7 +46,6 @@ import { Feature } from 'ol';
 import { Geometry } from 'ol/geom';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import HelpContent from './HelpContent';
 import FileDropZone from './FileDropZone';
 import AttributeTable from './AttributeTable';
 import { getArea, getLength } from 'ol/sphere';
@@ -563,7 +562,7 @@ export default function Sidebar({
               </Menubar>
 
               <Tabs defaultValue="json" className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                <TabsList className="w-full grid grid-cols-5 flex-shrink-0">
+                <TabsList className="w-full grid grid-cols-4 flex-shrink-0">
                   <TabsTrigger value="json" className="text-xs">
                     JSON
                   </TabsTrigger>
@@ -575,9 +574,6 @@ export default function Sidebar({
                   </TabsTrigger>
                   <TabsTrigger value="layers" className="text-xs">
                     Layers
-                  </TabsTrigger>
-                  <TabsTrigger value="help" className="text-xs">
-                    Help
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent
@@ -952,9 +948,6 @@ export default function Sidebar({
                   onFeatureSelect={onFeatureSelect}
                   onDeleteFeature={onDeleteFeature}
                 />
-              </TabsContent>
-              <TabsContent value="help" className="flex-1 mt-2 overflow-y-auto min-h-0">
-                <HelpContent />
               </TabsContent>
             </Tabs>
           </TooltipProvider>

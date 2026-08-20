@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Sun, Moon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sun, Moon, HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import HelpModal from './HelpContent';
 
 interface HeaderProps {
   theme?: 'light' | 'dark';
@@ -10,6 +11,8 @@ interface HeaderProps {
 }
 
 export default function Header({ theme = 'light', onToggleTheme }: HeaderProps) {
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
   return (
     <header className="h-9 px-3 flex-shrink-0 border-b border-border bg-card/90 backdrop-blur-md flex items-center justify-between z-30 select-none">
       {/* Left: Brand Header */}
@@ -26,8 +29,29 @@ export default function Header({ theme = 'light', onToggleTheme }: HeaderProps) 
         </h1>
       </div>
 
-      {/* Right: Theme Toggle, Copyright, & GitHub Link */}
-      <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+      {/* Right: Help Modal Trigger, Theme Toggle, Copyright, & GitHub Link */}
+      <div className="flex items-center gap-2 sm:gap-2.5 text-xs text-muted-foreground">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setIsHelpOpen(true)}
+                className="flex items-center gap-1 px-2 h-7 rounded-[var(--radius)] text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-xs font-medium"
+                aria-label="Buka Panduan & Dokumentasi"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-primary" />
+                <span className="hidden sm:inline">Help</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">Panduan & Dokumentasi</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <div className="h-3 w-[1px] bg-border" aria-hidden="true" />
+
         {onToggleTheme && (
           <TooltipProvider>
             <Tooltip>
@@ -86,6 +110,8 @@ export default function Header({ theme = 'light', onToggleTheme }: HeaderProps) 
           </svg>
         </a>
       </div>
+
+      <HelpModal open={isHelpOpen} onOpenChange={setIsHelpOpen} />
     </header>
   );
 }

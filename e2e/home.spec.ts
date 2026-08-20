@@ -25,24 +25,27 @@ test.describe('Geovara E2E Tests', () => {
     const tabsList = page.locator('[role="tablist"]');
     await expect(tabsList).toBeVisible({ timeout: 20000 });
 
-    // Mengambil elemen tab
+    // Mengambil elemen tab sidebar
     const jsonTab = page.locator('[role="tab"]:has-text("JSON")');
+    const tableTab = page.locator('[role="tab"]:has-text("Table")');
     const featuresTab = page.locator('[role="tab"]:has-text("Features")');
     const layersTab = page.locator('[role="tab"]:has-text("Layers")');
-    const helpTab = page.locator('[role="tab"]:has-text("Help")');
 
     await expect(jsonTab).toBeVisible({ timeout: 10000 });
+    await expect(tableTab).toBeVisible({ timeout: 10000 });
     await expect(featuresTab).toBeVisible({ timeout: 10000 });
     await expect(layersTab).toBeVisible({ timeout: 10000 });
-    await expect(helpTab).toBeVisible({ timeout: 10000 });
 
-    // Klik tab "Help" dan pastikan konten bantuan ter-load
-    await helpTab.click();
-    const helpHeading = page.locator('h3:has-text("Getting Started")');
+    // Buka Help modal dari header
+    const helpBtn = page.locator('button[aria-label="Buka Panduan & Dokumentasi"]');
+    await expect(helpBtn).toBeVisible({ timeout: 10000 });
+    await helpBtn.click();
+
+    const helpHeading = page.locator('text=Overview & Supported Formats');
     await expect(helpHeading).toBeVisible({ timeout: 10000 });
 
-    // Kembalikan ke tab "JSON"
-    await jsonTab.click();
+    // Tutup dialog
+    await page.keyboard.press('Escape');
 
     // Pastikan container editor Monaco termuat
     const monacoEditor = page.locator('.monaco-editor');
