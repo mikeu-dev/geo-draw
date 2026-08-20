@@ -529,6 +529,19 @@ export default function Home() {
     setIs3d((prev) => !prev);
   }, []);
 
+  const handleToggleGraticule = useCallback(() => {
+    setShowGraticule((prev) => {
+      const next = !prev;
+      setTimeout(() => {
+        toast({
+          title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
+          description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
+        });
+      }, 0);
+      return next;
+    });
+  }, [toast]);
+
   if (!isClient) return null;
 
   return (
@@ -551,16 +564,7 @@ export default function Home() {
           onFeatureSelect={handleFeatureSelect}
           onFeaturePropertyChange={handleFeaturePropertyChange}
           showGraticule={showGraticule}
-          onToggleGraticule={() =>
-            setShowGraticule((prev) => {
-              const next = !prev;
-              toast({
-                title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
-                description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
-              });
-              return next;
-            })
-          }
+          onToggleGraticule={handleToggleGraticule}
         />
 
         <div className="flex-grow relative h-full min-w-0">
@@ -616,16 +620,7 @@ export default function Home() {
           basemapOpacity={basemapOpacity}
           onBasemapOpacityChange={setBasemapOpacity}
           showGraticule={showGraticule}
-          onToggleGraticule={() =>
-            setShowGraticule((prev) => {
-              const next = !prev;
-              toast({
-                title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
-                description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
-              });
-              return next;
-            })
-          }
+          onToggleGraticule={handleToggleGraticule}
         />
       </main>
     </div>
