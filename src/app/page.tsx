@@ -108,7 +108,7 @@ export default function Home() {
   const skipFeaturesSync = useRef(false);
   const isEditingInMonaco = useRef(false);
 
-  const syncFeaturesFromString = useCallback((str: string) => {
+  const syncFeaturesFromString = useCallback((str: string, shouldFitBounds = false) => {
     try {
       if (!str || str === defaultGeoJsonString) {
         setFeatures([]);
@@ -121,6 +121,9 @@ export default function Home() {
       });
       skipFeaturesSync.current = true;
       setFeatures(parsed);
+      if (shouldFitBounds && parsed.length > 0) {
+        window.dispatchEvent(new CustomEvent('map:fitbounds', { detail: { features: parsed } }));
+      }
     } catch {
       /* ignore */
     }
@@ -243,7 +246,7 @@ export default function Home() {
           });
           const fetchedData = await fetchRemoteGeoJSON(remoteUrl);
           setGeojsonString(fetchedData);
-          syncFeaturesFromString(fetchedData);
+          syncFeaturesFromString(fetchedData, true);
           resetHistory(fetchedData);
           toast({
             title: 'GeoJSON Eksternal Berhasil Dimuat',
@@ -269,7 +272,11 @@ export default function Home() {
         const decoded = decodeGeoJSON(hash);
         if (decoded) {
           setGeojsonString(decoded);
-          syncFeaturesFromString(decoded);
+          const hasExplicitMapHash = window.location.hash
+            .substring(1)
+            .split('&')
+            .some((p) => p.startsWith('map='));
+          syncFeaturesFromString(decoded, !hasExplicitMapHash);
           resetHistory(decoded);
         }
         setIsParsing(false);
@@ -286,7 +293,7 @@ export default function Home() {
       setGeoJSON: (data: string | object) => {
         const str = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
         setGeojsonString(str);
-        syncFeaturesFromString(str);
+        syncFeaturesFromString(str, true);
       },
       getFeatures: () => features,
       getFeaturesCount: () => features.length,
@@ -310,7 +317,10 @@ export default function Home() {
       },
       clear: () => handleClear(),
       fitBounds: () => {
-        window.dispatchEvent(new CustomEvent('map:flyto', { detail: { zoom: 2, lat: 0, lon: 0 } }));
+        window.dispatchEvent(new CustomEvent('map:fitbounds'));
+      },
+      zoomToExtent: () => {
+        window.dispatchEvent(new CustomEvent('map:fitbounds'));
       },
       setBasemap: (basemapId: string) => {
         window.dispatchEvent(
@@ -353,6 +363,8 @@ export default function Home() {
     (action: SpatialIntentOutput) => {
       if (action.action === 'flyTo') {
         window.dispatchEvent(new CustomEvent('map:flyto', { detail: action.params }));
+      } else if (action.action === 'fitBounds') {
+        window.dispatchEvent(new CustomEvent('map:fitbounds'));
       } else if (action.action === 'setBasemap') {
         window.dispatchEvent(
           new CustomEvent('map:setbasemap', { detail: { basemap: action.params?.basemap } })
@@ -377,6 +389,7 @@ export default function Home() {
           const bufferedFeature = format.readFeature(buffered);
           bufferedFeature.setId(`buffer_${Date.now()}`);
           setFeatures((prev) => [...prev, bufferedFeature as Feature<Geometry>]);
+          window.dispatchEvent(new CustomEvent('map:fitbounds'));
         }
       } else if (action.action === 'centroid') {
         if (selectedFeature) {
@@ -385,12 +398,14 @@ export default function Home() {
           const centroidFeature = format.readFeature(centroidGj);
           centroidFeature.setId(`centroid_${Date.now()}`);
           setFeatures((prev) => [...prev, centroidFeature as Feature<Geometry>]);
+          window.dispatchEvent(new CustomEvent('map:fitbounds'));
         } else if (features.length > 0) {
           const fc = format.writeFeaturesObject(features);
           const centroidGj = GisService.calculateCentroid(fc);
           const centroidFeature = format.readFeature(centroidGj);
           centroidFeature.setId(`centroid_fc_${Date.now()}`);
           setFeatures((prev) => [...prev, centroidFeature as Feature<Geometry>]);
+          window.dispatchEvent(new CustomEvent('map:fitbounds'));
         }
       } else if (action.action === 'convexHull') {
         if (features.length > 0) {
@@ -400,6 +415,7 @@ export default function Home() {
             const hullFeature = format.readFeature(hullGj);
             hullFeature.setId(`convex_hull_${Date.now()}`);
             setFeatures((prev) => [...prev, hullFeature as Feature<Geometry>]);
+            window.dispatchEvent(new CustomEvent('map:fitbounds'));
           }
         }
       } else if (action.action === 'bbox') {
@@ -410,12 +426,14 @@ export default function Home() {
           const bboxFeature = format.readFeature(bboxGj);
           bboxFeature.setId(`bbox_${Date.now()}`);
           setFeatures((prev) => [...prev, bboxFeature as Feature<Geometry>]);
+          window.dispatchEvent(new CustomEvent('map:fitbounds'));
         } else if (features.length > 0) {
           const fc = format.writeFeaturesObject(features);
           const bboxGj = GisService.calculateBBoxPolygon(fc);
           const bboxFeature = format.readFeature(bboxGj);
           bboxFeature.setId(`bbox_fc_${Date.now()}`);
           setFeatures((prev) => [...prev, bboxFeature as Feature<Geometry>]);
+          window.dispatchEvent(new CustomEvent('map:fitbounds'));
         }
       } else if (action.action === 'simplify') {
         if (selectedFeature) {
@@ -427,6 +445,7 @@ export default function Home() {
             prev.map((f) => (f.getId() === selectedFeature.getId() ? simplifiedFeature : f))
           );
           setSelectedFeature(simplifiedFeature);
+          window.dispatchEvent(new CustomEvent('map:fitbounds'));
         }
       } else if (action.action === 'union') {
         if (features.length >= 2) {
@@ -437,6 +456,7 @@ export default function Home() {
             unionFeature.setId(`union_${Date.now()}`);
             setFeatures([unionFeature as Feature<Geometry>]);
             setSelectedFeature(unionFeature as Feature<Geometry>);
+            window.dispatchEvent(new CustomEvent('map:fitbounds'));
           }
         }
       } else if (action.action === 'loadUrl') {
@@ -446,7 +466,7 @@ export default function Home() {
           fetchRemoteGeoJSON(url)
             .then((data) => {
               setGeojsonString(data);
-              syncFeaturesFromString(data);
+              syncFeaturesFromString(data, true);
               resetHistory(data);
               toast({
                 title: 'Data Eksternal Berhasil Dimuat',

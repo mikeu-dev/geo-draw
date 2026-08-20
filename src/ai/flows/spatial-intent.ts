@@ -29,6 +29,7 @@ const SpatialIntentOutputSchema = z.object({
       'unkink',
       'calculateField',
       'flyTo',
+      'fitBounds',
       'setBasemap',
       'setProjection',
       'clear',

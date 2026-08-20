@@ -19,6 +19,7 @@ import {
   Scissors,
   FlaskConical,
   Shapes,
+  Scan,
 } from 'lucide-react';
 import BasemapSwitcher from './BasemapSwitcher';
 import MapScreenshot from './MapScreenshot';
@@ -276,6 +277,23 @@ export default function DrawingTools({
           {featuresCount > 0 && (
             <>
               <Separator orientation="horizontal" className="my-1 bg-border" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('map:fitbounds'));
+                    }}
+                    className="w-8 h-8 rounded-[var(--radius)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    aria-label="Pusatkan ke seluruh data (Fit Bounds)"
+                  >
+                    <Scan className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Fit to data (Zoom to Extent)</p>
+                </TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Toggle

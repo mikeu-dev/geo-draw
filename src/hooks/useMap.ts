@@ -13,6 +13,7 @@ import { topoJsonDragFormat } from '@/lib/ol-topojson-drag-format';
 import { fromLonLat, toLonLat, transform, transformExtent } from 'ol/proj';
 import { Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
+import { createEmpty, extend, isEmpty } from 'ol/extent';
 import { DrawEvent } from 'ol/interaction/Draw';
 import { SelectEvent } from 'ol/interaction/Select';
 import { DragAndDropEvent } from 'ol/interaction/DragAndDrop';
@@ -177,11 +178,24 @@ export function useMap({
     });
     dragAndDrop.on('addfeatures', (event: DragAndDropEvent) => {
       const dropped = event.features as Feature<Geometry>[];
-      if (dropped) {
+      if (dropped && dropped.length > 0) {
         dropped.forEach((f, i) => {
           if (!f.getId()) f.setId(`dropped_${Date.now()}_${i}`);
         });
         setFeatures((prev) => [...prev, ...dropped]);
+
+        const extent = createEmpty();
+        dropped.forEach((f) => {
+          const geom = f.getGeometry();
+          if (geom) extend(extent, geom.getExtent());
+        });
+        if (!isEmpty(extent) && isFinite(extent[0])) {
+          newMap.getView().fit(extent, {
+            duration: 1000,
+            padding: [60, 60, 60, 60],
+            maxZoom: 18,
+          });
+        }
       }
     });
     newMap.addInteraction(dragAndDrop);
@@ -208,6 +222,57 @@ export function useMap({
         view.fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
       } else if (lon !== undefined && lat !== undefined) {
         view.animate({ center: fromLonLat([lon, lat]), zoom: 16, duration: 1000 });
+      }
+    };
+
+    const handleFitBounds = (event?: Event) => {
+      const customEvent = event as CustomEvent<{
+        extent?: [number, number, number, number];
+        features?: Feature<Geometry>[];
+        padding?: [number, number, number, number];
+        duration?: number;
+        maxZoom?: number;
+      }> | undefined;
+
+      const activeMap = mapInstance.current;
+      if (!activeMap) return;
+      const view = activeMap.getView();
+      if (!view) return;
+
+      const padding = customEvent?.detail?.padding ?? [60, 60, 60, 60];
+      const duration = customEvent?.detail?.duration ?? 1000;
+      const maxZoom = customEvent?.detail?.maxZoom ?? 18;
+
+      let targetExtent: [number, number, number, number] | null = null;
+
+      if (customEvent?.detail?.extent) {
+        targetExtent = customEvent.detail.extent;
+      } else if (customEvent?.detail?.features && customEvent.detail.features.length > 0) {
+        const extent = createEmpty();
+        customEvent.detail.features.forEach((f) => {
+          const geom = f.getGeometry();
+          if (geom) extend(extent, geom.getExtent());
+        });
+        if (!isEmpty(extent) && isFinite(extent[0])) {
+          targetExtent = extent as [number, number, number, number];
+        }
+      } else {
+        const extent = vectorSource.getExtent();
+        if (extent && !isEmpty(extent) && isFinite(extent[0])) {
+          targetExtent = extent as [number, number, number, number];
+        }
+      }
+
+      if (targetExtent) {
+        view.fit(targetExtent, { duration, padding, maxZoom });
+      } else {
+        // Fallback in case features are still populating vectorSource in the next microtask
+        setTimeout(() => {
+          const fallbackExtent = vectorSource.getExtent();
+          if (fallbackExtent && !isEmpty(fallbackExtent) && isFinite(fallbackExtent[0])) {
+            view.fit(fallbackExtent, { duration, padding, maxZoom });
+          }
+        }, 120);
       }
     };
 
@@ -246,10 +311,12 @@ export function useMap({
     };
 
     window.addEventListener('map:flyto', handleFlyTo);
+    window.addEventListener('map:fitbounds', handleFitBounds);
     window.addEventListener('map:setbasemap', handleBasemap);
 
     return () => {
       window.removeEventListener('map:flyto', handleFlyTo);
+      window.removeEventListener('map:fitbounds', handleFitBounds);
       window.removeEventListener('map:setbasemap', handleBasemap);
       window.removeEventListener('hashchange', updateViewFromHash);
       if (mapInstance.current) {

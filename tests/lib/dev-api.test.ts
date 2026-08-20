@@ -25,6 +25,7 @@ describe('dev-api utility', () => {
       addFeature: () => {},
       clear: () => {},
       fitBounds: () => {},
+      zoomToExtent: () => {},
       setBasemap: () => {},
       setProjection: () => {},
       spatial: defaultDevSpatial,

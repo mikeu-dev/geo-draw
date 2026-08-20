@@ -716,6 +716,9 @@ export default function Sidebar({
                           geojsonStr = JSON.stringify(parsed, null, 2);
                         }
                         onGeojsonChange(geojsonStr);
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent('map:fitbounds'));
+                        }, 60);
                         toast({ title: `Imported ${filename}` });
                       } catch {
                         toast({

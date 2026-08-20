@@ -43,6 +43,14 @@ export function matchQuickSpatialIntent(prompt: string): SpatialIntentOutput | n
     };
   }
 
+  // Fit bounds / Zoom to data extent
+  if (/\b(fit\s*bounds?|fit\s*to\s*bounds?|zoom\s*to\s*extent|zoom\s*to\s*data|zoom\s*to\s*all|pusatkan\s*peta|sesuaikan\s*peta|zoom\s*semua)\b/i.test(p)) {
+    return {
+      action: 'fitBounds',
+      narrative: 'Fitting camera viewport to data extent...',
+    };
+  }
+
   // Basemap switcher
   if (/\b(satellite|satelit|citra)\b/i.test(p)) {
     return {

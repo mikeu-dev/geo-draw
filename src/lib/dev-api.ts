@@ -23,6 +23,7 @@ export interface GeovaraDevApi {
   addFeature: (geometryOrGeojson: object, properties?: Record<string, unknown>) => void;
   clear: () => void;
   fitBounds: () => void;
+  zoomToExtent?: () => void;
   setBasemap: (basemapId: string) => void;
   setProjection: (projection: 'EPSG:4326' | 'EPSG:3857') => void;
   spatial: {

@@ -297,6 +297,10 @@ export default function MapComponent({
         } else {
           setFeatures((prev) => [...prev, ...olFeatures]);
         }
+
+        if (olFeatures.length > 0) {
+          window.dispatchEvent(new CustomEvent('map:fitbounds', { detail: { features: olFeatures } }));
+        }
       } catch (err) {
         toast({
           title: 'Gagal memuat hasil kalkulasi ke peta',
