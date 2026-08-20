@@ -255,7 +255,7 @@ export default function RightSidebar({
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">
+                <TooltipContent side="bottom">
                   <p>Lipat Sidebar Kanan</p>
                 </TooltipContent>
               </Tooltip>

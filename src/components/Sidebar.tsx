@@ -421,7 +421,7 @@ export default function Sidebar({
                             <Trash2 className="h-4 w-4" />
                           </MenubarTrigger>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>Hapus Semua Data</p>
                         </TooltipContent>
                       </Tooltip>
@@ -439,7 +439,7 @@ export default function Sidebar({
                             <Undo2 className="h-4 w-4" />
                           </MenubarTrigger>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>Undo (Ctrl+Z)</p>
                         </TooltipContent>
                       </Tooltip>
@@ -457,7 +457,7 @@ export default function Sidebar({
                             <Redo2 className="h-4 w-4" />
                           </MenubarTrigger>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>Redo (Ctrl+Y)</p>
                         </TooltipContent>
                       </Tooltip>
@@ -476,7 +476,7 @@ export default function Sidebar({
                             )}
                           </MenubarTrigger>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>{isLinkCopied ? 'Link Copied!' : 'Share Map Link'}</p>
                         </TooltipContent>
                       </Tooltip>
@@ -489,7 +489,7 @@ export default function Sidebar({
                             <FileDown className="h-4 w-4" />
                           </MenubarTrigger>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>Export Dataset</p>
                         </TooltipContent>
                       </Tooltip>
@@ -543,7 +543,7 @@ export default function Sidebar({
                             <Code2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>Rapikan / Format JSON</p>
                         </TooltipContent>
                       </Tooltip>
@@ -564,7 +564,7 @@ export default function Sidebar({
                             )}
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="bottom">
                           <p>{isCopied ? 'Copied!' : 'Copy to clipboard'}</p>
                         </TooltipContent>
                       </Tooltip>
