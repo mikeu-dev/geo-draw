@@ -226,22 +226,41 @@ export default function SpatialToolsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-primary" />
-            Turf.js Spatial Analysis Toolkit
+            Spatial Analysis Toolkit
           </DialogTitle>
           <DialogDescription>
-            Jalankan transformasi geometris deterministik dan analisis jangkauan spasial langsung di browser.
+            Jalankan transformasi geometris deterministik dan analisis jangkauan spasial langsung di
+            browser.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(val) => setActiveTab(val as typeof activeTab)}
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-7 w-full">
-            <TabsTrigger value="buffer" className="text-[11px] px-1">Buffer</TabsTrigger>
-            <TabsTrigger value="rings" className="text-[11px] px-1">Rings</TabsTrigger>
-            <TabsTrigger value="simplify" className="text-[11px] px-1">Simplify</TabsTrigger>
-            <TabsTrigger value="hull" className="text-[11px] px-1">Hull</TabsTrigger>
-            <TabsTrigger value="centroid" className="text-[11px] px-1">Centroid</TabsTrigger>
-            <TabsTrigger value="unkink" className="text-[11px] px-1">Unkink</TabsTrigger>
-            <TabsTrigger value="union" className="text-[11px] px-1">Union</TabsTrigger>
+            <TabsTrigger value="buffer" className="text-[11px] px-1">
+              Buffer
+            </TabsTrigger>
+            <TabsTrigger value="rings" className="text-[11px] px-1">
+              Rings
+            </TabsTrigger>
+            <TabsTrigger value="simplify" className="text-[11px] px-1">
+              Simplify
+            </TabsTrigger>
+            <TabsTrigger value="hull" className="text-[11px] px-1">
+              Hull
+            </TabsTrigger>
+            <TabsTrigger value="centroid" className="text-[11px] px-1">
+              Centroid
+            </TabsTrigger>
+            <TabsTrigger value="unkink" className="text-[11px] px-1">
+              Unkink
+            </TabsTrigger>
+            <TabsTrigger value="union" className="text-[11px] px-1">
+              Union
+            </TabsTrigger>
           </TabsList>
 
           {/* Scope Target */}
@@ -259,18 +278,15 @@ export default function SpatialToolsDialog({
                 </Label>
               </div>
               <div className="flex items-center space-x-1.5">
-                <RadioGroupItem
-                  value="selected"
-                  id="scope-selected"
-                  disabled={!selectedFeature}
-                />
+                <RadioGroupItem value="selected" id="scope-selected" disabled={!selectedFeature} />
                 <Label
                   htmlFor="scope-selected"
                   className={`text-xs cursor-pointer ${
                     !selectedFeature ? 'text-muted-foreground line-through' : ''
                   }`}
                 >
-                  Fitur Terpilih {selectedFeature ? `(${selectedFeature.id || 'Aktif'})` : '(Belum dipilih)'}
+                  Fitur Terpilih{' '}
+                  {selectedFeature ? `(${selectedFeature.id || 'Aktif'})` : '(Belum dipilih)'}
                 </Label>
               </div>
             </RadioGroup>
@@ -281,7 +297,9 @@ export default function SpatialToolsDialog({
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <Label className="text-xs">Jarak Buffer</Label>
-                <span className="font-semibold text-primary">{bufferDistance} {bufferUnits}</span>
+                <span className="font-semibold text-primary">
+                  {bufferDistance} {bufferUnits}
+                </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <Input
@@ -334,10 +352,7 @@ export default function SpatialToolsDialog({
                   placeholder="100, 300, 500"
                   className="col-span-2 text-xs"
                 />
-                <Select
-                  value={ringUnits}
-                  onValueChange={(val) => setRingUnits(val as SpatialUnit)}
-                >
+                <Select value={ringUnits} onValueChange={(val) => setRingUnits(val as SpatialUnit)}>
                   <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -350,7 +365,8 @@ export default function SpatialToolsDialog({
                 </Select>
               </div>
               <div className="p-2.5 bg-secondary/50 rounded text-[11px] text-muted-foreground">
-                Menghasilkan zonasi jangkauan radial dengan gradasi warna (*heat spectrum*) untuk analisis aksesibilitas fasilitas atau radius bahaya.
+                Menghasilkan zonasi jangkauan radial dengan gradasi warna (*heat spectrum*) untuk
+                analisis aksesibilitas fasilitas atau radius bahaya.
               </div>
             </div>
           </TabsContent>
@@ -373,12 +389,11 @@ export default function SpatialToolsDialog({
               <div className="flex items-center justify-between pt-2">
                 <div className="flex flex-col">
                   <span className="text-xs font-medium">Preservasi Topologi Tinggi (HQ)</span>
-                  <span className="text-[11px] text-muted-foreground">Mencegah penyusutan bentuk berlebih</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Mencegah penyusutan bentuk berlebih
+                  </span>
                 </div>
-                <Switch
-                  checked={simplifyHighQuality}
-                  onCheckedChange={setSimplifyHighQuality}
-                />
+                <Switch checked={simplifyHighQuality} onCheckedChange={setSimplifyHighQuality} />
               </div>
             </div>
           </TabsContent>
@@ -390,7 +405,8 @@ export default function SpatialToolsDialog({
               Menghitung selubung poligon cembung terluar (Minimum Bounding Convex Envelope).
             </div>
             <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
-              Convex Hull bertindak seperti pita karet yang diregangkan mengelilingi seluruh himpunan koordinat untuk mengidentifikasi batas perimeter terjauh.
+              Convex Hull bertindak seperti pita karet yang diregangkan mengelilingi seluruh
+              himpunan koordinat untuk mengidentifikasi batas perimeter terjauh.
             </div>
           </TabsContent>
 
@@ -401,7 +417,8 @@ export default function SpatialToolsDialog({
               Menghitung titik pusat geometris (Center of Mass) untuk setiap fitur.
             </div>
             <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
-              Menghasilkan satu fitur Point untuk setiap garis atau poligon, mempermudah pelabelan dan analisis kedekatan jarak.
+              Menghasilkan satu fitur Point untuk setiap garis atau poligon, mempermudah pelabelan
+              dan analisis kedekatan jarak.
             </div>
           </TabsContent>
 
@@ -412,7 +429,8 @@ export default function SpatialToolsDialog({
               Memperbaiki poligon yang bersilangan sendiri (Self-Intersecting Kink).
             </div>
             <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
-              Memecah poligon kompleks dengan simpul saling-silang menjadi kumpulan poligon sederhana yang valid sesuai standar OGC / RFC 7946.
+              Memecah poligon kompleks dengan simpul saling-silang menjadi kumpulan poligon
+              sederhana yang valid sesuai standar OGC / RFC 7946.
             </div>
           </TabsContent>
 
@@ -420,10 +438,12 @@ export default function SpatialToolsDialog({
           <TabsContent value="union" className="space-y-4 pt-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Merge className="w-4 h-4 text-primary" />
-              Menggabungkan beberapa poligon yang bertumpukan menjadi satu poligon tunggal (Boolean Union).
+              Menggabungkan beberapa poligon yang bertumpukan menjadi satu poligon tunggal (Boolean
+              Union).
             </div>
             <div className="p-3 bg-secondary/50 rounded text-xs text-muted-foreground leading-relaxed">
-              Operasi Union menyatukan batas-batas luar dan menghapus garis pemisah internal pada poligon-poligon yang saling bersentuhan atau tumpang tindih.
+              Operasi Union menyatukan batas-batas luar dan menghapus garis pemisah internal pada
+              poligon-poligon yang saling bersentuhan atau tumpang tindih.
             </div>
           </TabsContent>
 
@@ -443,7 +463,10 @@ export default function SpatialToolsDialog({
               </div>
               <div className="flex items-center space-x-1.5">
                 <RadioGroupItem value="replace" id="out-replace" />
-                <Label htmlFor="out-replace" className="cursor-pointer text-xs font-normal text-destructive">
+                <Label
+                  htmlFor="out-replace"
+                  className="cursor-pointer text-xs font-normal text-destructive"
+                >
                   Gantikan Dataset
                 </Label>
               </div>

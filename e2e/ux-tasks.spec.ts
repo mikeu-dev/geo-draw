@@ -51,7 +51,7 @@ test.describe('Geovara Usability & UX Tasks E2E Suite (7 UX Tasks)', () => {
     if (await spatialToolsBtn.isVisible()) {
       await spatialToolsBtn.dispatchEvent('click');
       // Expect dialog header
-      const dialogTitle = page.locator('text=Turf.js Spatial Analysis Toolkit');
+      const dialogTitle = page.locator('text=Spatial Analysis Toolkit');
       await expect(dialogTitle).toBeVisible({ timeout: 10000 });
 
       // Close dialog
