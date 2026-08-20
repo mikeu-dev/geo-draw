@@ -122,24 +122,9 @@ export const basemaps: BasemapOption[] = [
         <path d="M 0,60 Q 30,20 60,35 T 100,10 L 100,60 Z" fill="#dbe6cb" />
         <path d="M 20,60 Q 45,30 75,42 T 100,30 L 100,60 Z" fill="#ccdcb8" />
         {/* Contour lines */}
-        <path
-          d="M 0,45 Q 35,18 70,30 T 100,15"
-          stroke="#8f9f77"
-          strokeWidth="0.9"
-          fill="none"
-        />
-        <path
-          d="M 5,55 Q 40,28 75,38 T 100,25"
-          stroke="#7d8d66"
-          strokeWidth="0.9"
-          fill="none"
-        />
-        <path
-          d="M 0,32 Q 25,10 55,20 T 100,5"
-          stroke="#9faf86"
-          strokeWidth="0.8"
-          fill="none"
-        />
+        <path d="M 0,45 Q 35,18 70,30 T 100,15" stroke="#8f9f77" strokeWidth="0.9" fill="none" />
+        <path d="M 5,55 Q 40,28 75,38 T 100,25" stroke="#7d8d66" strokeWidth="0.9" fill="none" />
+        <path d="M 0,32 Q 25,10 55,20 T 100,5" stroke="#9faf86" strokeWidth="0.8" fill="none" />
         {/* Peak summit indicator */}
         <polygon points="50,16 53,22 47,22" fill="#52633e" />
       </svg>
@@ -160,15 +145,15 @@ export const basemaps: BasemapOption[] = [
         {/* Charcoal Dark Background */}
         <rect width="100" height="60" fill="#0f172a" />
         {/* Water body dark blue-grey */}
-        <path
-          d="M 0,48 Q 30,38 55,45 T 100,38"
-          stroke="#1e293b"
-          strokeWidth="8"
-          fill="none"
-        />
+        <path d="M 0,48 Q 30,38 55,45 T 100,38" stroke="#1e293b" strokeWidth="8" fill="none" />
         {/* Neon illuminated road grid */}
         <path d="M 0,22 L 100,22 M 52,0 L 52,60" stroke="#334155" strokeWidth="4" />
-        <path d="M 0,22 L 100,22 M 52,0 L 52,60" stroke="#38bdf8" strokeWidth="1.2" opacity="0.85" />
+        <path
+          d="M 0,22 L 100,22 M 52,0 L 52,60"
+          stroke="#38bdf8"
+          strokeWidth="1.2"
+          opacity="0.85"
+        />
         <path d="M 12,0 L 88,60" stroke="#818cf8" strokeWidth="1" opacity="0.6" />
         {/* City light node dots */}
         <circle cx="52" cy="22" r="2.5" fill="#38bdf8" />
@@ -243,11 +228,8 @@ export default function BasemapSwitcher({
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/50">
             <div>
               <DropdownMenuLabel className="p-0 text-xs font-bold tracking-tight text-foreground">
-                Gaya Peta (Basemap)
+                Basemap
               </DropdownMenuLabel>
-              <p className="text-[10px] text-muted-foreground">
-                Tersinkronisasi ke 2D & 3D Globe
-              </p>
             </div>
           </div>
 

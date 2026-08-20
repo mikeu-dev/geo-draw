@@ -59,7 +59,9 @@ test.describe('Geovara E2E Tests', () => {
     await expect(mapCanvas).toBeVisible({ timeout: 15000 });
   });
 
-  test('should support horizontal drag resizing and conditional toggle button', async ({ page }) => {
+  test('should support horizontal drag resizing and conditional toggle button', async ({
+    page,
+  }) => {
     const aside = page.locator('aside');
     await expect(aside).toBeVisible({ timeout: 20000 });
 
@@ -90,7 +92,10 @@ test.describe('Geovara E2E Tests', () => {
 
     // Drag to the left past collapse threshold to close
     const updatedHandleBox = await resizeHandle.boundingBox();
-    await page.mouse.move(updatedHandleBox!.x + updatedHandleBox!.width / 2, updatedHandleBox!.y + 100);
+    await page.mouse.move(
+      updatedHandleBox!.x + updatedHandleBox!.width / 2,
+      updatedHandleBox!.y + 100
+    );
     await page.mouse.down();
     await page.mouse.move(50, updatedHandleBox!.y + 100, { steps: 8 });
     await page.mouse.up();
@@ -105,14 +110,15 @@ test.describe('Geovara E2E Tests', () => {
     await expect(resizeHandle).toBeVisible({ timeout: 10000 });
   });
 
-  test('should open basemap switcher with mini previews and switch basemap style', async ({ page }) => {
+  test('should open basemap switcher with mini previews and switch basemap style', async ({
+    page,
+  }) => {
     const basemapBtn = page.locator('button[aria-label="Basemap & Opacity"]');
     await expect(basemapBtn).toBeVisible({ timeout: 10000 });
     await basemapBtn.click();
 
     // Verify popover header and description
-    await expect(page.locator('text=Gaya Peta (Basemap)')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('text=Tersinkronisasi ke 2D & 3D Globe')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Basemap')).toBeVisible({ timeout: 5000 });
 
     // Verify 4 mini preview cards are rendered using role button
     const osmCard = page.getByRole('button', { name: /OpenStreetMap/ });
@@ -134,7 +140,9 @@ test.describe('Geovara E2E Tests', () => {
     await expect(darkCard).toHaveClass(/border-primary/);
   });
 
-  test('should support clear and delete features with confirmation modal and full editor synchronization', async ({ page }) => {
+  test('should support clear and delete features with confirmation modal and full editor synchronization', async ({
+    page,
+  }) => {
     // Inject external dataset via window.geovara API
     await page.evaluate(() => {
       window.geovara?.setGeoJSON({
@@ -181,7 +189,9 @@ test.describe('Geovara E2E Tests', () => {
     expect(currentGj).toContain('"features": []');
   });
 
-  test('should preserve imported data features when switching to 3D Globe and back to 2D', async ({ page }) => {
+  test('should preserve imported data features when switching to 3D Globe and back to 2D', async ({
+    page,
+  }) => {
     // 1. Import / set GeoJSON data with multiple features
     await page.evaluate(() => {
       window.geovara?.setGeoJSON({
@@ -217,7 +227,9 @@ test.describe('Geovara E2E Tests', () => {
     await globeOption.click();
 
     // Verify 3D mode is active and features count remains intact
-    await expect(page.locator('button[aria-label="Map View & Projection: 3D Globe"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button[aria-label="Map View & Projection: 3D Globe"]')).toBeVisible({
+      timeout: 10000,
+    });
     count = await page.evaluate(() => window.geovara?.getFeaturesCount());
     expect(count).toBe(2);
 
@@ -235,12 +247,16 @@ test.describe('Geovara E2E Tests', () => {
     await mercatorOption.click();
 
     // Verify 2D mode restored and features still intact
-    await expect(page.locator('button[aria-label="Map View & Projection: 3857"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button[aria-label="Map View & Projection: 3857"]')).toBeVisible({
+      timeout: 10000,
+    });
     count = await page.evaluate(() => window.geovara?.getFeaturesCount());
     expect(count).toBe(2);
   });
 
-  test('should render imported data when imported directly while 3D Globe mode is active', async ({ page }) => {
+  test('should render imported data when imported directly while 3D Globe mode is active', async ({
+    page,
+  }) => {
     // 1. Switch to 3D Globe mode first
     const viewSwitcherBtn = page.locator('button[aria-label^="Map View & Projection:"]');
     await expect(viewSwitcherBtn).toBeVisible({ timeout: 10000 });
@@ -251,7 +267,9 @@ test.describe('Geovara E2E Tests', () => {
     await globeOption.click();
 
     // Verify 3D mode is active
-    await expect(page.locator('button[aria-label="Map View & Projection: 3D Globe"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button[aria-label="Map View & Projection: 3D Globe"]')).toBeVisible({
+      timeout: 10000,
+    });
 
     // 2. Import / inject data while 3D Globe is already active
     await page.evaluate(() => {
@@ -283,5 +301,3 @@ test.describe('Geovara E2E Tests', () => {
     expect(gj).toContain('feat_jogja');
   });
 });
-
-
