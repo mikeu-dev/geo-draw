@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   Copy,
   Trash2,
+  Code2,
   CheckCircle,
   AlertTriangle,
   FileDown,
@@ -284,6 +285,29 @@ export default function Sidebar({
       }
     );
   };
+
+  const handleFormatJson = useCallback(() => {
+    if (!geojsonString || !geojsonString.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Editor Kosong',
+        description: 'Tidak ada data GeoJSON untuk dirapikan.',
+      });
+      return;
+    }
+    try {
+      const parsed = JSON.parse(geojsonString);
+      const formatted = JSON.stringify(parsed, null, 2);
+      onGeojsonChange(formatted);
+      toast({ title: 'JSON diformat dengan rapi' });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal merapikan JSON',
+        description: 'Pastikan format JSON valid sebelum dirapikan.',
+      });
+    }
+  }, [geojsonString, onGeojsonChange, toast]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href).then(
@@ -586,6 +610,23 @@ export default function Sidebar({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
+                            onClick={handleFormatJson}
+                            disabled={!geojsonString || !geojsonString.trim()}
+                            aria-label="Format JSON"
+                          >
+                            <Code2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Rapikan / Format JSON</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
                             onClick={handleCopy}
                           >
                             {isCopied ? (
@@ -714,6 +755,13 @@ export default function Sidebar({
                         } else if (canTryWorker) {
                           const parsed = await parseGeoJsonStringInWorker(content);
                           geojsonStr = JSON.stringify(parsed, null, 2);
+                        } else {
+                          try {
+                            const parsed = JSON.parse(content);
+                            geojsonStr = JSON.stringify(parsed, null, 2);
+                          } catch {
+                            geojsonStr = content;
+                          }
                         }
                         onGeojsonChange(geojsonStr);
                         setTimeout(() => {

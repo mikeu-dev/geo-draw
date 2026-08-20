@@ -55,6 +55,16 @@ export default function FileDropZone({ onFileLoad }: FileDropZoneProps) {
           return;
         }
 
+        if (ext === '.json' || ext === '.geojson') {
+          try {
+            const parsed = JSON.parse(content);
+            void Promise.resolve(onFileLoad(JSON.stringify(parsed, null, 2), file.name));
+            return;
+          } catch {
+            // fallback to raw content if JSON parse fails
+          }
+        }
+
         // Standard GeoJSON, KML, TopoJSON
         void Promise.resolve(onFileLoad(content, file.name));
       } catch (err) {

@@ -95,4 +95,15 @@ describe('geojson-validator deterministic', () => {
     expect(result.isValid).toBe(false);
     expect(result.feedback).toContain('di luar batas wajar WGS 84');
   });
+
+  it('should validate minified single-line GeoJSON datasets correctly', () => {
+    const minified =
+      '{"type":"FeatureCollection","crs":{"type":"name","properties":{"name":"EPSG:4326"}},"features":[{"type":"Feature","id":1,"geometry":{"type":"Point","coordinates":[107.464227,-6.543408]},"properties":{"NAMOBJ":"Balai Desa Citalang"}}]}';
+    const result = validateGeoJSONDeterministic(minified);
+    expect(result.isValid).toBe(true);
+    expect(result.stats?.featureCount).toBe(1);
+
+    const formatted = JSON.stringify(JSON.parse(minified), null, 2);
+    expect(formatted.split('\n').length).toBeGreaterThan(5);
+  });
 });
