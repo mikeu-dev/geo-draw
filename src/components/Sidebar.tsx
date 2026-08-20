@@ -23,7 +23,6 @@ import {
   Undo2,
   Redo2,
   ChevronRight,
-  Grid,
 } from 'lucide-react';
 import {
   validateGeoJSONDeterministic,
@@ -72,8 +71,6 @@ interface SidebarProps {
   onZoomToFeature: (id: string | number) => void;
   onFeatureSelect: (feature: Feature<Geometry> | null) => void;
   onFeaturePropertyChange?: (featureId: string | number, key: string, value: unknown) => void;
-  showGraticule?: boolean;
-  onToggleGraticule?: () => void;
   theme?: 'light' | 'dark';
 }
 
@@ -107,8 +104,6 @@ export default function Sidebar({
   onZoomToFeature,
   onFeatureSelect,
   onFeaturePropertyChange,
-  showGraticule = false,
-  onToggleGraticule,
   theme = 'light',
 }: SidebarProps) {
   const { toast } = useToast();
@@ -470,25 +465,6 @@ export default function Sidebar({
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {onToggleGraticule && (
-                      <MenubarMenu>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <MenubarTrigger
-                              className={`w-8 h-8 p-0 justify-center ${showGraticule ? 'bg-accent text-accent-foreground' : ''}`}
-                              onClick={onToggleGraticule}
-                              aria-label="Toggle Graticule Grid"
-                            >
-                              <Grid className="h-4 w-4" />
-                            </MenubarTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{showGraticule ? 'Sembunyikan Graticule (Lat/Lon Grid)' : 'Tampilkan Graticule (Lat/Lon Grid)'}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </MenubarMenu>
-                    )}
-
                     <MenubarMenu>
                       <Tooltip>
                         <TooltipTrigger asChild>

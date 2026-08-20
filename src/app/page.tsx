@@ -563,8 +563,6 @@ export default function Home() {
           onZoomToFeature={handleZoomTo}
           onFeatureSelect={handleFeatureSelect}
           onFeaturePropertyChange={handleFeaturePropertyChange}
-          showGraticule={showGraticule}
-          onToggleGraticule={handleToggleGraticule}
         />
 
         <div className="flex-grow relative h-full min-w-0">

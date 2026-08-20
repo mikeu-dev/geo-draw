@@ -14,6 +14,7 @@ import {
   Grid,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -510,14 +511,11 @@ export default function RightSidebar({
                             </span>
                           </div>
                         </div>
-                        <Button
-                          variant={showGraticule ? 'default' : 'outline'}
-                          size="sm"
-                          className="text-[11px] h-7 px-2.5"
-                          onClick={onToggleGraticule}
-                        >
-                          {showGraticule ? 'Aktif' : 'Nonaktif'}
-                        </Button>
+                        <Switch
+                          checked={showGraticule}
+                          onCheckedChange={() => onToggleGraticule()}
+                          aria-label="Toggle Coordinate Grid (Graticule)"
+                        />
                       </div>
                     </div>
                   )}
