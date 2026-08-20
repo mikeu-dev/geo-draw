@@ -7,6 +7,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import RightSidebar from '@/components/RightSidebar';
 import MapSkeleton from '@/components/MapSkeleton';
 import { Loader2 } from 'lucide-react';
 import {
@@ -549,13 +550,6 @@ export default function Home() {
           onZoomToFeature={handleZoomTo}
           onFeatureSelect={handleFeatureSelect}
           onFeaturePropertyChange={handleFeaturePropertyChange}
-          onHeavyParseChange={setIsParsing}
-          vectorOpacity={vectorOpacity}
-          onVectorOpacityChange={setVectorOpacity}
-          vectorVisible={vectorVisible}
-          onVectorVisibleChange={setVectorVisible}
-          basemapOpacity={basemapOpacity}
-          onBasemapOpacityChange={setBasemapOpacity}
           showGraticule={showGraticule}
           onToggleGraticule={() =>
             setShowGraticule((prev) => {
@@ -569,7 +563,7 @@ export default function Home() {
           }
         />
 
-        <div className="flex-grow relative h-full">
+        <div className="flex-grow relative h-full min-w-0">
           {isParsing && (
             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm animate-in fade-in duration-500">
               <div className="relative">
@@ -601,6 +595,32 @@ export default function Home() {
             showGraticule={showGraticule}
           />
         </div>
+
+        <RightSidebar
+          features={features}
+          onGeojsonChange={handleGeojsonChange}
+          onDeleteFeature={handleDeleteFeature}
+          onZoomToFeature={handleZoomTo}
+          onFeatureSelect={handleFeatureSelect}
+          onHeavyParseChange={setIsParsing}
+          vectorOpacity={vectorOpacity}
+          onVectorOpacityChange={setVectorOpacity}
+          vectorVisible={vectorVisible}
+          onVectorVisibleChange={setVectorVisible}
+          basemapOpacity={basemapOpacity}
+          onBasemapOpacityChange={setBasemapOpacity}
+          showGraticule={showGraticule}
+          onToggleGraticule={() =>
+            setShowGraticule((prev) => {
+              const next = !prev;
+              toast({
+                title: next ? 'Graticule (Grid Koordinat) Aktif' : 'Graticule Nonaktif',
+                description: next ? 'Garis lintang dan bujur ditampilkan pada kanvas.' : undefined,
+              });
+              return next;
+            })
+          }
+        />
 
         <AIAssistant
           onAction={handleAIAction}
