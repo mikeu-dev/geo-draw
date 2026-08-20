@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Overlay, Feature } from 'ol';
 import type { Geometry } from 'ol/geom';
-import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { Stroke, Style } from 'ol/style';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import BaseLayer from 'ol/layer/Base';
 import Graticule from 'ol/layer/Graticule';
@@ -20,6 +20,7 @@ import CursorGuide from './CursorGuide';
 import SpatialToolsDialog from './SpatialToolsDialog';
 import UsabilityLabDialog from './UsabilityLabDialog';
 import GeoJSONFormat from 'ol/format/GeoJSON';
+import { createSimplestyleForFeature } from '@/lib/simplestyle';
 import { OSM, XYZ } from 'ol/source';
 import type { FeatureCollection } from 'geojson';
 
@@ -86,25 +87,11 @@ export default function MapComponent({
   }>({});
   const { toast } = useToast();
 
-  // Evidence-based Visual Hierarchy: High-contrast data saliency
+  // Evidence-based Visual Hierarchy & Simplestyle support
   const styleFunction = useCallback(
     (feature: Feature<Geometry>) => {
-      const isSelected = selectedFeature && selectedFeature.getId() === feature.getId();
-      const fill = isSelected
-        ? 'rgba(236, 72, 153, 0.3)'
-        : feature.get('fill') || 'rgba(147, 51, 234, 0.25)';
-      const stroke = isSelected ? '#ec4899' : feature.get('stroke') || '#9333ea';
-      const strokeWidth = isSelected ? 3.5 : feature.get('strokeWidth') || 2.5;
-
-      return new Style({
-        fill: new Fill({ color: fill }),
-        stroke: new Stroke({ color: stroke, width: strokeWidth }),
-        image: new CircleStyle({
-          radius: isSelected ? 8 : 6,
-          fill: new Fill({ color: stroke }),
-          stroke: new Stroke({ color: '#ffffff', width: isSelected ? 2.5 : 1.5 }),
-        }),
-      });
+      const isSelected = selectedFeature !== null && selectedFeature.getId() === feature.getId();
+      return createSimplestyleForFeature(feature, isSelected);
     },
     [selectedFeature]
   );

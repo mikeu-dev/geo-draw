@@ -189,13 +189,26 @@ export default function Home() {
         const newFeatures = [...prev];
         const feature = newFeatures.find((f) => f.getId() === featureId);
         if (feature) {
-          if (value === null || value === undefined) {
+          if (value === null || value === undefined || value === '') {
             feature.unset(key);
           } else {
             feature.set(key, value);
           }
+          feature.changed();
         }
         return newFeatures;
+      });
+      setSelectedFeature((prev) => {
+        if (prev && prev.getId() === featureId) {
+          if (value === null || value === undefined || value === '') {
+            prev.unset(key);
+          } else {
+            prev.set(key, value);
+          }
+          prev.changed();
+          return prev;
+        }
+        return prev;
       });
     },
     []
